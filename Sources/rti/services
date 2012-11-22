@@ -1,0 +1,19 @@
+# Super tabla de rti
+#id		en	osc_f	osc_ph	r_init	r_steps	r_ths	func	data
+#
+%include "../led_ll.h"
+LED_PWM		0	1	0	0	8	0	led_pwm	NULL
+#LED_BLNK	0	10ms	0	0	3s	0	led_blnk NULL
+
+%include "../motor/mot_ll.h"
+SMOT		0	2	0	0	8	0	smot_srv NULL
+
+#%include "../placa/display_ll.h"
+#DISP		0	4	0	0	4	0	disp_srv NULL
+
+#%include "../placa/kbd_ll.h"
+#KBD		0	4	1	0	100ms	0	disp_srv NULL
+
+#esto no me acuerdo como era
+#%include "../graphics_ll.h"
+#GRAPHIC		0	???????????????????????????????????????????????
