@@ -6,59 +6,34 @@
 #define RTI_FREQ 781 // Hz
 #define RTI_PER (1.0/RTI_FREQ) // seconds
 
+typedef u16 rti_time; // An integer multiple of RTI_PER (in miliseconds)
 
-#define RTI_ALWAYS 1
-#define RTI_ONCE 0
-#define RTI_CANCEL 0
-#define RTI_AUTOCANCEL 0
-#define RTI_NOW 1
-#define RTI_INVALID_ID (-1)
+#define RTI_MS2PERIOD(ms) (DIV_CEIL( (((u32)ms) > 0 ? ms : 0) * RTI_FREQ, 1000 )) // Converts miliseconds to rti_time
 
-#define RTI_MS2PERIOD(ms) (DIV_CEIL( (((u32)ms) > 0 ? ms : 0) * RTI_FREQ, 1000 ))
+typedef s8 rti_id; // An id for a registered callback
 
-enum {RTI_NORMAL, RTI_PROTECT};
-#define RTI_DEFAULT_PROTECT RTI_NORMAL
+#define RTI_INVALID_ID (-1) // Invalid means no registered function has that id
 
-typedef u16 rti_time;
-typedef s8 rti_id;
-typedef rti_time (*rti_ptr) (void *data, rti_time period);
+typedef void (*rti_ptr) (void *data, rti_time period, rti_id id); // A function callback for registering in the RTI
 
-void rti_init(void);
 
-rti_id rti_register(rti_ptr callback, void *data, rti_time period, rti_time delay);
-	/* Registra una función 'f' para que se corra a partir del un retardo
-	 * inicial 'delay', y a partir de alli, cada 'period'.
-	 * Period puede ser un tiempo MAYOR QUE CERO, RTI_ALWAYS para que se
-	 * ejecute siempre, o RTI_ONCE para que se llame 1 vez y se cancele 
-	 * (un "monoestable")
-	 * Delay puede ser un tiempo MAYOR QUE CERO, o RTI_NOW para que se
-	 * ejecute cuanto antes.
-	 * Cuando se llama a 'f' se le pasa:
-	 * 	void *data' : puntero a un dato arbitrario del usuario
-	 * 	rti_time period: el tiempo desde la última llamada (el periodo 
-	 * 			actual, o el delay inicial (p/ la 1era llamada)
-	 * El valor que devuelve es el tiempo en el que se la debe llamar de 
-	 * vuelta. Casos comunes son:
-	 * 	Devolver el mismo rti_time que entró: persiste con el mismo 
-	 * 	periodo (o si el usuario puso RTI_ONCE, lo respeta)
-	 * 	Devolver RTI_CANCEL, para cancelarse.
-	 */
+void rti_Init(void);
+// Initializes the RTI module. This requires no other modules to work.
 
-rti_id rti_register2(rti_ptr callback, void *data, rti_time period, rti_time delay, s8 protect);
-	/* Esta función es como rti_register, con la diferencia que, en caso de
-	 * auto-cancelación, si 'protect' está en RTI_PROTECT, el timer queda en
-	 * la tabla (inactivo) hasta que el usuario le da un rti_cancel
-	 */
-	
-void rti_set_period(rti_id id, rti_time period);
+rti_id rti_Register(rti_ptr callback, void *data, rti_time period, rti_time delay);
+// Registers a callback function to be called periodically every period*RTI_PER seconds, after an initial delay of delay*RTI_PER seconds.
+// period and delay can be set using RTI_MS2DIV(timeInMiliseconds).
+// When callback is called, it receives data, period and its rti_id. 
+// callback is called with interrupts inhibited and MUST NOT disinhibit them.
+	 
+#define RTI_ALWAYS 1 // period for a function that will always be called (its frequency is RTI_FREQ)
+#define RTI_ONCE 0 // delay for a function that will only be called once (in this case, period is irrelevant)
+#define RTI_NOW 1 // delay for a function that will be called for the first time as soon as the RTI interrupts the CPU
 
-	
-void rti_cancel(rti_id n);
-	/* Cancelar un timer que ya está cancelado nos es seguro
-	 * La excepción es si fue una auto-cancelación y el timer tenía el
-	 * atributo 'protect' en RTI_PROTECT */
+void rti_SetPeriod(rti_id id, rti_time period); // Changes the period of a registered rti_id
 
-extern void interrupt rti_srv(void);
+void rti_Cancel(rti_id n); // Cancels a registered rti_id
 
+extern void interrupt rti_Service(void); // Interrupt function. To be registered in the IVT.
 
 #endif

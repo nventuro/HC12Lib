@@ -133,7 +133,7 @@ void (* const interrupt_vector_table[])() ={
     tim2_srv,	// VECT10	timch2
     tim1_srv,	// VECT9	timch1
     tim0_srv,	// VECT8	timch0
-    rti_srv,	// VECT7	rti
+    rti_Service,// VECT7	rti
     NOTUSED,	// VECT6	irq
     NOTUSED,	// VECT5	xirq
     NOTUSED,	// VECT4	swi

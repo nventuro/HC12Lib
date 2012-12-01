@@ -141,7 +141,7 @@ static void led_fancy_enter(int end_dim)
 static void led_fancy_leave(rti_time dur)
 {
 	if (dur != LED_NON_STOP)
-		led_fancy_cfg.stop_func = rti_register2(led_autostop, NULL,RTI_ONCE,dur,RTI_PROTECT);
+		led_fancy_cfg.stop_func = rti_register(led_autostop, NULL,RTI_ONCE,dur);
 	else
 		led_fancy_cfg.stop_func = RTI_INVALID_ID;
 }
