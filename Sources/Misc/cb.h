@@ -1,17 +1,14 @@
-/*
- * cb.h
- *
- * grupo 2 - 2012
- * 
- * Buffers circulares
- */
-
-#ifndef __CB_H__
-#define __CB_H__
+#ifndef _CB_H
+#define _CB_H
 
 #include "common.h"
 
-enum {CB_READY, CB_EMPTY, CB_FULL};
+typedef enum 
+{
+	CB_OK, 
+	CB_EMPTY, 
+	CB_FULL
+} cb_status;
 
 typedef struct {
 	u8 *mem;

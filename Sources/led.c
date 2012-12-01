@@ -46,11 +46,11 @@ struct LEDBlink
 	u8 blink_dim_off;
 	u8 dim_end;
 	rti_time blink_t_on;
-	rti_time blink_t_off;	
-	timer_id blink_func;
-	timer_id stop_func;
+	rti_id blink_t_off;	
+	rti_id blink_func;
+	rti_id stop_func;
 	
-	timer_id fade_func;
+	rti_id fade_func;
 	u8 fade_dir;
 };
 

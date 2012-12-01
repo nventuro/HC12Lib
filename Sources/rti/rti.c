@@ -1,210 +1,121 @@
-/*
- * rti.c
- * 
- * Control de la RTI
- * Lab de micros - 2012 - Grupo X
- *
- */
-
+#include <mc9s12xdp512.h>
 #include "rti.h"
-#include "../derivative.h"
-#include "../common.h"
 
-#define RTI_DIV (0x29)
-
-#ifdef DEBUG
-
-#define RTI_DEBUG_DD DDRE_DDRE3
-#define RTI_DEBUG_PIN PORTE_PE3
-
-#define RTI_DBG_INIT() (RTI_DEBUG_DD = 1)
-#define RTI_DBG_ENTER() (RTI_DEBUG_PIN = 1)
-#define RTI_DBG_LEAVE() (RTI_DEBUG_PIN = 0)
-
-#else /* not DEBUG*/
-
-#define RTI_DBG_INIT()
-#define RTI_DBG_ENTER()
-#define RTI_DBG_LEAVE()
-
-#endif /*DEBUG*/
-
-//#ifdef RTI_COMPAT
+#define RTI_PRESCALER (0x29)
+#define RTI_SETPRESCALER(presc) (RTICTL = presc)
+#define RTI_ENABLE_INTERRUPTS() (CRGINT_RTIE = 1)
+#define RTI_CLEAR_FLAG() (CRGFLG_RTIF = 1)
 
 #define RTI_MAX_FCNS 20
 
+#define RTI_IS_VALID_ID(id) (((id >= 0) && (id < RTI_MAX_FCNS)) ? _TRUE : _FALSE)
+
 struct rti_cb {
 	rti_time period;
-	rti_time cnt;
-	rti_time (*f)(void *, rti_time);
-	int protect;
+	rti_time count;
+	rti_ptr callback;
+	s8 protect;
 	void *data;
 };
 
-static struct rti_cb rti_tbl[RTI_MAX_FCNS];
+bool rti_isInit = _FALSE;
 
-//#endif /*RTI_COMPAT */
+struct rti_cb rti_tbl[RTI_MAX_FCNS];
 
-//extern struct rti_srv *rti_srvs;
-
-/* ****** ** IMPORTANTE * ***** */
-void rti_reenable(void)
-{
-	CRGFLG_RTIF = 1;
-}
-
-/* ****** ** ---------- * ****** */
-
-/*
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-***
-*/
 
 void rti_init()
 {
-	int i;
+	rti_id i;
+	if (rti_isInit == _TRUE)
+		return;
 	
-	RTI_DBG_INIT();
+	rti_isInit = _TRUE;	
 	
-//#ifdef RTI_COMPAT
 	for (i = 0; i < RTI_MAX_FCNS; i++)
-		rti_tbl[i].f = NULL;
-//#endif /*RTI_COMPAT */
+		rti_tbl[i].callback = NULL;
 	
-	RTICTL = RTI_DIV;
-	CRGINT_RTIE = 1;
-	rti_reenable();
+	RTI_SETPRESCALER (RTI_PRESCALER);
+	RTI_ENABLE_INTERRUPTS();
+	RTI_CLEAR_FLAG();
+	
+	return;
 }
 
-/*
- *
-**
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*/
 
-//#ifdef RTI_COMPAT
-timer_id rti_register2(rti_time (*f)(void *, rti_time), void *data, 
-				rti_time period, rti_time delay, int protect)
+rti_id rti_register (rti_ptr callback, void *data, rti_time period, rti_time delay)
 {
-	int i;
-	
-	for (i = 0; i < RTI_MAX_FCNS; i++) {
-		if (rti_tbl[i].f == NULL) {
-			rti_tbl[i].f = f;
+	return rti_register2(callback, data, period, delay, RTI_DEFAULT_PROTECT);
+}
+
+
+rti_id rti_register2(rti_ptr callback, void *data, rti_time period, rti_time delay, s8 protect)
+{
+	rti_id i;
+	for (i = 0; i < RTI_MAX_FCNS; i++) 
+	{
+		if (rti_tbl[i].callback == NULL) 
+		{
+			rti_tbl[i].callback = callback;
 			rti_tbl[i].data = data;
 			rti_tbl[i].period = period;
 			rti_tbl[i].protect = protect;
-			rti_tbl[i].cnt = delay;
+			rti_tbl[i].count = delay;
 			break;
 		}
 	}
 		
 	if (i == RTI_MAX_FCNS)
-		i = -E_NOMEM;
+		i = RTI_INVALID_ID;
 	
 	return i;
 }
 
-timer_id rti_register(rti_time (*f)(void *, rti_time), void *data, 
-						rti_time period, rti_time delay)
-{
-	return rti_register2(f, data, period, delay, RTI_DEFAULT_PROTECT);
-}
 
-rti_time rti_set_period(int n, rti_time period)
+void rti_set_period(rti_id id, rti_time period)
 {
-	rti_time old_p = rti_tbl[n].period;
+	if (!RTI_IS_VALID_ID(id))
+		return;
 	
-	rti_tbl[n].period = period;
+	rti_tbl[id].period = period;
 	
-	return old_p;
+	return;
 }
 
-void rti_cancel(timer_id n)
+
+void rti_cancel(rti_id id)
 {
-	rti_tbl[n].protect = RTI_NORMAL;
-	rti_tbl[n].cnt = RTI_CANCEL;
+	if (!RTI_IS_VALID_ID(id))
+		return;
+	
+	rti_tbl[id].protect = RTI_NORMAL;
+	rti_tbl[id].count = RTI_CANCEL;
 }
 
-//#endif /*RTI_COMPAT */
 
 void interrupt rti_srv(void)
 {
-	int i;
-
-	RTI_DBG_ENTER();
-
-//#ifdef RTI_COMPAT
-	for (i = 0; i < RTI_MAX_FCNS; i++) {
-		if (rti_tbl[i].f != NULL) {
-			if (rti_tbl[i].cnt == RTI_AUTOCANCEL) {
+	rti_id i;
+	for (i = 0; i < RTI_MAX_FCNS; i++) 
+	{
+		if (rti_tbl[i].callback != NULL) 
+		{
+			if (rti_tbl[i].count == RTI_AUTOCANCEL) 
+			{
 				if (!rti_tbl[i].protect == RTI_PROTECT)
-					rti_tbl[i].f = NULL;
-			} else {
-				if(!(--rti_tbl[i].cnt)) {
-					rti_tbl[i].period = rti_tbl[i].f(rti_tbl[i].data, rti_tbl[i].period);
-					rti_tbl[i].cnt = rti_tbl[i].period;
+					rti_tbl[i].callback = NULL;
+			} 
+			else 
+			{
+				if((--rti_tbl[i].count) == 0) 
+				{
+					rti_tbl[i].period = rti_tbl[i].callback(rti_tbl[i].data, rti_tbl[i].period);
+					rti_tbl[i].count = rti_tbl[i].period;
 				}
 			}
 		}
 	}
-//#endif /*RTI_COMPAT */
-/*
 
-*/
-
-	RTI_DBG_LEAVE();
-	rti_reenable();
-}
-
-/* funciones convenientes */
-
-rti_time flagger(void *flag, rti_time pw)
-{
-	*((u8*)flag) = 1;
+	RTI_CLEAR_FLAG();
 	
-	return pw;
+	return;
 }

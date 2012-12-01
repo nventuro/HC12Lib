@@ -36,13 +36,9 @@ typedef union {
 #define NULL ((void*)0)
 #endif
 
-#define DIVUP(a,b) (((a)/(b))+1) // ceil(a/b)
-#define DIVOFF(a, b) ((a+b)/b)
+#define DIV_CEIL(a,b) (((a)/(b))+1) // ceil(a/b)
 
 #define BOOL(a) ((a)?1:0)
-
-enum {E_OK, E_NOMEM, E_BADCFG, E_GRAPHIC, E_DONEHELP, E_BADARGS, E_NOTREADY,
-					E_TIMEOUT, E_OTHER, N_ECODES}; 
 
 #define SUCCESS (-E_OK)
 

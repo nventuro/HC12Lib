@@ -1,17 +1,11 @@
-/* rti.h
- */
-
-#ifndef __RTI_H__
-#define __RTI_H__
+#ifndef _RTI_H
+#define _RTI_H
 
 #include "common.h"
 
-//#define RTI_COMPAT
+#define RTI_FREQ 781 // Hz
+#define RTI_PER (1.0/RTI_FREQ) // seconds
 
-#define RTI_FREQ 781 /*Hz*/
-#define RTI_PER (1.0/RTI_FREQ) /*ms */
-
-//#ifdef RTI_COMPAT
 
 #define RTI_ALWAYS 1
 #define RTI_ONCE 0
@@ -20,48 +14,18 @@
 #define RTI_NOW 1
 #define RTI_INVALID_ID (-1)
 
-//#endif /* RTI_COMPAT */
-
-#define RTI_MS2PERIOD(ms) ( DIVUP(((long long)ms)*RTI_FREQ, 1000))
-
-//#ifdef RTI_COMPAT
+#define RTI_MS2PERIOD(ms) (DIV_CEIL( (((u32)ms) > 0 ? ms : 0) * RTI_FREQ, 1000 ))
 
 enum {RTI_NORMAL, RTI_PROTECT};
 #define RTI_DEFAULT_PROTECT RTI_NORMAL
 
-//#endif /* RTI_COMPAT */
-
-typedef s16 rti_time;
-typedef int timer_id;
-/* */
-
-/*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*/
+typedef u16 rti_time;
+typedef s8 rti_id;
+typedef rti_time (*rti_ptr) (void *data, rti_time period);
 
 void rti_init(void);
 
-/*
-*
-*/
-
-//#ifdef RTI_COMPAT
-
-timer_id rti_register(rti_time (*f)(void *, rti_time), void *data, 
-					rti_time period, rti_time delay);
+rti_id rti_register(rti_ptr callback, void *data, rti_time period, rti_time delay);
 	/* Registra una función 'f' para que se corra a partir del un retardo
 	 * inicial 'delay', y a partir de alli, cada 'period'.
 	 * Period puede ser un tiempo MAYOR QUE CERO, RTI_ALWAYS para que se
@@ -80,33 +44,21 @@ timer_id rti_register(rti_time (*f)(void *, rti_time), void *data,
 	 * 	Devolver RTI_CANCEL, para cancelarse.
 	 */
 
-timer_id rti_register2(rti_time (*f)(void *, rti_time), void *data, 
-				rti_time period, rti_time delay, int protect);
+rti_id rti_register2(rti_ptr callback, void *data, rti_time period, rti_time delay, s8 protect);
 	/* Esta función es como rti_register, con la diferencia que, en caso de
 	 * auto-cancelación, si 'protect' está en RTI_PROTECT, el timer queda en
 	 * la tabla (inactivo) hasta que el usuario le da un rti_cancel
 	 */
 	
-rti_time rti_set_period(int n, rti_time period);
-	/* n : id del timer, period: nuevo periodo */
+void rti_set_period(rti_id id, rti_time period);
+
 	
-void rti_cancel(timer_id n);
+void rti_cancel(rti_id n);
 	/* Cancelar un timer que ya está cancelado nos es seguro
 	 * La excepción es si fue una auto-cancelación y el timer tenía el
 	 * atributo 'protect' en RTI_PROTECT */
 
-//#endif /* RTI_COMPAT */
-
 extern void interrupt rti_srv(void);
 
-//#ifdef RTI_COMPAT
 
-rti_time flagger(void *flag, rti_time pw);
-	/* levata un flag despues de tanto tiempo (lo pone en 1)
-	 * Ejemplo rti_register(flagger, &flag, RTI_ONCE, DELAY);
-	 */
-//#endif /* RTI_COMPAT */
-
-/* */
-
-#endif /* __RTI_H__ */
+#endif
