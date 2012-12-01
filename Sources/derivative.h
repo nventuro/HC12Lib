@@ -7,4 +7,3 @@
 #include <mc9s12xdp512.h>
 
 #pragma LINK_INFO DERIVATIVE "mc9s12xdp512"
-

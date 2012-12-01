@@ -40,20 +40,12 @@ typedef union {
 
 #define BOOL(a) ((a)?1:0)
 
-#define SUCCESS (-E_OK)
+#define BIT(n) (1<<(n))
 
 
-#define BITx(n) (1<<(n))
-#define BIT(v, i) ((v) & BITx(i))
-#define _BYTE(n,b) (BITx(n)*BOOL(b))
-#define BYTE(b7,b6,b5,b4,b3,b2,b1,b0) ( _BYTE(7,(b7)) | _BYTE(6,(b6)) | \
-_BYTE(5,(b6)) | _BYTE(4,(b4)) | _BYTE(3,(b3)) | _BYTE(2,(b2)) | _BYTE(1, (b1))\
-| _BYTE(0, (b0)))
+// Monitor IO
 
-#define BSET(p, b, v) ((p) = (((p) & ~BITx(b)) | (BITx(b) & FBOOL(v))))
-
-#define MASKED_WRITE(p, m, d) ((p) = (((p) & ~(m)) | ((d) & (m))))
-
-#define PORTDD_OUT 1
+void TERMIO_PutChar(char ch);
+char TERMIO_GetChar(void);
 
 #endif

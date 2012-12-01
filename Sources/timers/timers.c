@@ -517,7 +517,7 @@ void tim_disableInterrupts(s8 timId)
 bool tim_areInterruptsEnabled (s8 timId)
 {
 	if(!IS_VALID_ID(timId))
-		return;
+		return _FALSE;
 	
 	switch (timId)
 	{
@@ -563,7 +563,7 @@ bool tim_areInterruptsEnabled (s8 timId)
 				return _TRUE;
 	}
 			
-	return;
+	return _FALSE;
 }
 
 void tim_enableOvfInterrupts(s8 timId)
@@ -622,8 +622,6 @@ u16 tim_getValue(s8 timId)
 			return TC6;
 		case 7:
 			return TC7;
-		default:
-			return 0; // Nunca pasa
 	}
 }
 

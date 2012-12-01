@@ -1,6 +1,5 @@
 //Vectores de interrupción para MonS12X
 
-#include "config.h"
 #include "rti.h"
 #include "iic.h"
 #include "timers.h"
@@ -9,7 +8,7 @@
 #define NOTUSED ((const *)0xFFFF)
 #endif
 
-extern void _Startup(); /* startup routine */
+extern void _Startup(); /* Startup routine */
 extern void ISR_sci();
 
 #pragma CODE_SEG __NEAR_SEG NON_BANKED /* Interrupt section for this module. Placement will be in NON_BANKED area. */
