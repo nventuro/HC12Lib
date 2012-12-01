@@ -31,7 +31,7 @@ enum {RTI_NORMAL, RTI_PROTECT};
 
 //#endif /* RTI_COMPAT */
 
-typedef uint rti_time ;
+typedef s16 rti_time;
 typedef int timer_id;
 /* */
 

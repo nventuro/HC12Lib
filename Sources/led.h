@@ -10,7 +10,7 @@
 #define __LED_H__
 
 #include "common.h"
-#include "rti/rtix.h"
+#include "rti.h"
 
 #define LED_ON	255
 #define LED_OFF	0

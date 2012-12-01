@@ -9,7 +9,7 @@
 #include <limits.h>
 #include "derivative.h"
 #include "led.h"
-#include "rti/rtix.h"
+#include "rti.h"
 
 #define DIM_BITS 3
 #define DIM_MIN 0
@@ -71,7 +71,7 @@ void led_init(void)
 	led_fancy_cfg.stop_func = RTI_INVALID_ID;
 		
 	//rti_register(led_pwm_ctrl,NULL, RTI_ALWAYS, RTI_NOW);
-	rti_enable(SRV_LED_PWM, 1);
+	//rti_enable(SRV_LED_PWM, 1);
 }
 
 void led_up()

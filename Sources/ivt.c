@@ -1,7 +1,7 @@
 //Vectores de interrupción para MonS12X
 
 #include "config.h"
-#include "rtix.h"
+#include "rti.h"
 #include "iic.h"
 #include "timers.h"
 

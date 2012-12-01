@@ -1,0 +1,49 @@
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+g
+load ram.s19
+help
+g 1000 
+load ram.s19
+g 1000 
+load ram.s19
