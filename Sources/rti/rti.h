@@ -3,16 +3,14 @@
 
 #include "common.h"
 
-#define RTI_FREQ 781 // Hz
+#define RTI_FREQ 781 // Hz. In order to change this value, RTI_PRESCALER in rti.c must be changed and recompiled.
 #define RTI_PER (1.0/RTI_FREQ) // seconds
 
 typedef u16 rti_time; // An integer multiple of RTI_PER (in miliseconds)
 
-#define RTI_MS2PERIOD(ms) (DIV_CEIL( (((u32)ms) > 0 ? ms : 0) * RTI_FREQ, 1000 )) // Converts miliseconds to rti_time
+#define RTI_MS2PERIOD(ms) (DIV_CEIL((((u32)ms)>0?ms:0)*RTI_FREQ,1000)) // Converts miliseconds to rti_time
 
 typedef s8 rti_id; // An id for a registered callback
-
-#define RTI_INVALID_ID (-1) // Invalid means no registered function has that id
 
 typedef void (*rti_ptr) (void *data, rti_time period, rti_id id); // A function callback for registering in the RTI
 
@@ -25,6 +23,9 @@ rti_id rti_Register(rti_ptr callback, void *data, rti_time period, rti_time dela
 // period and delay can be set using RTI_MS2DIV(timeInMiliseconds).
 // When callback is called, it receives data, period and its rti_id. 
 // callback is called with interrupts inhibited and MUST NOT disinhibit them.
+// Returns the rti_id of the registed callback. 
+
+#define RTI_INVALID_ID (-1) // Returned by rti_Register if the RTI memory is full and callback registration can't be done.
 	 
 #define RTI_ALWAYS 1 // period for a function that will always be called (its frequency is RTI_FREQ)
 #define RTI_ONCE 0 // delay for a function that will only be called once (in this case, period is irrelevant)

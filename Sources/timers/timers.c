@@ -92,20 +92,6 @@ void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, u8 i)
 		SET_TIOS_IC(i);
 }
 
-s8 tim_safeGetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf) 
-{
-	u8 i;
-	for (i = 0; i < TIM_AMOUNT; i++)
-		if (tim_data.ovfArray[i] == ovf) // No anota dos veces el ovf
-		{
-			ovf = NULL;
-			break;
-		}
-
-	return tim_getTimer(reqType, cb, ovf);	
-}
-
-
 void tim_freeTimer(s8 timId)
 {
 	if (!IS_VALID_ID(timId))

@@ -3,44 +3,53 @@
 
 #include "common.h"
 
-#define INVALID_TIMER (-1)
-
 typedef enum
 {
-	TIM_IC,
-	TIM_OC
+	TIM_IC,	// Input Capture
+	TIM_OC	// Output Compare
 } tim_type;
 
-typedef void (*tim_ptr) (void);
+typedef void (*tim_ptr) (void); // A function callback for registering in a timer
+
+typedef s8 tim_id; // An id for a registered callback
 
 void tim_init (void);
+// Initializes the Timer module. This requires no other modules to work.
 
-s8 tim_getTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf);
-s8 tim_safeGetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf);
-s8 tim_getSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, u8 timNumber);
+tim_id tim_getTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow);
+// Sets one of the module's free timers as reqType. 
+// When the timer interrupts, callback is called. 
+// When the global timer (TCNT) overflows, overflow is called.
+// callback and overflow are called with interrupts inhibited and MUST NOT disinhibit them.
+// Returns the tim_id of the assigned timer. 
 
-void tim_freeTimer(s8 timId);
+tim_id tim_getSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, u8 timNumber);
+// Same as tim_GetTimer, but instead of assigning a random timer, timNUmberisUsed.
 
-void tim_setFallingEdge(s8 timId);
-void tim_setRisingEdge(s8 timId);
-void tim_setBothEdge(s8 timId);
+#define TIM_INVALID_ID (-1) // Returned by tim_GetTimer if all timers are being used, or by tim_GetSpecificTimer if timNumber is being used.
 
-void tim_setOutputHigh(s8 timId);
-void tim_setOutputLow(s8 timId);
-void tim_setOutputToggle(s8 timId);
-void tim_disconnectOutput(s8 timId);
+void tim_freeTimer(tim_id id);
 
-bool tim_areInterruptsEnabled (s8 timId);
-void tim_enableInterrupts(s8 timId);
-void tim_disableInterrupts(s8 timId);
+void tim_setFallingEdge(tim_id id);
+void tim_setRisingEdge(tim_id id);
+void tim_setBothEdge(tim_id id);
 
-void tim_enableOvfInterrupts(s8 timId);
-void tim_disableOvfInterrupts(s8 timId);
+void tim_setOutputHigh(tim_id id);
+void tim_setOutputLow(tim_id id);
+void tim_setOutputToggle(tim_id id);
+void tim_disconnectOutput(tim_id id);
 
-void tim_clearFlag(s8 timId);
+bool tim_areInterruptsEnabled (tim_id id);
+void tim_enableInterrupts(tim_id id);
+void tim_disableInterrupts(tim_id id);
 
-u16 tim_getValue(s8 timId);
-void tim_setValue(s8 timId, u16 value);
+void tim_enableOvfInterrupts(tim_id id);
+void tim_disableOvfInterrupts(tim_id id);
+
+void tim_clearFlag(tim_id id);
+
+u16 tim_getValue(tim_id id);
+void tim_setValue(tim_id id, u16 value);
 
 u16 tim_getGlobalValue(void);
 

@@ -1,2 +1,2 @@
-- Timer data (tim_data) is uninitialized (tim_data.init is uninitialized, should be _FALSE)
 - I2C is not safe: SafeCLI and SafeSEI calls are missing. Same for RTC and RTI.
+- A template project.
