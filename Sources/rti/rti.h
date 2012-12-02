@@ -3,7 +3,8 @@
 
 #include "common.h"
 
-#define RTI_FREQ 781 // Hz. In order to change this value, RTI_PRESCALER in rti.c must be changed and recompiled.
+#define RTI_FREQ 781 // Hz. 
+// In order to change this value, RTI_PRESCALER in rti.c must be changed and recompiled.
 #define RTI_PER (1.0/RTI_FREQ) // seconds
 
 typedef u16 rti_time; // An integer multiple of RTI_PER (in miliseconds)
@@ -16,7 +17,7 @@ typedef void (*rti_ptr) (void *data, rti_time period, rti_id id); // A function 
 
 
 void rti_Init(void);
-// Initializes the RTI module. This requires no other modules to work.
+// Initializes the RTI module. This requires no other modules to work, and doesn't require interrupts to be enabled.
 
 rti_id rti_Register(rti_ptr callback, void *data, rti_time period, rti_time delay);
 // Registers a callback function to be called periodically every period*RTI_PER seconds, after an initial delay of delay*RTI_PER seconds.
@@ -31,10 +32,13 @@ rti_id rti_Register(rti_ptr callback, void *data, rti_time period, rti_time dela
 #define RTI_ONCE 0 // delay for a function that will only be called once (in this case, period is irrelevant)
 #define RTI_NOW 1 // delay for a function that will be called for the first time as soon as the RTI interrupts the CPU
 
-void rti_SetPeriod(rti_id id, rti_time period); // Changes the period of a registered rti_id
+void rti_SetPeriod(rti_id id, rti_time period); 
+// Changes the period of a registered rti_id
 
-void rti_Cancel(rti_id n); // Cancels a registered rti_id
+void rti_Cancel(rti_id n); 
+// Cancels a registered rti_id
 
-extern void interrupt rti_Service(void); // Interrupt function. To be registered in the IVT.
+extern void interrupt rti_Service(void); 
+// Interrupt function. To be registered in the IVT under rti.
 
 #endif

@@ -49,7 +49,7 @@ struct
 	u8 startUpStage;
 	s8 timId;
 	rtc_ptr extCB;
-} rtc_intData = {_FALSE, 0, INVALID_TIMER, NULL};
+} rtc_intData = {_FALSE, 0, TIM_INVALID_ID, NULL};
 
 
 void rtc_startUp (void);

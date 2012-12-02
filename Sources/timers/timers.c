@@ -3,7 +3,7 @@
 
 #define TIM_AMOUNT 8
 
-#define	TIMER_PRESCALER 2 // Overflow cada 6.5ms, resolución de 100ns
+#define	TIMER_PRESCALER 2 // 40MHz / 2^2 = 10 MHz. The TCNT resolution is 100ns.
 
 #define SET_TIOS_OC(i) (TIOS |= (1 << i))
 #define SET_TIOS_IC(i) (TIOS &= ~(1 << i))
@@ -11,48 +11,49 @@
 #define IS_VALID_ID(id) (((id >= 0) && (id < TIM_AMOUNT)) ? _TRUE : _FALSE)
 
 struct {
-	bool init;
 	bool isTimerUsed[TIM_AMOUNT];
 	tim_ptr cbArray[TIM_AMOUNT];
 	tim_ptr ovfArray[TIM_AMOUNT];
 	bool ovfIntEnable[TIM_AMOUNT];
 } tim_data;
 
+bool tim_isInit = _FALSE;
 
-void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, u8 i);
-tim_type tim_getType(u8 id);
+void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i);
+tim_type tim_getType(tim_id id);
 
 
 void tim_init(void) 
 {
-	if (tim_data.init == _FALSE)
-	{
-		u8 i;
+	tim_id i;
+	
+	if (tim_isInit == _TRUE)
+		return;
+	
+	tim_isInit = _TRUE;
+	
 
-		tim_data.init = _TRUE;
-		
-		for (i = 0; i < TIM_AMOUNT; i++)
-		{
-			tim_data.isTimerUsed[i] = _FALSE;
-			tim_data.cbArray[i] = NULL;		
-			tim_data.ovfArray[i] = NULL;
-			tim_data.ovfIntEnable[i] = _FALSE;
-			tim_disableInterrupts(i);			
-		}
-		
-		TIOS = 0x00; //Todos son Input capture
-		TSCR2 |= TIMER_PRESCALER;	// Overflow cada 6.5ms, resolución de 100ns
-		TSCR2_TOI = 1;
-		TSCR1_TEN = 1; // Enable		
+	for (i = 0; i < TIM_AMOUNT; i++)
+	{
+		tim_data.isTimerUsed[i] = _FALSE;
+		tim_data.cbArray[i] = NULL;		
+		tim_data.ovfArray[i] = NULL;
+		tim_data.ovfIntEnable[i] = _FALSE;
+		tim_disableInterrupts(i);			
 	}
+	
+	TIOS = 0x00; // Input Capture by default
+	TSCR2 |= TIMER_PRESCALER;
+	TSCR2_TOI = 1;
+	TSCR1_TEN = 1;		
 	
 	return;
 }
 
-s8 tim_getSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, u8 timNumber)
+tim_id tim_getSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 {
 	if (tim_data.isTimerUsed[timNumber] == _TRUE)
-		return INVALID_TIMER;
+		return TIM_INVALID_ID;
 	
 	assignTimer(reqType, cb, ovf, timNumber);
 	
@@ -60,9 +61,9 @@ s8 tim_getSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, u8 timNumber)
 }
 
 
-s8 tim_getTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
+tim_id tim_getTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 {
-	s8 i;
+	tim_id i;
 	for (i = 0; i < TIM_AMOUNT; i++)
 		if (tim_data.isTimerUsed[i] == _FALSE)
 		{
@@ -71,12 +72,12 @@ s8 tim_getTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 		}
 		
 	if (i == TIM_AMOUNT)
-		i = INVALID_TIMER;
+		i = TIM_INVALID_ID;
 	
 	return i;	
 }
 
-void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, u8 i)
+void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i)
 {
 	tim_disableInterrupts(i);
 	tim_clearFlag(i);
@@ -92,7 +93,7 @@ void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, u8 i)
 		SET_TIOS_IC(i);
 }
 
-void tim_freeTimer(s8 timId)
+void tim_freeTimer(tim_id timId)
 {
 	if (!IS_VALID_ID(timId))
 		return;
@@ -108,13 +109,13 @@ void tim_freeTimer(s8 timId)
 	return;
 }
 
-tim_type tim_getType(u8 id)
+tim_type tim_getType(tim_id id)
 {
 	return ((TIOS & (1 << id)) ? TIM_OC : TIM_IC);
 }
 
 
-void tim_setFallingEdge(s8 timId)
+void tim_setFallingEdge(tim_id timId)
 {
 	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_OC)
 		return;
@@ -159,7 +160,7 @@ void tim_setFallingEdge(s8 timId)
 }
 
 
-void tim_setRisingEdge(s8 timId)
+void tim_setRisingEdge(tim_id timId)
 {
 	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_OC)
 		return;
@@ -204,7 +205,7 @@ void tim_setRisingEdge(s8 timId)
 }
 
 
-void tim_setBothEdge(s8 timId)
+void tim_setBothEdge(tim_id timId)
 {
 	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_OC)
 		return;
@@ -249,7 +250,7 @@ void tim_setBothEdge(s8 timId)
 }
 
 
-void tim_setOutputHigh(s8 timId)
+void tim_setOutputHigh(tim_id timId)
 {
 	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_IC)
 		return;
@@ -293,7 +294,7 @@ void tim_setOutputHigh(s8 timId)
 	return;
 }
 
-void tim_setOutputLow(s8 timId)
+void tim_setOutputLow(tim_id timId)
 {
 	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_IC)
 		return;
@@ -337,7 +338,7 @@ void tim_setOutputLow(s8 timId)
 	return;
 }
 
-void tim_setOutputToggle(s8 timId)
+void tim_setOutputToggle(tim_id timId)
 {
 	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_IC)
 		return;
@@ -382,7 +383,7 @@ void tim_setOutputToggle(s8 timId)
 }
 
 
-void tim_disconnectOutput(s8 timId)
+void tim_disconnectOutput(tim_id timId)
 {
 	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_IC)
 		return;
@@ -427,7 +428,7 @@ void tim_disconnectOutput(s8 timId)
 }
 
 
-void tim_enableInterrupts(s8 timId)
+void tim_enableInterrupts(tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return;
@@ -464,7 +465,7 @@ void tim_enableInterrupts(s8 timId)
 }
 
 
-void tim_disableInterrupts(s8 timId)
+void tim_disableInterrupts(tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return;
@@ -500,7 +501,7 @@ void tim_disableInterrupts(s8 timId)
 	return;
 }
 
-bool tim_areInterruptsEnabled (s8 timId)
+bool tim_areInterruptsEnabled (tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return _FALSE;
@@ -552,7 +553,7 @@ bool tim_areInterruptsEnabled (s8 timId)
 	return _FALSE;
 }
 
-void tim_enableOvfInterrupts(s8 timId)
+void tim_enableOvfInterrupts(tim_id timId)
 {
 	if (!IS_VALID_ID(timId))
 		return;
@@ -563,7 +564,7 @@ void tim_enableOvfInterrupts(s8 timId)
 }
 
 
-void tim_disableOvfInterrupts(s8 timId)
+void tim_disableOvfInterrupts(tim_id timId)
 {
 	if (!IS_VALID_ID(timId))
 		return;
@@ -574,7 +575,7 @@ void tim_disableOvfInterrupts(s8 timId)
 }
 
 
-void tim_clearFlag(s8 timId)
+void tim_clearFlag(tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return;
@@ -585,7 +586,7 @@ void tim_clearFlag(s8 timId)
 }
 
 
-u16 tim_getValue(s8 timId)
+u16 tim_getValue(tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return 0;
@@ -612,7 +613,7 @@ u16 tim_getValue(s8 timId)
 }
 
 
-void tim_setValue(s8 timId, u16 value)
+void tim_setValue(tim_id timId, u16 value)
 {
 	if(!IS_VALID_ID(timId))
 		return;
@@ -745,7 +746,7 @@ void interrupt tim7_srv(void)
 
 void interrupt timOvf_srv(void)
 {
-	u8 i;
+	tim_id i;
 	TFLG2_TOF = 1;
 	
 	for (i = 0; i < TIM_AMOUNT; i++)
