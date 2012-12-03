@@ -70,12 +70,12 @@ void ir_init(void)
 
 	icData.init = _TRUE;
 
-	tim_init();
+	tim_Init();
 
-	irTimers.icTimerId = tim_getSpecificTimer(TIM_IC, ir_icSrv, ir_ovfSrv, IR_IC_TIMER);
-	irTimers.ocTimerId = tim_getSpecificTimer(TIM_OC, ir_ocSrv, NULL, IR_OC_TIMER);
+	irTimers.icTimerId = tim_GetSpecificTimer(TIM_IC, ir_icSrv, ir_ovfSrv, IR_IC_TIMER);
+	irTimers.ocTimerId = tim_GetSpecificTimer(TIM_OC, ir_ocSrv, NULL, IR_OC_TIMER);
 
-	tim_enableOvfInterrupts(irTimers.icTimerId);
+	tim_EnableOvfInterrupts(irTimers.icTimerId);
 
 	cBuffer = cb_create(irBuffer, BUFF_LENGTH);
 
@@ -91,9 +91,9 @@ void resetTransmission(void)
 
 	//Las interrupciones por OC solo están habilitadas durante una transmision
 	icData.icInhibit = _FALSE;
-	tim_enableInterrupts(irTimers.icTimerId);
-	tim_setFallingEdge(irTimers.icTimerId);
-	tim_disableInterrupts(irTimers.ocTimerId);
+	tim_EnableInterrupts(irTimers.icTimerId);
+	tim_SetFallingEdge(irTimers.icTimerId);
+	tim_DisableInterrupts(irTimers.ocTimerId);
 }
 
 
@@ -101,20 +101,20 @@ void startTransmission(void)
 {
 	icData.transmitting = _TRUE;
 
-	tim_setRisingEdge(irTimers.icTimerId);
+	tim_SetRisingEdge(irTimers.icTimerId);
 
 	icData.currentBit = 14;
 	icData.receivedData = 0;
 	store_1();
 
-	icData.lastEdge = tim_getValue(irTimers.icTimerId) - HBT_TIME;	// No pasa nada aunque HBT_TIME > TC1
+	icData.lastEdge = tim_GetValue(irTimers.icTimerId) - HBT_TIME;	// No pasa nada aunque HBT_TIME > TC1
 
-	if (((s32) (tim_getValue(irTimers.icTimerId) - (s32)(HBT_TIME) )) >= 0)
+	if (((s32) (tim_GetValue(irTimers.icTimerId) - (s32)(HBT_TIME) )) >= 0)
 		icData.overflowCnt = 0;
 	else
 		icData.overflowCnt = 1;
 
-	tim_enableInterrupts(irTimers.ocTimerId);
+	tim_EnableInterrupts(irTimers.ocTimerId);
 }
 
 
@@ -148,18 +148,18 @@ void endTransmission(void)
 void ir_icSrv(void)
 {
 	icData.icInhibit = _TRUE;
-	tim_disableInterrupts(irTimers.icTimerId);
+	tim_DisableInterrupts(irTimers.icTimerId);
 
-	tim_clearFlag(irTimers.ocTimerId);
-	tim_setValue(irTimers.ocTimerId, tim_getValue(irTimers.icTimerId) + EDGE_TIME_MARGIN); //Margen por rise time lento
+	tim_ClearFlag(irTimers.ocTimerId);
+	tim_SetValue(irTimers.ocTimerId, tim_GetValue(irTimers.icTimerId) + EDGE_TIME_MARGIN); //Margen por rise time lento
 
 	if (icData.transmitting == _FALSE)
 		startTransmission();
 	else
 	{
-		u32 timeElapsed = (icData.overflowCnt * CNT_MAX + tim_getValue(irTimers.icTimerId)) - icData.lastEdge;
+		u32 timeElapsed = (icData.overflowCnt * CNT_MAX + tim_GetValue(irTimers.icTimerId)) - icData.lastEdge;
 
-		icData.lastEdge = tim_getValue(irTimers.icTimerId);
+		icData.lastEdge = tim_GetValue(irTimers.icTimerId);
 		icData.overflowCnt = 0;
 
 		if ((timeElapsed >= HBT2_MIN) && (timeElapsed < HBT2_MAX))
@@ -200,9 +200,9 @@ void ir_ocSrv(void)
     if (icData.icInhibit == _TRUE)
 	{
 	    icData.icInhibit = _FALSE;
-	    tim_clearFlag(irTimers.icTimerId);
-	    tim_enableInterrupts(irTimers.icTimerId);
-	    tim_setValue(irTimers.ocTimerId, (icData.lastEdge + RC5_TIMEOUT) - EDGE_TIME_MARGIN);
+	    tim_ClearFlag(irTimers.icTimerId);
+	    tim_EnableInterrupts(irTimers.icTimerId);
+	    tim_SetValue(irTimers.ocTimerId, (icData.lastEdge + RC5_TIMEOUT) - EDGE_TIME_MARGIN);
     }
     else
     	resetTransmission();

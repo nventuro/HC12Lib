@@ -123,15 +123,15 @@ void (* const interrupt_vector_table[])() ={
     NOTUSED,	// VECT19	spi0
     NOTUSED,	// VECT18	timpaie
     NOTUSED,	// VECT17	timpaaovf
-    timOvf_srv,	// VECT16	timovf
-    tim7_srv,	// VECT15	timch7
-    tim6_srv,	// VECT14	timch6
-    tim5_srv,	// VECT13	timch5
-    tim4_srv,	// VECT12	timch4
-    tim3_srv,	// VECT11	timch3
-    tim2_srv,	// VECT10	timch2
-    tim1_srv,	// VECT9	timch1
-    tim0_srv,	// VECT8	timch0
+    timOvf_Service,	// VECT16	timovf
+    tim7_Service,	// VECT15	timch7
+    tim6_Service,	// VECT14	timch6
+    tim5_Service,	// VECT13	timch5
+    tim4_Service,	// VECT12	timch4
+    tim3_Service,	// VECT11	timch3
+    tim2_Service,	// VECT10	timch2
+    tim1_Service,	// VECT9	timch1
+    tim0_Service,	// VECT8	timch0
     rti_Service,// VECT7	rti
     NOTUSED,	// VECT6	irq
     NOTUSED,	// VECT5	xirq

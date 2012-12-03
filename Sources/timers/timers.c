@@ -19,11 +19,11 @@ struct {
 
 bool tim_isInit = _FALSE;
 
-void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i);
-tim_type tim_getType(tim_id id);
+void tim_AssignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i);
+tim_type tim_GetType(tim_id id);
 
 
-void tim_init(void) 
+void tim_Init(void) 
 {
 	tim_id i;
 	
@@ -39,7 +39,7 @@ void tim_init(void)
 		tim_data.cbArray[i] = NULL;		
 		tim_data.ovfArray[i] = NULL;
 		tim_data.ovfIntEnable[i] = _FALSE;
-		tim_disableInterrupts(i);			
+		tim_DisableInterrupts(i);			
 	}
 	
 	TIOS = 0x00; // Input Capture by default
@@ -50,24 +50,24 @@ void tim_init(void)
 	return;
 }
 
-tim_id tim_getSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
+tim_id tim_GetSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 {
 	if (tim_data.isTimerUsed[timNumber] == _TRUE)
 		return TIM_INVALID_ID;
 	
-	assignTimer(reqType, cb, ovf, timNumber);
+	tim_AssignTimer(reqType, cb, ovf, timNumber);
 	
 	return timNumber;
 }
 
 
-tim_id tim_getTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
+tim_id tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 {
 	tim_id i;
 	for (i = 0; i < TIM_AMOUNT; i++)
 		if (tim_data.isTimerUsed[i] == _FALSE)
 		{
-			assignTimer(reqType, cb, ovf, i);
+			tim_AssignTimer(reqType, cb, ovf, i);
 			break;
 		}
 		
@@ -77,10 +77,10 @@ tim_id tim_getTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 	return i;	
 }
 
-void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i)
+void tim_AssignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i)
 {
-	tim_disableInterrupts(i);
-	tim_clearFlag(i);
+	tim_DisableInterrupts(i);
+	tim_ClearFlag(i);
 	
 	tim_data.isTimerUsed[i] = _TRUE;
 	tim_data.cbArray[i] = cb;
@@ -93,13 +93,13 @@ void assignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i)
 		SET_TIOS_IC(i);
 }
 
-void tim_freeTimer(tim_id timId)
+void tim_FreeTimer(tim_id timId)
 {
 	if (!IS_VALID_ID(timId))
 		return;
 	
-	tim_disableInterrupts(timId);
-	tim_clearFlag(timId);
+	tim_DisableInterrupts(timId);
+	tim_ClearFlag(timId);
 	
 	tim_data.isTimerUsed[timId] = _FALSE;
 	tim_data.ovfIntEnable[timId] = _FALSE;
@@ -109,15 +109,15 @@ void tim_freeTimer(tim_id timId)
 	return;
 }
 
-tim_type tim_getType(tim_id id)
+tim_type tim_GetType(tim_id id)
 {
 	return ((TIOS & (1 << id)) ? TIM_OC : TIM_IC);
 }
 
 
-void tim_setFallingEdge(tim_id timId)
+void tim_SetFallingEdge(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_OC)
+	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_OC)
 		return;
 	
 	switch (timId)
@@ -160,9 +160,9 @@ void tim_setFallingEdge(tim_id timId)
 }
 
 
-void tim_setRisingEdge(tim_id timId)
+void tim_SetRisingEdge(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_OC)
+	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_OC)
 		return;
 	
 	switch (timId)
@@ -205,9 +205,9 @@ void tim_setRisingEdge(tim_id timId)
 }
 
 
-void tim_setBothEdge(tim_id timId)
+void tim_SetBothEdge(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_OC)
+	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_OC)
 		return;
 	
 	switch (timId)
@@ -250,9 +250,9 @@ void tim_setBothEdge(tim_id timId)
 }
 
 
-void tim_setOutputHigh(tim_id timId)
+void tim_SetOutputHigh(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_IC)
+	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_IC)
 		return;
 	
 	switch (timId)
@@ -294,9 +294,9 @@ void tim_setOutputHigh(tim_id timId)
 	return;
 }
 
-void tim_setOutputLow(tim_id timId)
+void tim_SetOutputLow(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_IC)
+	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_IC)
 		return;
 	
 	switch (timId)
@@ -338,9 +338,9 @@ void tim_setOutputLow(tim_id timId)
 	return;
 }
 
-void tim_setOutputToggle(tim_id timId)
+void tim_SetOutputToggle(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_IC)
+	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_IC)
 		return;
 	
 	switch (timId)
@@ -383,9 +383,9 @@ void tim_setOutputToggle(tim_id timId)
 }
 
 
-void tim_disconnectOutput(tim_id timId)
+void tim_DisconnectOutput(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_getType(timId) == TIM_IC)
+	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_IC)
 		return;
 	
 	switch (timId)
@@ -428,7 +428,7 @@ void tim_disconnectOutput(tim_id timId)
 }
 
 
-void tim_enableInterrupts(tim_id timId)
+void tim_EnableInterrupts(tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return;
@@ -465,7 +465,7 @@ void tim_enableInterrupts(tim_id timId)
 }
 
 
-void tim_disableInterrupts(tim_id timId)
+void tim_DisableInterrupts(tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return;
@@ -501,7 +501,7 @@ void tim_disableInterrupts(tim_id timId)
 	return;
 }
 
-bool tim_areInterruptsEnabled (tim_id timId)
+bool tim_AreInterruptsEnabled (tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return _FALSE;
@@ -553,7 +553,7 @@ bool tim_areInterruptsEnabled (tim_id timId)
 	return _FALSE;
 }
 
-void tim_enableOvfInterrupts(tim_id timId)
+void tim_EnableOvfInterrupts(tim_id timId)
 {
 	if (!IS_VALID_ID(timId))
 		return;
@@ -564,7 +564,7 @@ void tim_enableOvfInterrupts(tim_id timId)
 }
 
 
-void tim_disableOvfInterrupts(tim_id timId)
+void tim_DisableOvfInterrupts(tim_id timId)
 {
 	if (!IS_VALID_ID(timId))
 		return;
@@ -575,7 +575,7 @@ void tim_disableOvfInterrupts(tim_id timId)
 }
 
 
-void tim_clearFlag(tim_id timId)
+void tim_ClearFlag(tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return;
@@ -586,7 +586,7 @@ void tim_clearFlag(tim_id timId)
 }
 
 
-u16 tim_getValue(tim_id timId)
+u16 tim_GetValue(tim_id timId)
 {
 	if(!IS_VALID_ID(timId))
 		return 0;
@@ -613,7 +613,7 @@ u16 tim_getValue(tim_id timId)
 }
 
 
-void tim_setValue(tim_id timId, u16 value)
+void tim_SetValue(tim_id timId, u16 value)
 {
 	if(!IS_VALID_ID(timId))
 		return;
@@ -650,15 +650,15 @@ void tim_setValue(tim_id timId, u16 value)
 }
 
 
-u16 tim_getGlobalValue(void)
+u16 tim_GetGlobalValue(void)
 {
 	return TCNT;
 }
 
 
-void interrupt tim0_srv(void)
+void interrupt tim0_Service(void)
 {
-	tim_clearFlag(0);
+	tim_ClearFlag(0);
 
 	if (tim_data.cbArray[0] != NULL)
 		(*tim_data.cbArray[0])();
@@ -667,9 +667,9 @@ void interrupt tim0_srv(void)
 }
 
 
-void interrupt tim1_srv(void)
+void interrupt tim1_Service(void)
 {
-	tim_clearFlag(1);
+	tim_ClearFlag(1);
 
 	if (tim_data.cbArray[1] != NULL)
 		(*tim_data.cbArray[1])();
@@ -678,9 +678,9 @@ void interrupt tim1_srv(void)
 }
 
 
-void interrupt tim2_srv(void)
+void interrupt tim2_Service(void)
 {
-	tim_clearFlag(2);
+	tim_ClearFlag(2);
 
 	if (tim_data.cbArray[2] != NULL)
 		(*tim_data.cbArray[2])();
@@ -689,9 +689,9 @@ void interrupt tim2_srv(void)
 }
 
 
-void interrupt tim3_srv(void)
+void interrupt tim3_Service(void)
 {
-	tim_clearFlag(3);
+	tim_ClearFlag(3);
 
 	if (tim_data.cbArray[3] != NULL)
 		(*tim_data.cbArray[3])();
@@ -700,9 +700,9 @@ void interrupt tim3_srv(void)
 }
 
 
-void interrupt tim4_srv(void)
+void interrupt tim4_Service(void)
 {
-	tim_clearFlag(4);
+	tim_ClearFlag(4);
 
 	if (tim_data.cbArray[4] != NULL)
 		(*tim_data.cbArray[4])();
@@ -711,9 +711,9 @@ void interrupt tim4_srv(void)
 }
 
 
-void interrupt tim5_srv(void)
+void interrupt tim5_Service(void)
 {
-	tim_clearFlag(5);
+	tim_ClearFlag(5);
 
 	if (tim_data.cbArray[5] != NULL)
 		(*tim_data.cbArray[5])();
@@ -722,9 +722,9 @@ void interrupt tim5_srv(void)
 }
 
 
-void interrupt tim6_srv(void)
+void interrupt tim6_Service(void)
 {
-	tim_clearFlag(6);
+	tim_ClearFlag(6);
 
 	if (tim_data.cbArray[6] != NULL)
 		(*tim_data.cbArray[6])();
@@ -733,9 +733,9 @@ void interrupt tim6_srv(void)
 }
 
 
-void interrupt tim7_srv(void)
+void interrupt tim7_Service(void)
 {
-	tim_clearFlag(7);
+	tim_ClearFlag(7);
 
 	if (tim_data.cbArray[7] != NULL)
 		(*tim_data.cbArray[7])();
@@ -744,7 +744,7 @@ void interrupt tim7_srv(void)
 }
 
 
-void interrupt timOvf_srv(void)
+void interrupt timOvf_Service(void)
 {
 	tim_id i;
 	TFLG2_TOF = 1;
