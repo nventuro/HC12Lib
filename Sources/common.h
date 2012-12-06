@@ -48,4 +48,14 @@ typedef union {
 void TERMIO_PutChar(char ch);
 char TERMIO_GetChar(void);
 
+
+// Interrupt inhibiting
+
+bool SafeSei(void); 
+// Inhibits interrupts and returns the value of the I bit before performing this action. To be used in conjunction with SafeCli().
+
+#define SafeCli(interruptsWereEnabled) do{if (interruptsWereEnabled) {_asm cli;}} while(0)
+// Disinhibits interrupts if they were previously uninhibited. This function receives the value returned by SafeSei();
+
+
 #endif
