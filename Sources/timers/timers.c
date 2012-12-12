@@ -3,7 +3,7 @@
 
 #define TIM_AMOUNT 8
 
-#define	TIMER_PRESCALER 2 // 40MHz / 2^2 = 10 MHz. The TCNT resolution is 100ns.
+#define	TIMER_PRESCALER 6 // 40MHz / 2^6 = 625 kHz. The TCNT resolution is 1.6us.
 
 #define SET_TIOS_OC(i) (TIOS |= (1 << i))
 #define SET_TIOS_IC(i) (TIOS &= ~(1 << i))
@@ -50,7 +50,7 @@ void tim_Init(void)
 	return;
 }
 
-tim_id tim_GetSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
+tim_id tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 {
 	if (tim_data.isTimerUsed[timNumber] == _TRUE)
 		return TIM_INVALID_ID;
@@ -61,7 +61,7 @@ tim_id tim_GetSpecificTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id ti
 }
 
 
-tim_id tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
+tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 {
 	tim_id i;
 	for (i = 0; i < TIM_AMOUNT; i++)

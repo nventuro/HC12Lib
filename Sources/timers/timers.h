@@ -3,8 +3,8 @@
 
 #include "common.h"
 
-#define TIM_STEP 100 // The resolution of the global timer (TCNT) in nanoseconds.
-// In order to change this value, TIM_PRESCALER in tim.c must be changed and recompiled.
+// The resolution of the global timer (TCNT) is 1.6 microseconds. The TCNT overflows every 105 miliseconds.
+// In order to change this value, TIM_PRESCALER in timers.c must be changed and the file recompiled.
 
 typedef enum
 {
@@ -19,7 +19,7 @@ typedef s8 tim_id; // An id for a registered callback
 void tim_Init (void);
 // Initializes the timer module. This requires no other modules to work, and doesn't require interrupts to be enabled.
 
-tim_id tim_GetTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow);
+tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow);
 // Sets one of the module's free timers as reqType. 
 // When the timer interrupts, callback is called. 
 // When the global timer (TCNT) overflows, overflow is called.
@@ -27,7 +27,7 @@ tim_id tim_GetTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow);
 // The received timer has normal an overflow interrupts (they have to be enabled using tim_EnableInterrupts and tim_EnableOvfInterrupts).
 // Returns the tim_id of the assigned timer. 
 
-tim_id tim_GetSpecificTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow, tim_id timNumber);
+tim_id tim_GetTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow, tim_id timNumber);
 // Same as tim_GetTimer, but instead of assigning a random timer, timNUmberisUsed.
 
 #define TIM_INVALID_ID (-1) // Returned by tim_GetTimer if all timers are being used, or by tim_GetSpecificTimer if timNumber is being used.
