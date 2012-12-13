@@ -6,6 +6,8 @@
 // The resolution of the global timer (TCNT) is 1.6 microseconds. The TCNT overflows every 105 miliseconds.
 // In order to change this value, TIM_PRESCALER in timers.c must be changed and the file recompiled.
 
+#define TIM_OVERFLOW_TICKS 65536
+
 typedef enum
 {
 	TIM_IC,	// Input Capture
