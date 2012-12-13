@@ -1,8 +1,5 @@
 #include "lcd.h"
 #include "timers.h"
-#include <stdio.h>
-
-#define DDR_OUT 0xFF
 
 #define LCD_RS_INSTR 0
 #define LCD_RS_DATA 1

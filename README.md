@@ -7,6 +7,7 @@ It offers support for:
   - I2C
   - Input Capture / Output Compare
   - PWM
-  - Hitachi HD44780 based LCDs
-  - The DS1307 RTC (Real Time Clock)
+  - A Hitachi HD44780 based LCD
+  - An HC-SR04 ultrasonic distance sensor
+  - A DS1307 RTC (Real Time Clock)
   - An infrared remote control using the RC-5 protocol

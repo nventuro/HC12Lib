@@ -42,6 +42,11 @@ typedef union {
 
 #define BIT(n) (1<<(n))
 
+#define GLUE(a,b) GLUE_AGAIN(a,b)
+#define GLUE_AGAIN(a,b) a ## b
+
+#define DDR_OUT 0xFF
+
 
 // Monitor IO
 
