@@ -44,9 +44,9 @@ void tim_FreeTimer(tim_id id);
 
 // All of the functions below will fail or behave unexpectedly if they receive an invalid timer id.
 // There are two versions for some of the following functions: the first one is a macro (defined in timers_macros.h), and requires the 
-// received id to be determined in preprocessing time (a constant, not a variable). The second one, which have a tim_d prefix, are 
+// received id to be determined in preprocessing time (a constant, not a variable). The second one, which has a tim_d prefix, is 
 // dynamic, and can receive a non-constant id. The macro implementation is usually about twice as fast as the dynamic implementation, 
-// and is therefore recommended.
+// and is therefore recommended, especially since the timer id is usually known to the programmer.
 
 
 bool tim_dAreInterruptsEnabled(tim_id id);
