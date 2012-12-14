@@ -1,14 +1,13 @@
 #include "timers.h"
-#include "mc9s12xdp512.h"
 
-//#define TIM_AMOUNT 8
+#define TIM_AMOUNT 8
 
-#define	TIMER_PRESCALER 5 // 40MHz / 2^6 = 625 kHz. The TCNT resolution is 1.6us.
+#define	TIMER_PRESCALER 5 // 24MHz / 2^5 = 750 kHz. The TCNT resolution is 1.333us.
 
 #define SET_TIOS_OC(i) (TIOS |= (1 << i))
 #define SET_TIOS_IC(i) (TIOS &= ~(1 << i))
 
-#define TIM_AMOUNT 8
+#define CLEAR_OVF_FLAG() (TFLG2_TOF = 1)
 
 struct {
 	bool isTimerUsed[TIM_AMOUNT];
@@ -37,7 +36,7 @@ void tim_Init(void)
 		tim_data.cbArray[i] = NULL;		
 		tim_data.ovfArray[i] = NULL;
 		tim_data.ovfIntEnable[i] = _FALSE;
-		tim_DisableInterrupts(i);			
+		tim_dDisableInterrupts(i);			
 	}
 	
 	TIOS = 0x00; // Input Capture by default
@@ -77,7 +76,7 @@ tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 
 void tim_AssignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i)
 {
-	tim_DisableInterrupts(i);
+	tim_dDisableInterrupts(i);
 	tim_ClearFlag(i);
 	
 	tim_data.isTimerUsed[i] = _TRUE;
@@ -93,7 +92,7 @@ void tim_AssignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i)
 
 void tim_FreeTimer(tim_id timId)
 {
-	tim_DisableInterrupts(timId);
+	tim_dDisableInterrupts(timId);
 	tim_ClearFlag(timId);
 	
 	tim_data.isTimerUsed[timId] = _FALSE;
@@ -104,299 +103,7 @@ void tim_FreeTimer(tim_id timId)
 	return;
 }
 
-void tim_SetFallingEdge(tim_id timId)
-{
-	switch (timId)
-	{
-		case 0:
-			TCTL4_EDG0A = 0;
-			TCTL4_EDG0B = 1;
-			break;
-		case 1:
-			TCTL4_EDG1A = 0;
-			TCTL4_EDG1B = 1;
-			break;
-		case 2:
-			TCTL4_EDG2A = 0;
-			TCTL4_EDG2B = 1;
-			break;
-		case 3:
-			TCTL4_EDG3A = 0;
-			TCTL4_EDG3B = 1;
-			break;
-		case 4:
-			TCTL3_EDG4A = 0;
-			TCTL3_EDG4B = 1;
-			break;
-		case 5:
-			TCTL3_EDG5A = 0;
-			TCTL3_EDG5B = 1;
-			break;
-		case 6:
-			TCTL3_EDG6A = 0;
-			TCTL3_EDG6B = 1;
-			break;
-		case 7:
-			TCTL3_EDG7A = 0;
-			TCTL3_EDG7B = 1;
-			break;
-	}
-	
-	return;
-}
-
-
-void tim_SetRisingEdge(tim_id timId)
-{
-	switch (timId)
-	{
-		case 0:
-			TCTL4_EDG0A = 1;
-			TCTL4_EDG0B = 0;
-			break;
-		case 1:
-			TCTL4_EDG1A = 1;
-			TCTL4_EDG1B = 0;
-			break;
-		case 2:
-			TCTL4_EDG2A = 1;
-			TCTL4_EDG2B = 0;
-			break;
-		case 3:
-			TCTL4_EDG3A = 1;
-			TCTL4_EDG3B = 0;
-			break;
-		case 4:
-			TCTL3_EDG4A = 1;
-			TCTL3_EDG4B = 0;
-			break;
-		case 5:
-			TCTL3_EDG5A = 1;
-			TCTL3_EDG5B = 0;
-			break;
-		case 6:
-			TCTL3_EDG6A = 1;
-			TCTL3_EDG6B = 0;
-			break;
-		case 7:
-			TCTL3_EDG7A = 1;
-			TCTL3_EDG7B = 0;
-			break;
-	}
-	
-	return;
-}
-
-
-void tim_SetBothEdge(tim_id timId)
-{
-	switch (timId)
-	{
-		case 0:
-			TCTL4_EDG0A = 1;
-			TCTL4_EDG0B = 1;
-			break;
-		case 1:
-			TCTL4_EDG1A = 1;
-			TCTL4_EDG1B = 1;
-			break;
-		case 2:
-			TCTL4_EDG2A = 1;
-			TCTL4_EDG2B = 1;
-			break;
-		case 3:
-			TCTL4_EDG3A = 1;
-			TCTL4_EDG3B = 1;
-			break;
-		case 4:
-			TCTL3_EDG4A = 1;
-			TCTL3_EDG4B = 1;
-			break;
-		case 5:
-			TCTL3_EDG5A = 1;
-			TCTL3_EDG5B = 1;
-			break;
-		case 6:
-			TCTL3_EDG6A = 1;
-			TCTL3_EDG6B = 1;
-			break;
-		case 7:
-			TCTL3_EDG7A = 1;
-			TCTL3_EDG7B = 1;
-			break;
-	}
-	
-	return;
-}
-
-
-void tim_SetOutputHigh(tim_id timId)
-{
-	switch (timId)
-	{
-		case 0:
-			TCTL2_OL0 = 1;
-			TCTL2_OM0 = 1;
-			break;
-		case 1:
-			TCTL2_OL1 = 1;
-			TCTL2_OM1 = 1;
-			break;
-		case 2:
-			TCTL2_OL2 = 1;
-			TCTL2_OM2 = 1;
-			break;
-		case 3:
-			TCTL2_OL3 = 1;
-			TCTL2_OM3 = 1;
-			break;
-		case 4:
-			TCTL1_OL4 = 1;
-			TCTL1_OM4 = 1;
-			break;
-		case 5:
-			TCTL1_OL5 = 1;
-			TCTL1_OM5 = 1;
-			break;
-		case 6:
-			TCTL1_OL6 = 1;
-			TCTL1_OM6 = 1;
-			break;
-		case 7:
-			TCTL1_OL7 = 1;
-			TCTL1_OM7 = 1;
-			break;
-	}
-	
-	return;
-}
-
-void tim_SetOutputLow(tim_id timId)
-{
-	switch (timId)
-	{
-		case 0:
-			TCTL2_OL0 = 0;
-			TCTL2_OM0 = 1;
-			break;
-		case 1:
-			TCTL2_OL1 = 0;
-			TCTL2_OM1 = 1;
-			break;
-		case 2:
-			TCTL2_OL2 = 0;
-			TCTL2_OM2 = 1;
-			break;
-		case 3:
-			TCTL2_OL3 = 0;
-			TCTL2_OM3 = 1;
-			break;
-		case 4:
-			TCTL1_OL4 = 0;
-			TCTL1_OM4 = 1;
-			break;
-		case 5:
-			TCTL1_OL5 = 0;
-			TCTL1_OM5 = 1;
-			break;
-		case 6:
-			TCTL1_OL6 = 0;
-			TCTL1_OM6 = 1;
-			break;
-		case 7:
-			TCTL1_OL7 = 0;
-			TCTL1_OM7 = 1;
-			break;
-	}
-	
-	return;
-}
-
-void tim_SetOutputToggle(tim_id timId)
-{
-	switch (timId)
-	{
-		case 0:
-			TCTL2_OL0 = 1;
-			TCTL2_OM0 = 0;
-			break;
-		case 1:
-			TCTL2_OL1 = 1;
-			TCTL2_OM1 = 0;
-			break;
-		case 2:
-			TCTL2_OL2 = 1;
-			TCTL2_OM2 = 0;
-			break;
-		case 3:
-			TCTL2_OL3 = 1;
-			TCTL2_OM3 = 0;
-			break;
-		case 4:
-			TCTL1_OL4 = 1;
-			TCTL1_OM4 = 0;
-			break;
-		case 5:
-			TCTL1_OL5 = 1;
-			TCTL1_OM5 = 0;
-			break;
-		case 6:
-			TCTL1_OL6 = 1;
-			TCTL1_OM6 = 0;
-			break;
-		case 7:
-			TCTL1_OL7 = 1;
-			TCTL1_OM7 = 0;
-			break;
-	}
-	
-	return;
-}
-
-
-void tim_DisconnectOutput(tim_id timId)
-{
-	switch (timId)
-	{
-		case 0:
-			TCTL2_OL0 = 0;
-			TCTL2_OM0 = 0;
-			break;
-		case 1:
-			TCTL2_OL1 = 0;
-			TCTL2_OM1 = 0;
-			break;
-		case 2:
-			TCTL2_OL2 = 0;
-			TCTL2_OM2 = 0;
-			break;
-		case 3:
-			TCTL2_OL3 = 0;
-			TCTL2_OM3 = 0;
-			break;
-		case 4:
-			TCTL1_OL4 = 0;
-			TCTL1_OM4 = 0;
-			break;
-		case 5:
-			TCTL1_OL5 = 0;
-			TCTL1_OM5 = 0;
-			break;
-		case 6:
-			TCTL1_OL6 = 0;
-			TCTL1_OM6 = 0;
-			break;
-		case 7:
-			TCTL1_OL7 = 0;
-			TCTL1_OM7 = 0;
-			break;
-	}
-	
-	return;
-}
-
-
-void tim_EnableInterrupts(tim_id timId)
+void tim_dEnableInterrupts(tim_id timId)
 {
 	switch (timId)
 	{
@@ -429,7 +136,7 @@ void tim_EnableInterrupts(tim_id timId)
 	return;
 }
 
-void tim_DisableInterrupts(tim_id timId)
+void tim_dDisableInterrupts(tim_id timId)
 {
 	switch (timId)
 	{
@@ -462,7 +169,7 @@ void tim_DisableInterrupts(tim_id timId)
 	return;
 }
 
-bool tim_AreInterruptsEnabled (tim_id timId)
+bool tim_dAreInterruptsEnabled (tim_id timId)
 {
 	switch (timId)
 	{
@@ -527,15 +234,305 @@ void tim_DisableOvfInterrupts(tim_id timId)
 }
 
 
-void tim_ClearFlag(tim_id timId)
+void tim_dClearFlag(tim_id timId)
 {
 	TFLG1 = 1<<timId;
 	
 	return;	
 }
 
+void tim_dSetFallingEdge(tim_id timId)
+{
+	switch (timId)
+	{
+		case 0:
+			TCTL4_EDG0A = 0;
+			TCTL4_EDG0B = 1;
+			break;
+		case 1:
+			TCTL4_EDG1A = 0;
+			TCTL4_EDG1B = 1;
+			break;
+		case 2:
+			TCTL4_EDG2A = 0;
+			TCTL4_EDG2B = 1;
+			break;
+		case 3:
+			TCTL4_EDG3A = 0;
+			TCTL4_EDG3B = 1;
+			break;
+		case 4:
+			TCTL3_EDG4A = 0;
+			TCTL3_EDG4B = 1;
+			break;
+		case 5:
+			TCTL3_EDG5A = 0;
+			TCTL3_EDG5B = 1;
+			break;
+		case 6:
+			TCTL3_EDG6A = 0;
+			TCTL3_EDG6B = 1;
+			break;
+		case 7:
+			TCTL3_EDG7A = 0;
+			TCTL3_EDG7B = 1;
+			break;
+	}
+	
+	return;
+}
 
-u16 tim_GetValue(tim_id timId)
+
+void tim_dSetRisingEdge(tim_id timId)
+{
+	switch (timId)
+	{
+		case 0:
+			TCTL4_EDG0A = 1;
+			TCTL4_EDG0B = 0;
+			break;
+		case 1:
+			TCTL4_EDG1A = 1;
+			TCTL4_EDG1B = 0;
+			break;
+		case 2:
+			TCTL4_EDG2A = 1;
+			TCTL4_EDG2B = 0;
+			break;
+		case 3:
+			TCTL4_EDG3A = 1;
+			TCTL4_EDG3B = 0;
+			break;
+		case 4:
+			TCTL3_EDG4A = 1;
+			TCTL3_EDG4B = 0;
+			break;
+		case 5:
+			TCTL3_EDG5A = 1;
+			TCTL3_EDG5B = 0;
+			break;
+		case 6:
+			TCTL3_EDG6A = 1;
+			TCTL3_EDG6B = 0;
+			break;
+		case 7:
+			TCTL3_EDG7A = 1;
+			TCTL3_EDG7B = 0;
+			break;
+	}
+	
+	return;
+}
+
+
+void tim_dSetBothEdge(tim_id timId)
+{
+	switch (timId)
+	{
+		case 0:
+			TCTL4_EDG0A = 1;
+			TCTL4_EDG0B = 1;
+			break;
+		case 1:
+			TCTL4_EDG1A = 1;
+			TCTL4_EDG1B = 1;
+			break;
+		case 2:
+			TCTL4_EDG2A = 1;
+			TCTL4_EDG2B = 1;
+			break;
+		case 3:
+			TCTL4_EDG3A = 1;
+			TCTL4_EDG3B = 1;
+			break;
+		case 4:
+			TCTL3_EDG4A = 1;
+			TCTL3_EDG4B = 1;
+			break;
+		case 5:
+			TCTL3_EDG5A = 1;
+			TCTL3_EDG5B = 1;
+			break;
+		case 6:
+			TCTL3_EDG6A = 1;
+			TCTL3_EDG6B = 1;
+			break;
+		case 7:
+			TCTL3_EDG7A = 1;
+			TCTL3_EDG7B = 1;
+			break;
+	}
+	
+	return;
+}
+
+
+void tim_dSetOutputHigh(tim_id timId)
+{
+	switch (timId)
+	{
+		case 0:
+			TCTL2_OL0 = 1;
+			TCTL2_OM0 = 1;
+			break;
+		case 1:
+			TCTL2_OL1 = 1;
+			TCTL2_OM1 = 1;
+			break;
+		case 2:
+			TCTL2_OL2 = 1;
+			TCTL2_OM2 = 1;
+			break;
+		case 3:
+			TCTL2_OL3 = 1;
+			TCTL2_OM3 = 1;
+			break;
+		case 4:
+			TCTL1_OL4 = 1;
+			TCTL1_OM4 = 1;
+			break;
+		case 5:
+			TCTL1_OL5 = 1;
+			TCTL1_OM5 = 1;
+			break;
+		case 6:
+			TCTL1_OL6 = 1;
+			TCTL1_OM6 = 1;
+			break;
+		case 7:
+			TCTL1_OL7 = 1;
+			TCTL1_OM7 = 1;
+			break;
+	}
+	
+	return;
+}
+
+void tim_dSetOutputLow(tim_id timId)
+{
+	switch (timId)
+	{
+		case 0:
+			TCTL2_OL0 = 0;
+			TCTL2_OM0 = 1;
+			break;
+		case 1:
+			TCTL2_OL1 = 0;
+			TCTL2_OM1 = 1;
+			break;
+		case 2:
+			TCTL2_OL2 = 0;
+			TCTL2_OM2 = 1;
+			break;
+		case 3:
+			TCTL2_OL3 = 0;
+			TCTL2_OM3 = 1;
+			break;
+		case 4:
+			TCTL1_OL4 = 0;
+			TCTL1_OM4 = 1;
+			break;
+		case 5:
+			TCTL1_OL5 = 0;
+			TCTL1_OM5 = 1;
+			break;
+		case 6:
+			TCTL1_OL6 = 0;
+			TCTL1_OM6 = 1;
+			break;
+		case 7:
+			TCTL1_OL7 = 0;
+			TCTL1_OM7 = 1;
+			break;
+	}
+	
+	return;
+}
+
+void tim_dSetOutputToggle(tim_id timId)
+{
+	switch (timId)
+	{
+		case 0:
+			TCTL2_OL0 = 1;
+			TCTL2_OM0 = 0;
+			break;
+		case 1:
+			TCTL2_OL1 = 1;
+			TCTL2_OM1 = 0;
+			break;
+		case 2:
+			TCTL2_OL2 = 1;
+			TCTL2_OM2 = 0;
+			break;
+		case 3:
+			TCTL2_OL3 = 1;
+			TCTL2_OM3 = 0;
+			break;
+		case 4:
+			TCTL1_OL4 = 1;
+			TCTL1_OM4 = 0;
+			break;
+		case 5:
+			TCTL1_OL5 = 1;
+			TCTL1_OM5 = 0;
+			break;
+		case 6:
+			TCTL1_OL6 = 1;
+			TCTL1_OM6 = 0;
+			break;
+		case 7:
+			TCTL1_OL7 = 1;
+			TCTL1_OM7 = 0;
+			break;
+	}
+	
+	return;
+}
+
+
+void tim_dDisconnectOutput(tim_id timId)
+{
+	switch (timId)
+	{
+		case 0:
+			TCTL2_OL0 = 0;
+			TCTL2_OM0 = 0;
+			break;
+		case 1:
+			TCTL2_OL1 = 0;
+			TCTL2_OM1 = 0;
+			break;
+		case 2:
+			TCTL2_OL2 = 0;
+			TCTL2_OM2 = 0;
+			break;
+		case 3:
+			TCTL2_OL3 = 0;
+			TCTL2_OM3 = 0;
+			break;
+		case 4:
+			TCTL1_OL4 = 0;
+			TCTL1_OM4 = 0;
+			break;
+		case 5:
+			TCTL1_OL5 = 0;
+			TCTL1_OM5 = 0;
+			break;
+		case 6:
+			TCTL1_OL6 = 0;
+			TCTL1_OM6 = 0;
+			break;
+		case 7:
+			TCTL1_OL7 = 0;
+			TCTL1_OM7 = 0;
+			break;
+	}
+	
+	return;
+}
+
+u16 tim_dGetValue(tim_id timId)
 {
 	switch (timId)
 	{
@@ -559,7 +556,7 @@ u16 tim_GetValue(tim_id timId)
 }
 
 
-void tim_SetValue(tim_id timId, u16 value)
+void tim_dSetValue(tim_id timId, u16 value)
 {
 	switch (timId)
 	{
@@ -590,12 +587,6 @@ void tim_SetValue(tim_id timId, u16 value)
 	}
 			
 	return;
-}
-
-
-u16 tim_GetGlobalValue(void)
-{
-	return TCNT;
 }
 
 
@@ -690,7 +681,7 @@ void interrupt tim7_Service(void)
 void interrupt timOvf_Service(void)
 {
 	tim_id i;
-	TFLG2_TOF = 1;
+	CLEAR_OVF_FLAG();
 	
 	for (i = 0; i < TIM_AMOUNT; i++)
 		if ((tim_data.ovfArray[i] != NULL) && (tim_data.ovfIntEnable[i] == _TRUE))

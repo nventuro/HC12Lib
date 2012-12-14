@@ -2,7 +2,6 @@
 #define _USONIC_H
 
 #include "common.h"
-#include "mc9s12xdp512.h"
 
 #define USONIC_TRIGG_TIMER 6
 #define USONIC_ECHO_TIMER 5

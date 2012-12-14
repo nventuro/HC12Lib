@@ -38,12 +38,15 @@ typedef union {
 
 #define DIV_CEIL(a,b) (((a)/(b))+1) // ceil(a/b)
 
-#define BOOL(a) ((a)?1:0)
+#define BOOL(a) ((a) ? _TRUE:_FALSE)
 
 #define BIT(n) (1<<(n))
 
 #define GLUE(a,b) GLUE_AGAIN(a,b)
 #define GLUE_AGAIN(a,b) a ## b
+
+#define GLUE2(a,b,c) GLUE_AGAIN2(a,b,c)
+#define GLUE_AGAIN2(a,b,c) a ## b ## c
 
 #define DDR_OUT 0xFF
 

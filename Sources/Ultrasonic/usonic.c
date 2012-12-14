@@ -1,5 +1,6 @@
 #include "usonic.h"
 #include "timers.h"
+#include "mc9s12xdp512.h"
 #include <stdio.h>
 
 #define USONIC_TRIGG GLUE(PTT_PTT,USONIC_TRIGG_TIMER)
@@ -8,7 +9,7 @@
 #define USONIC_PULSE_TIME 7
 #define USONIC_TIMEOUT_OVF 3
 
-#define USONIC_CONVERSION(x) ((x)*TIM_TICK_NS*2667/58000)
+#define USONIC_CONVERSION(x) ((x)*TIM_TICK_NS/58000)
 
 typedef enum
 {
@@ -41,10 +42,12 @@ void usonic_Init (void)
 	
 	usonic_IsInit = _TRUE;	
 
-	usonic_data.stage = IDLE;	
+	usonic_data.stage = IDLE;
+	if (tim_dAreInterruptsEnabled(USONIC_TRIGG_TIMER))
+		;
 
 	tim_Init();	
-
+	
 	tim_GetTimer (TIM_OC, usonic_TriggerCallback, NULL, USONIC_TRIGG_TIMER);
 	tim_GetTimer (TIM_IC, usonic_EchoCallback, usonic_EchoOverflow, USONIC_ECHO_TIMER);
 
