@@ -3,6 +3,7 @@
 
 #include "common.h"
 
+#define TIM_TICK_NS 1600
 // The resolution of the global timer (TCNT) is 1.6 microseconds. The TCNT overflows every 105 miliseconds.
 // In order to change this value, TIM_PRESCALER in timers.c must be changed and the file recompiled.
 
@@ -30,9 +31,13 @@ tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow);
 // Returns the tim_id of the assigned timer. 
 
 tim_id tim_GetTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow, tim_id timNumber);
-// Same as tim_GetTimer, but instead of assigning a random timer, timNUmberisUsed.
+// Same as tim_GetTimer, but instead of assigning a random timer, timNUmberisUsed. 
+// timNumber is a number, from 0 to 7, which indicates which timer module will be used.
+// If the timer is free, the return value will equal timNumber.
 
 #define TIM_INVALID_ID (-1) // Returned by tim_GetTimer if all timers are being used, or by tim_GetSpecificTimer if timNumber is being used.
+
+// All of the functions below will fail or behave unexpectedly if they receive an invalid timer id.
 
 void tim_FreeTimer(tim_id id);
 // Deletes the overflow and interrupt callbacks from a previously set timer, and releases it so it can be reassigned using tim_GetTimer.
@@ -53,7 +58,8 @@ bool tim_AreInterruptsEnabled (tim_id id);
 // Informs whether or not interrupts are enabled for a timer.
 void tim_EnableInterrupts(tim_id id);
 // Enables interrupts for a timer.
-void tim_DisableInterrupts(tim_id id);
+void tim_DisableInterrupts(tim_id timId);
+//void tim_DisableInterrupts(tim_id id);
 // Disables interrupts for a timer.
 
 void tim_EnableOvfInterrupts(tim_id id);
@@ -62,6 +68,7 @@ void tim_DisableOvfInterrupts(tim_id id);
 // Disables TCNT overflow interrupts for a timer.
 
 void tim_ClearFlag(tim_id id);
+//#define tim_ClearFlag(timId) { if(IS_VALID_ID(timId)) TFLG1 = 1<<(timId); }
 // Clears the interrupt flag of a timer. This is done automatically everytime callback and overflow are called.
 
 void tim_SetValue(tim_id id, u16 value);

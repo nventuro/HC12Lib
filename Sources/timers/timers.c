@@ -1,14 +1,14 @@
 #include "timers.h"
 #include "mc9s12xdp512.h"
 
-#define TIM_AMOUNT 8
+//#define TIM_AMOUNT 8
 
-#define	TIMER_PRESCALER 6 // 40MHz / 2^6 = 625 kHz. The TCNT resolution is 1.6us.
+#define	TIMER_PRESCALER 5 // 40MHz / 2^6 = 625 kHz. The TCNT resolution is 1.6us.
 
 #define SET_TIOS_OC(i) (TIOS |= (1 << i))
 #define SET_TIOS_IC(i) (TIOS &= ~(1 << i))
 
-#define IS_VALID_ID(id) (((id >= 0) && (id < TIM_AMOUNT)) ? _TRUE : _FALSE)
+#define TIM_AMOUNT 8
 
 struct {
 	bool isTimerUsed[TIM_AMOUNT];
@@ -20,8 +20,6 @@ struct {
 bool tim_isInit = _FALSE;
 
 void tim_AssignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i);
-tim_type tim_GetType(tim_id id);
-
 
 void tim_Init(void) 
 {
@@ -43,7 +41,7 @@ void tim_Init(void)
 	}
 	
 	TIOS = 0x00; // Input Capture by default
-	TSCR2 |= TIMER_PRESCALER;
+	TSCR2_PR = TIMER_PRESCALER;
 	TSCR2_TOI = 1;
 	TSCR1_TEN = 1;		
 	
@@ -95,9 +93,6 @@ void tim_AssignTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id i)
 
 void tim_FreeTimer(tim_id timId)
 {
-	if (!IS_VALID_ID(timId))
-		return;
-	
 	tim_DisableInterrupts(timId);
 	tim_ClearFlag(timId);
 	
@@ -109,17 +104,8 @@ void tim_FreeTimer(tim_id timId)
 	return;
 }
 
-tim_type tim_GetType(tim_id id)
-{
-	return ((TIOS & (1 << id)) ? TIM_OC : TIM_IC);
-}
-
-
 void tim_SetFallingEdge(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_OC)
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -162,9 +148,6 @@ void tim_SetFallingEdge(tim_id timId)
 
 void tim_SetRisingEdge(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_OC)
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -207,9 +190,6 @@ void tim_SetRisingEdge(tim_id timId)
 
 void tim_SetBothEdge(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_OC)
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -252,9 +232,6 @@ void tim_SetBothEdge(tim_id timId)
 
 void tim_SetOutputHigh(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_IC)
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -296,9 +273,6 @@ void tim_SetOutputHigh(tim_id timId)
 
 void tim_SetOutputLow(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_IC)
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -340,9 +314,6 @@ void tim_SetOutputLow(tim_id timId)
 
 void tim_SetOutputToggle(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_IC)
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -385,9 +356,6 @@ void tim_SetOutputToggle(tim_id timId)
 
 void tim_DisconnectOutput(tim_id timId)
 {
-	if(!IS_VALID_ID(timId) || tim_GetType(timId) == TIM_IC)
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -430,9 +398,6 @@ void tim_DisconnectOutput(tim_id timId)
 
 void tim_EnableInterrupts(tim_id timId)
 {
-	if(!IS_VALID_ID(timId))
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -464,12 +429,8 @@ void tim_EnableInterrupts(tim_id timId)
 	return;
 }
 
-
 void tim_DisableInterrupts(tim_id timId)
 {
-	if(!IS_VALID_ID(timId))
-		return;
-	
 	switch (timId)
 	{
 		case 0:
@@ -497,15 +458,12 @@ void tim_DisableInterrupts(tim_id timId)
 			TIE_C7I = 0;
 			break;
 	}
-			
+	
 	return;
 }
 
 bool tim_AreInterruptsEnabled (tim_id timId)
 {
-	if(!IS_VALID_ID(timId))
-		return _FALSE;
-	
 	switch (timId)
 	{
 		case 0:
@@ -555,9 +513,6 @@ bool tim_AreInterruptsEnabled (tim_id timId)
 
 void tim_EnableOvfInterrupts(tim_id timId)
 {
-	if (!IS_VALID_ID(timId))
-		return;
-	
 	tim_data.ovfIntEnable[timId] = _TRUE;
 
 	return;
@@ -566,9 +521,6 @@ void tim_EnableOvfInterrupts(tim_id timId)
 
 void tim_DisableOvfInterrupts(tim_id timId)
 {
-	if (!IS_VALID_ID(timId))
-		return;
-	
 	tim_data.ovfIntEnable[timId] = _FALSE;
 
 	return;
@@ -577,9 +529,6 @@ void tim_DisableOvfInterrupts(tim_id timId)
 
 void tim_ClearFlag(tim_id timId)
 {
-	if(!IS_VALID_ID(timId))
-		return;
-	
 	TFLG1 = 1<<timId;
 	
 	return;	
@@ -588,9 +537,6 @@ void tim_ClearFlag(tim_id timId)
 
 u16 tim_GetValue(tim_id timId)
 {
-	if(!IS_VALID_ID(timId))
-		return 0;
-	
 	switch (timId)
 	{
 		case 0:
@@ -615,9 +561,6 @@ u16 tim_GetValue(tim_id timId)
 
 void tim_SetValue(tim_id timId, u16 value)
 {
-	if(!IS_VALID_ID(timId))
-		return;
-	
 	switch (timId)
 	{
 		case 0:
