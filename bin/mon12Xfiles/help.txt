@@ -1,0 +1,125 @@
+Archivo de Ayuda del Terminal
+
+rb address
+  Lee el contenido del byte cuya direccion es address.
+    Address:  Direccion hexadecimal (1 a 4 caracteres).
+    Ejemplos: rb 0010 ; read 0x10 ; read 10
+
+wb address,value
+  Escribe valor el byte cuya direccion es address (solo RAM).
+    Address:  Direccion hexadecimal (1 a 4 caracteres).
+    Value:    Valor hexadecimal a guardar (1 o 2 caracteres).
+    Ejemplos: wb 10,1 ; read 0x10,0x1	
+
+nrd address,count
+  Lee count caracteres empezando por la direccion address
+    Address:  Direccion hexadecimal (1 a 4 caracteres).
+    Count:    Valor decimal (entre 1 y 256).
+    Ejemplos: nrd 1000,10 ; nread 0x1000,10
+
+nwr address,count,n1,n2,...,ncount
+  Escribe count (n1,n2,...,ncount) valores en la direccion address.
+    Address:  Direccion hexadecimal (1 a 4 caracteres).
+    Count:    Valor decimal (entre 1 y 256).
+    ni:       Valor hexadecimal a guardar (1 o 2 caracteres).
+    Ejemplos: nwr 1000,2,0xff,10
+
+dump ADDR CNT FNAME
+  Escribe el contenido de la memoria a un archivo
+	ADDR:	Dirección de inicio (hex)
+	CNT:	Cantidad de bytes (dec)
+	FNAME:	Nombre de archivo de salida (formato de salida=binario)
+  Ejemplos: dump 1000 2500 test.bin    ;   dump 0 65536 logical_map.bin
+
+
+regs
+  Muestra en pantalla el contenido de todos los registros.
+
+SP address
+  Escribe el Stack Pointer con el valor deseado.
+    Address:  Direccion hexadecimal (1 a 4 caracteres).
+    Ejemplos: SP 1000 ; SP 0x1000
+
+PC address
+  Escribe el Program Counter con el valor deseado.
+    Address:  Direccion hexadecimal (1 a 4 caracteres).
+    Ejemplos: PC 1000 ; PC 0x1000
+
+X value
+  Escribe el Registro X con el valor deseado.
+    value:    Valor hexadecimal (1 a 4 caracteres).
+    Ejemplos: X 1000 ; X 0x1000 ; X 10
+
+Y value
+  Escribe el Registro Y con el valor deseado.
+    value:    Valor hexadecimal (1 a 4 caracteres).
+    Ejemplos: Y 1000 ; Y 0x1000 ;Y 0xaa
+
+D value
+  Escribe el Registro D con el valor deseado.
+    value:    Valor hexadecimal (1 a 4 caracteres).
+    Ejemplos: D 1000 ; D 0x1000 ;D 0xaa
+
+CCR value
+  Escribe el Registro CCR con el valor deseado.
+    value:    Valor hexadecimal (1 a 2 caracteres).
+    Ejemplos: CCR FF ; CCR 0x00 ;CCR 1
+
+g [ADDR] [-t] [-i[1]]
+  Comienza a correr el programa del usuario a partir de
+  la dirreccion apuntada por el registro PC.
+	ADDR:	Setear PC=$ADDR antes de correr el programa
+	-t:	realizar el comando pasando a modo terminal.
+	-i?:	i0: desactiva interrupciones antes de comenzar.
+		i1: activa interrupciones antes de comenzar.
+    Ejemplos: g	  ; g -t  ; g 1029 -t  ; g 1029 -i1
+
+t
+  Ejecuta un comando Trace de una instruccion
+
+halt
+  Si el programa de usuario esta corriendo, lo detiene.
+
+reset
+  Resetea el microcontrolador
+
+load [-u] file_name
+  Carga un archivo .s19 en el microcontrolador
+	file_name:	ruta y nombre del archivo a cargar
+	-u:		actualiza el contenido, es decir sólo programa lo que cambió
+    Ejemplos:  load prog1.s19 ; load c:\archiv~1\prog1.s19
+               load c:\Archivos de programa\prog1.s19
+
+bp [address]
+  Coloca un Break Point en la direccion deseada.
+  Si el campo adrress esta vacio muestra todos los Break Point
+  colocados.
+    address:  Direccion hexadecimal (1 a 4 caracteres).
+    Ejemplos: bp 0x1200 ; bp 1200
+
+rbp [address][-a]
+  Remueve Break Points
+    address: dirreccion del bp a remover
+    -a:      remover todos los Break Points
+
+terminal
+  Pasar a modo Terminal
+
+port nombre_puerto
+  Cambia el puerto COM que se utiliza para comunicar con el
+  Microcontorlador
+    nombre_puerto: Nombre estandard del puerto
+    Ejemplos:      port COM1 ; port com3
+
+bdm
+  Entra en modo BDM (BackGround Debug Mode)
+
+bdm-eu (comando valido unicamente en modo BDM)
+  Borrar enteramente la flash y la EEPROM de microcontroladores 
+  protegidos y no protegidos a via BDM
+
+bdm-mon (comando valido unicamente en modo BDM)
+  Carga el programa monitor en el otro microcontrolador via BDM. Antes 
+  de cargarlo ejecuta el comando bdm-eu, por ende todo el contenido previo
+  del controlador sera borrado.
+	

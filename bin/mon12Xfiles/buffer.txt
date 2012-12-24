@@ -1,0 +1,49 @@
+g C000
+regs
+regs
+regs
+regs
+regs
+regs
+load ram.s19
+g c0000 -t
+g c0000 -t
+regs
+g c0000 -t
+g c0000 -t
+regs
+g c0000 -t
+g c0000 -t
+g c0000 -t
+regs
+load ram.s19
+g c0000 -t
+load ram.s19
+g c0000 -t
+g c0000 -t
+g c0000 -t
+g c0000 -t
+load ram.s19
+g c0000 -t
+g c0000 -t
+load ram.s19
+load ram.s19
+load ram.s19
+load ram.s19
+dump 
+dump c000 ffff p.bin
+dump c000 ffff
+help
+dump c0000 16384 p.bin
+dump c000 16384 p.bin
+load ram.s19
+g c0000 -t
+g c0000 -t
+g c0000 -t
+g c0000 -t
+g c0000 -t
+help
+regs
+reset
+reset
+load ram.s19

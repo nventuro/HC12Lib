@@ -1,5 +1,5 @@
 *** EVALUATION ***
-PROGRAM "C:\Users\Thurk\Documents\ITBA\68HC12\Driver Led\bin\templ_C_12X_nofloat_ram.abs"
+PROGRAM "C:\Users\Thurk\Documents\Projects & College\MC9S12X\HC12Lib\bin\templ_C_12X_nofloat_ram.abs"
 
 *********************************************************************************************
 TARGET SECTION
@@ -13,12 +13,12 @@ Linker      : SmartLinker V-5.0.40 Build 10203, Jul 23 2010
 FILE SECTION
 ---------------------------------------------------------------------------------------------
 mc9s12xdp512.c.o                        Model: SMALL,         Lang: ANSI-C
-main.c.o                                Model: SMALL,         Lang: ANSI-C
-rtshc12.c.o (ansixsi.lib)               Model: SMALL,         Lang: ANSI-C
 ivt.c.o                                 Model: SMALL,         Lang: ANSI-C
-simple_start12.c.o                      Model: SMALL,         Lang: ANSI-C
-led.c.o                                 Model: SMALL,         Lang: ANSI-C
 rti.c.o                                 Model: SMALL,         Lang: ANSI-C
+timers.c.o                              Model: SMALL,         Lang: ANSI-C
+iic.c.o                                 Model: SMALL,         Lang: ANSI-C
+startup.c.o                             Model: SMALL,         Lang: ANSI-C
+main.c.o                                Model: SMALL,         Lang: ANSI-C
 
 *********************************************************************************************
 STARTUP SECTION
@@ -27,8 +27,8 @@ Entry point: 0x1000 (_Startup)
 _startupData is allocated at 0x1032 and uses 6 Bytes
 extern struct _tagStartup {
   unsigned nofZeroOut     1
-  _Range   pZeroOut       0x3100     87
-  _Copy    *toCopyDownBeg 0x11CE
+  _Range   pZeroOut       0x3100     474
+  _Copy    *toCopyDownBeg 0x11AB
 } _startupData;
 
 *********************************************************************************************
@@ -37,8 +37,8 @@ Section Name                    Size  Type     From       To       Segment
 ---------------------------------------------------------------------------------------------
 .init                             50     R     0x1000     0x1031   RAM_RO
 .startData                        34     R     0x1032     0x1053   RAM_RO
-.text                            367     R     0x1054     0x11C2   RAM_RO
-.copy                              2     R     0x11CE     0x11CF   RAM_RO
+.text                            343     R     0x1054     0x11AA   RAM_RO
+.copy                              2     R     0x11AB     0x11AC   RAM_RO
 VECTORS                          240     R     0x3F10     0x3FFF   RAMVECTORS
 .stack                           256   R/W     0x3000     0x30FF   RAM_RW
 .abs_section_8                     1   N/I        0x8        0x8   .absSeg0
@@ -688,12 +688,12 @@ VECTORS                          240     R     0x3F10     0x3FFF   RAMVECTORS
 .abs_section_3aa                   2   N/I      0x3AA      0x3AB   .absSeg644
 .abs_section_3ac                   2   N/I      0x3AC      0x3AD   .absSeg645
 .abs_section_3ae                   2   N/I      0x3AE      0x3AF   .absSeg646
-.bss                              87   R/W     0x3100     0x3156   RAM_RW
-RUNTIME                           11     R     0x11C3     0x11CD   RAM_RO
+.bss                               9   R/W     0x3100     0x3108   RAM_RW
+.common                          465   R/W     0x3109     0x32D9   RAM_RW
 
 Summary of section sizes per section type:
-READ_ONLY (R):         2C0 (dec:      704)
-READ_WRITE (R/W):      157 (dec:      343)
+READ_ONLY (R):         29D (dec:      669)
+READ_WRITE (R/W):      2DA (dec:      730)
 NO_INIT (N/I):         300 (dec:      768)
 
 *********************************************************************************************
@@ -743,10 +743,10 @@ MODULE:                 -- mc9s12xdp512.c.o --
      _SYNR                                       34       1       1       0   .abs_section_34
      _REFDV                                      35       1       1       0   .abs_section_35
      _CRGFLG                                     37       1       1       1   .abs_section_37
-     _CRGINT                                     38       1       1       1   .abs_section_38
+     _CRGINT                                     38       1       1       0   .abs_section_38
      _CLKSEL                                     39       1       1       0   .abs_section_39
      _PLLCTL                                     3A       1       1       0   .abs_section_3a
-     _RTICTL                                     3B       1       1       1   .abs_section_3b
+     _RTICTL                                     3B       1       1       0   .abs_section_3b
      _COPCTL                                     3C       1       1       0   .abs_section_3c
      _ARMCOP                                     3F       1       1       0   .abs_section_3f
      _TIOS                                       40       1       1       0   .abs_section_40
@@ -761,8 +761,8 @@ MODULE:                 -- mc9s12xdp512.c.o --
      _TCTL4                                      4B       1       1       0   .abs_section_4b
      _TIE                                        4C       1       1       0   .abs_section_4c
      _TSCR2                                      4D       1       1       0   .abs_section_4d
-     _TFLG1                                      4E       1       1       0   .abs_section_4e
-     _TFLG2                                      4F       1       1       0   .abs_section_4f
+     _TFLG1                                      4E       1       1       8   .abs_section_4e
+     _TFLG2                                      4F       1       1       1   .abs_section_4f
      _PACTL                                      60       1       1       0   .abs_section_60
      _PAFLG                                      61       1       1       0   .abs_section_61
      _MCCTL                                      66       1       1       0   .abs_section_66
@@ -815,9 +815,9 @@ MODULE:                 -- mc9s12xdp512.c.o --
      _SPI0DR                                     DD       1       1       0   .abs_section_dd
      _IIC0_IBAD                                  E0       1       1       0   .abs_section_e0
      _IIC0_IBFD                                  E1       1       1       0   .abs_section_e1
-     _IIC0_IBCR                                  E2       1       1       0   .abs_section_e2
-     _IIC0_IBSR                                  E3       1       1       0   .abs_section_e3
-     _IIC0_IBDR                                  E4       1       1       0   .abs_section_e4
+     _IIC0_IBCR                                  E2       1       1       3   .abs_section_e2
+     _IIC0_IBSR                                  E3       1       1       3   .abs_section_e3
+     _IIC0_IBDR                                  E4       1       1       1   .abs_section_e4
      _SPI1CR1                                    F0       1       1       0   .abs_section_f0
      _SPI1CR2                                    F1       1       1       0   .abs_section_f1
      _SPI1BR                                     F2       1       1       0   .abs_section_f2
@@ -1234,8 +1234,8 @@ MODULE:                 -- mc9s12xdp512.c.o --
      _PITMTLD1                                  347       1       1       0   .abs_section_347
      _XGCHID                                    382       1       1       0   .abs_section_382
      _XGCCR                                     39D       1       1       0   .abs_section_39d
-     _PORTAB                                      0       2       2       7   .abs_section_0
-     _DDRAB                                       2       2       2       2   .abs_section_2
+     _PORTAB                                      0       2       2       0   .abs_section_0
+     _DDRAB                                       2       2       2       0   .abs_section_2
      _PORTCD                                      4       2       2       0   .abs_section_4
      _DDRCD                                       6       2       2       0   .abs_section_6
      _PARTID                                     1A       2       2       0   .abs_section_1a
@@ -1355,65 +1355,68 @@ MODULE:                 -- mc9s12xdp512.c.o --
      _XGR5                                      3AA       2       2       0   .abs_section_3aa
      _XGR6                                      3AC       2       2       0   .abs_section_3ac
      _XGR7                                      3AE       2       2       0   .abs_section_3ae
-MODULE:                 -- main.c.o --
-- PROCEDURES:
-     led_change                                1054      13      19       1   .text       
-     init                                      1067       9       9       1   .text       
-     main                                      1070      1F      31       1   .text       
-- VARIABLES:
-     led_d                                     3100       1       1       4   .bss        
-MODULE:                 -- rtshc12.c.o (ansixsi.lib) --
-- PROCEDURES:
-     _ISHL                                     11C3       B      11       1   RUNTIME     
-- VARIABLES:
 MODULE:                 -- ivt.c.o --
 - PROCEDURES:
 - VARIABLES:
      interrupt_vector_table                    3F10      F0     240       0   VECTORS     
-MODULE:                 -- simple_start12.c.o --
+MODULE:                 -- rti.c.o --
+- PROCEDURES:
+     rti_Service                               1054      73     115       1   .text       
+- VARIABLES:
+     rti_tbl                                   3109      A0     160      13   .common     
+MODULE:                 -- timers.c.o --
+- PROCEDURES:
+     tim0_Service                              10C7       E      14       1   .text       
+     tim1_Service                              10D5       E      14       1   .text       
+     tim2_Service                              10E3       E      14       1   .text       
+     tim3_Service                              10F1       E      14       1   .text       
+     tim4_Service                              10FF       E      14       1   .text       
+     tim5_Service                              110D       E      14       1   .text       
+     tim6_Service                              111B       E      14       1   .text       
+     tim7_Service                              1129       E      14       1   .text       
+     timOvf_Service                            1137      2A      42       1   .text       
+- VARIABLES:
+     tim_data                                  31A9      30      48      19   .common     
+MODULE:                 -- iic.c.o --
+- PROCEDURES:
+     iic0_srv                                  1161      42      66       1   .text       
+- VARIABLES:
+     iic_data                                  3100       9       9       8   .bss        
+     iic_commData                              31D9     101     257       1   .common     
+MODULE:                 -- startup.c.o --
 - PROCEDURES:
      _Startup                                  1000      32      50       1   .init       
 - VARIABLES:
      _startupData                              1032       6       6       3   .startData  
 - LABELS:
      __SEG_END_SSTACK                          3100       0       0       1               
-MODULE:                 -- led.c.o --
+MODULE:                 -- main.c.o --
 - PROCEDURES:
-     led_init                                  108F      21      33       1   .text       
-     led                                       10B0       9       9       3   .text       
-     led_pwm_ctrl                              10B9      39      57       1   .text       
+     main                                      11A3       5       5       1   .text       
+     Init                                      11A8       3       3       1   .text       
 - VARIABLES:
-     LEDCfg                                    3101       6       6       4   .bss        
-MODULE:                 -- rti.c.o --
-- PROCEDURES:
-     rti_reenable                              10F2       4       4       2   .text       
-     rti_init                                  10F6      23      35       1   .text       
-     rti_register                              1119      49      73       2   .text       
-     rti_srv                                   1162      61      97       1   .text       
-- VARIABLES:
-     rti_tbl                                   3107      50      80      16   .bss        
 
 *********************************************************************************************
 MODULE STATISTIC
   Name                                      Data   Code  Const
 ---------------------------------------------------------------------------------------------
   mc9s12xdp512.c.o                           768      0      0
-  main.c.o                                     1     59      0
-  rtshc12.c.o (ansixsi.lib)                    0     11      0
   ivt.c.o                                      0      0    240
-  simple_start12.c.o                           0     50      0
-  led.c.o                                      6     99      0
-  rti.c.o                                     80    209      0
+  rti.c.o                                    160    115      0
+  timers.c.o                                  48    154      0
+  iic.c.o                                    266     66      0
+  startup.c.o                                  0     50      0
+  main.c.o                                     0      8      0
   other                                      256     34      2
 
 *********************************************************************************************
 SECTION USE IN OBJECT-ALLOCATION SECTION
 ---------------------------------------------------------------------------------------------
 SECTION: ".text"
-  led_change init main led_init led led_pwm_ctrl rti_reenable rti_init 
-  rti_register rti_srv 
+  rti_Service tim0_Service tim1_Service tim2_Service tim3_Service tim4_Service 
+  tim5_Service tim6_Service tim7_Service timOvf_Service iic0_srv main Init 
 SECTION: ".bss"
-  led_d LEDCfg rti_tbl 
+  iic_data 
 SECTION: ".init"
   _Startup 
 SECTION: "VECTORS"
@@ -2712,15 +2715,15 @@ SECTION: ".abs_section_3ac"
   _XGR6 
 SECTION: ".abs_section_3ae"
   _XGR7 
-SECTION: "RUNTIME"
-  _ISHL 
+SECTION: ".common"
+  rti_tbl tim_data iic_commData 
 
 *********************************************************************************************
 OBJECT LIST SORTED BY ADDRESS
      Name                                      Addr   hSize   dSize     Ref    Section   RLIB
 ---------------------------------------------------------------------------------------------
-     _PORTAB                                      0       2       2       7   .abs_section_0
-     _DDRAB                                       2       2       2       2   .abs_section_2
+     _PORTAB                                      0       2       2       0   .abs_section_0
+     _DDRAB                                       2       2       2       0   .abs_section_2
      _PORTCD                                      4       2       2       0   .abs_section_4
      _DDRCD                                       6       2       2       0   .abs_section_6
      _PORTE                                       8       1       1       0   .abs_section_8
@@ -2760,10 +2763,10 @@ OBJECT LIST SORTED BY ADDRESS
      _SYNR                                       34       1       1       0   .abs_section_34
      _REFDV                                      35       1       1       0   .abs_section_35
      _CRGFLG                                     37       1       1       1   .abs_section_37
-     _CRGINT                                     38       1       1       1   .abs_section_38
+     _CRGINT                                     38       1       1       0   .abs_section_38
      _CLKSEL                                     39       1       1       0   .abs_section_39
      _PLLCTL                                     3A       1       1       0   .abs_section_3a
-     _RTICTL                                     3B       1       1       1   .abs_section_3b
+     _RTICTL                                     3B       1       1       0   .abs_section_3b
      _COPCTL                                     3C       1       1       0   .abs_section_3c
      _ARMCOP                                     3F       1       1       0   .abs_section_3f
      _TIOS                                       40       1       1       0   .abs_section_40
@@ -2779,8 +2782,8 @@ OBJECT LIST SORTED BY ADDRESS
      _TCTL4                                      4B       1       1       0   .abs_section_4b
      _TIE                                        4C       1       1       0   .abs_section_4c
      _TSCR2                                      4D       1       1       0   .abs_section_4d
-     _TFLG1                                      4E       1       1       0   .abs_section_4e
-     _TFLG2                                      4F       1       1       0   .abs_section_4f
+     _TFLG1                                      4E       1       1       8   .abs_section_4e
+     _TFLG2                                      4F       1       1       1   .abs_section_4f
      _TC0                                        50       2       2       0   .abs_section_50
      _TC1                                        52       2       2       0   .abs_section_52
      _TC2                                        54       2       2       0   .abs_section_54
@@ -2875,9 +2878,9 @@ OBJECT LIST SORTED BY ADDRESS
      _SPI0DR                                     DD       1       1       0   .abs_section_dd
      _IIC0_IBAD                                  E0       1       1       0   .abs_section_e0
      _IIC0_IBFD                                  E1       1       1       0   .abs_section_e1
-     _IIC0_IBCR                                  E2       1       1       0   .abs_section_e2
-     _IIC0_IBSR                                  E3       1       1       0   .abs_section_e3
-     _IIC0_IBDR                                  E4       1       1       0   .abs_section_e4
+     _IIC0_IBCR                                  E2       1       1       3   .abs_section_e2
+     _IIC0_IBSR                                  E3       1       1       3   .abs_section_e3
+     _IIC0_IBDR                                  E4       1       1       1   .abs_section_e4
      _SPI1CR1                                    F0       1       1       0   .abs_section_f0
      _SPI1CR2                                    F1       1       1       0   .abs_section_f1
      _SPI1BR                                     F2       1       1       0   .abs_section_f2
@@ -3367,49 +3370,52 @@ OBJECT LIST SORTED BY ADDRESS
      _XGR6                                      3AC       2       2       0   .abs_section_3ac
      _XGR7                                      3AE       2       2       0   .abs_section_3ae
      _Startup                                  1000      32      50       1   .init       
-     led_change                                1054      13      19       1   .text       
-     init                                      1067       9       9       1   .text       
-     main                                      1070      1F      31       1   .text       
-     led_init                                  108F      21      33       1   .text       
-     led                                       10B0       9       9       3   .text       
-     led_pwm_ctrl                              10B9      39      57       1   .text       
-     rti_reenable                              10F2       4       4       2   .text       
-     rti_init                                  10F6      23      35       1   .text       
-     rti_register                              1119      49      73       2   .text       
-     rti_srv                                   1162      61      97       1   .text       
-     _ISHL                                     11C3       B      11       1   RUNTIME     
-     led_d                                     3100       1       1       4   .bss        
-     LEDCfg                                    3101       6       6       4   .bss        
-     rti_tbl                                   3107      50      80      16   .bss        
+     rti_Service                               1054      73     115       1   .text       
+     tim0_Service                              10C7       E      14       1   .text       
+     tim1_Service                              10D5       E      14       1   .text       
+     tim2_Service                              10E3       E      14       1   .text       
+     tim3_Service                              10F1       E      14       1   .text       
+     tim4_Service                              10FF       E      14       1   .text       
+     tim5_Service                              110D       E      14       1   .text       
+     tim6_Service                              111B       E      14       1   .text       
+     tim7_Service                              1129       E      14       1   .text       
+     timOvf_Service                            1137      2A      42       1   .text       
+     iic0_srv                                  1161      42      66       1   .text       
+     main                                      11A3       5       5       1   .text       
+     Init                                      11A8       3       3       1   .text       
+     iic_data                                  3100       9       9       8   .bss        
+     rti_tbl                                   3109      A0     160      13   .common     
+     tim_data                                  31A9      30      48      19   .common     
+     iic_commData                              31D9     101     257       1   .common     
      interrupt_vector_table                    3F10      F0     240       0   VECTORS     
 
 *********************************************************************************************
 UNUSED-OBJECTS SECTION
 ---------------------------------------------------------------------------------------------
 NOT USED PROCEDURES
-main.c.o:
-  led_change2 
-rtshc12.c.o (ansixsi.lib):
-  _BSHL _BSHRS _BSHRU _BDIVMODU _BDIVMODS _ISHRU _ISHRS _LSHL _LSHRU _LSHRS 
-  _LADD _LSUB _LAND _LOR _LXOR _LCMP _LCMP_P _LCMP_PP _LNEG _LCOM _LINC _LDEC 
-  _LMUL _LMULU16x32 _LMULS16x32 _lDivMod _LDIVU _NEG_P _LDIVS _LMODU _LMODS 
-  _ILSEXT _COPY _CASE_DIRECT _CASE_DIRECT_BYTE _CASE_CHECKED _CASE_CHECKED_BYTE 
-  _CASE_SEARCH _CASE_SEARCH_BYTE _CASE_SEARCH_8 _CASE_SEARCH_8_BYTE _FCALL 
-  _FPCMP _PADD _PSUB _PINC _PDEC 
 ivt.c.o:
   UnimplementedISR 
 rti.c.o:
-  rti_set_period rti_cancel 
+  rti_Init rti_Register rti_SetPeriod rti_Cancel 
+timers.c.o:
+  tim_Init tim_GetTimer tim_GetFreeTimer tim_AssignTimer tim_FreeTimer 
+  tim_dEnableInterrupts tim_dDisableInterrupts tim_dAreInterruptsEnabled 
+  tim_EnableOvfInterrupts tim_DisableOvfInterrupts tim_dClearFlag 
+  tim_dSetFallingEdge tim_dSetRisingEdge tim_dSetBothEdge tim_dSetOutputHigh 
+  tim_dSetOutputLow tim_dSetOutputToggle tim_dDisconnectOutput tim_dGetValue 
+  tim_dSetValue 
+iic.c.o:
+  iic_init iic_send iic_receive iic_isBusy iic_read_start iic_read iic_write 
 NOT USED VARIABLES
-main.c.o:
-  k 
-rtshc12.c.o (ansixsi.lib):
-  _PowOfTwo_8 _PowOfTwo_16 _PowOfTwo_32 errno 
+rti.c.o:
+  rti_isInit 
+timers.c.o:
+  tim_isInit 
 
 *********************************************************************************************
 COPYDOWN SECTION
 ---------------------------------------------------------------------------------------------
-------- ROM-ADDRESS: 0x11CE ---- SIZE       2 ---
+------- ROM-ADDRESS: 0x11AB ---- SIZE       2 ---
 Filling bytes inserted
  0000
 
@@ -3417,18 +3423,22 @@ Filling bytes inserted
 OBJECT-DEPENDENCIES SECTION
 ---------------------------------------------------------------------------------------------
 _Startup                  USES __SEG_END_SSTACK _startupData main 
-led_change                USES led_d led 
-init                      USES rti_init led_init 
-main                      USES init led_d led led_change rti_register 
-led_init                  USES _DDRAB LEDCfg led led_pwm_ctrl rti_register 
-led                       USES LEDCfg 
-led_pwm_ctrl              USES _PORTAB 
-rti_reenable              USES _CRGFLG 
-rti_init                  USES _DDRAB _ISHL rti_tbl _RTICTL _CRGINT 
-                                rti_reenable 
-rti_register              USES rti_tbl 
-rti_srv                   USES _PORTAB rti_tbl rti_reenable 
-interrupt_vector_table    USES rti_srv _Startup 
+rti_Service               USES rti_tbl _CRGFLG 
+tim0_Service              USES _TFLG1 tim_data 
+tim1_Service              USES _TFLG1 tim_data 
+tim2_Service              USES _TFLG1 tim_data 
+tim3_Service              USES _TFLG1 tim_data 
+tim4_Service              USES _TFLG1 tim_data 
+tim5_Service              USES _TFLG1 tim_data 
+tim6_Service              USES _TFLG1 tim_data 
+tim7_Service              USES _TFLG1 tim_data 
+timOvf_Service            USES _TFLG2 tim_data 
+iic0_srv                  USES _IIC0_IBSR iic_data _IIC0_IBCR _IIC0_IBDR 
+                                iic_commData 
+main                      USES Init 
+interrupt_vector_table    USES iic0_srv timOvf_Service tim7_Service 
+                                tim6_Service tim5_Service tim4_Service tim3_Service 
+                                tim2_Service tim1_Service tim0_Service rti_Service _Startup 
 
 *********************************************************************************************
 DEPENDENCY TREE
@@ -3437,40 +3447,36 @@ DEPENDENCY TREE
  | 
  +- main                
  |  | 
- |  +- init                
- |  |  | 
- |  |  +- rti_init            
- |  |  |  | 
- |  |  |  +- _ISHL               
- |  |  |  |    
- |  |  |  +- rti_reenable        
- |  |  |       
- |  |  +- led_init            
- |  |     | 
- |  |     +- led                 
- |  |     |    
- |  |     +- led_pwm_ctrl        
- |  |     |    
- |  |     +- rti_register        
- |  |          
- |  +- led                  (see above)
- |  |  
- |  +- led_change          
- |  |  | 
- |  |  +- led                  (see above)
- |  |     
- |  +- rti_register         (see above)
- |     
+ |  +- Init                
+ |       
  +- _Startup            
     | 
     +- main                 (see above)
        
  interrupt_vector_table
  | 
- +- rti_srv             
- |  | 
- |  +- rti_reenable         (see above)
- |     
+ +- iic0_srv            
+ |    
+ +- timOvf_Service      
+ |    
+ +- tim7_Service        
+ |    
+ +- tim6_Service        
+ |    
+ +- tim5_Service        
+ |    
+ +- tim4_Service        
+ |    
+ +- tim3_Service        
+ |    
+ +- tim2_Service        
+ |    
+ +- tim1_Service        
+ |    
+ +- tim0_Service        
+ |    
+ +- rti_Service         
+ |    
  +- _Startup             (see above)
     
 *********************************************************************************************
@@ -3479,6 +3485,6 @@ STATISTIC SECTION
 
 ExeFile:
 --------
-Number of blocks to be downloaded: 6
-Total size of all blocks to be downloaded: 704
+Number of blocks to be downloaded: 5
+Total size of all blocks to be downloaded: 669
 
