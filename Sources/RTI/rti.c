@@ -1,7 +1,7 @@
 #include <mc9s12xdp512.h>
 #include "rti.h"
 
-#define RTI_PRESCALER (0x29)
+#define RTI_PRESCALER (0x2B)
 #define RTI_SETPRESCALER(presc) (RTICTL = presc)
 #define RTI_ENABLE_INTERRUPTS() (CRGINT_RTIE = 1)
 #define RTI_CLEAR_FLAG() (CRGFLG_RTIF = 1)

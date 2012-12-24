@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#define RTI_FREQ 781 // Hz. 
+#define RTI_FREQ 976 // Hz. 
 // In order to change this value, RTI_PRESCALER in rti.c must be changed and recompiled.
 #define RTI_PER (1.0/RTI_FREQ) // seconds
 
