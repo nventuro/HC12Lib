@@ -33,7 +33,7 @@ _startupData is allocated at 0x1032 and uses 6 Bytes
 extern struct _tagStartup {
   unsigned nofZeroOut     1
   _Range   pZeroOut       0x3100     494
-  _Copy    *toCopyDownBeg 0x1B18
+  _Copy    *toCopyDownBeg 0x1B06
 } _startupData;
 
 *********************************************************************************************
@@ -43,9 +43,9 @@ Section Name                    Size  Type     From       To       Segment
 .init                             50     R     0x1000     0x1031   RAM_RO
 .startData                        34     R     0x1032     0x1053   RAM_RO
 .rodata                          116     R     0x1054     0x10C7   RAM_RO
-.rodata1                          31     R     0x10C8     0x10E6   RAM_RO
-.text                           2235     R     0x10E7     0x19A1   RAM_RO
-.copy                              2     R     0x1B18     0x1B19   RAM_RO
+.rodata1                          22     R     0x10C8     0x10DD   RAM_RO
+.text                           2226     R     0x10DE     0x198F   RAM_RO
+.copy                              2     R     0x1B06     0x1B07   RAM_RO
 VECTORS                          240     R     0x3F10     0x3FFF   RAMVECTORS
 .stack                           256   R/W     0x3000     0x30FF   RAM_RW
 .abs_section_8                     1   N/I        0x8        0x8   .absSeg0
@@ -697,10 +697,10 @@ VECTORS                          240     R     0x3F10     0x3FFF   RAMVECTORS
 .abs_section_3ae                   2   N/I      0x3AE      0x3AF   .absSeg646
 .bss                              18   R/W     0x3100     0x3111   RAM_RW
 .common                          476   R/W     0x3112     0x32ED   RAM_RW
-RUNTIME                          374     R     0x19A2     0x1B17   RAM_RO
+RUNTIME                          374     R     0x1990     0x1B05   RAM_RO
 
 Summary of section sizes per section type:
-READ_ONLY (R):         C0A (dec:     3082)
+READ_ONLY (R):         BF8 (dec:     3064)
 READ_WRITE (R/W):      2EE (dec:      750)
 NO_INIT (N/I):         300 (dec:      768)
 
@@ -1365,13 +1365,13 @@ MODULE:                 -- mc9s12xdp512.c.o --
      _XGR7                                      3AE       2       2       0   .abs_section_3ae
 MODULE:                 -- EMBEDDED.C.o (ansixsi.lib) --
 - PROCEDURES:
-     printf                                    10E7      13      19       3   .text       
+     printf                                    10DE      13      19       2   .text       
 - VARIABLES:
 MODULE:                 -- PRINTF.C.o (ansixsi.lib) --
 - PROCEDURES:
-     vprintf                                   10FA     44C    1100      45   .text       
-     _out                                      1546       9       9       9   .text       
-     set_printf                                154F       C      12       1   .text       
+     vprintf                                   10F1     44C    1100      45   .text       
+     _out                                      153D       9       9       9   .text       
+     set_printf                                1546       C      12       1   .text       
 - VARIABLES:
      pow10                                     1054      28      40       4   .rodata     
      pow16                                     107C      20      32       4   .rodata     
@@ -1379,17 +1379,17 @@ MODULE:                 -- PRINTF.C.o (ansixsi.lib) --
      pbuf                                      3100       6       6       9   .bss        
 MODULE:                 -- rtshc12.c.o (ansixsi.lib) --
 - PROCEDURES:
-     _BSHL                                     19A2       8       8       1   RUNTIME     
-     _LNEG                                     19AA       9       9       2   RUNTIME     
-     _LINC                                     19B3       5       5       1   RUNTIME     
-     _LMULS16x32                               19B8      1C      28       1   RUNTIME     
-     _lDivMod                                  19D4      B9     185       2   RUNTIME     
-     _NEG_P                                    1A8D       C      12       4   RUNTIME     
-     _LDIVS                                    1A99      35      53       1   RUNTIME     
-     _CASE_DIRECT_BYTE                         1ACE       5       5       1   RUNTIME     
-     _CASE_CHECKED_BYTE                        1AD3      14      20       1   RUNTIME     
-     _CASE_SEARCH_8                            1AE7      17      23       1   RUNTIME     
-     _CASE_SEARCH_8_BYTE                       1AFE      1A      26       1   RUNTIME     
+     _BSHL                                     1990       8       8       1   RUNTIME     
+     _LNEG                                     1998       9       9       2   RUNTIME     
+     _LINC                                     19A1       5       5       1   RUNTIME     
+     _LMULS16x32                               19A6      1C      28       1   RUNTIME     
+     _lDivMod                                  19C2      B9     185       2   RUNTIME     
+     _NEG_P                                    1A7B       C      12       4   RUNTIME     
+     _LDIVS                                    1A87      35      53       1   RUNTIME     
+     _CASE_DIRECT_BYTE                         1ABC       5       5       1   RUNTIME     
+     _CASE_CHECKED_BYTE                        1AC1      14      20       1   RUNTIME     
+     _CASE_SEARCH_8                            1AD5      17      23       1   RUNTIME     
+     _CASE_SEARCH_8_BYTE                       1AEC      1A      26       1   RUNTIME     
 - VARIABLES:
 MODULE:                 -- ivt.c.o --
 - PROCEDURES:
@@ -1397,42 +1397,42 @@ MODULE:                 -- ivt.c.o --
      interrupt_vector_table                    3F10      F0     240       0   VECTORS     
 MODULE:                 -- rti.c.o --
 - PROCEDURES:
-     rti_Init                                  155B      2A      42       1   .text       
-     rti_Register                              1585      46      70       3   .text       
-     rti_Cancel                                15CB      11      17       1   .text       
-     rti_Service                               15DC      5B      91       1   .text       
+     rti_Init                                  1552      2A      42       1   .text       
+     rti_Register                              157C      46      70       3   .text       
+     rti_Cancel                                15C2      11      17       1   .text       
+     rti_Service                               15D3      5B      91       1   .text       
 - VARIABLES:
      rti_isInit                                3106       1       1       2   .bss        
      rti_tbl                                   3112      A0     160      17   .common     
 MODULE:                 -- timers.c.o --
 - PROCEDURES:
-     tim_Init                                  1637      40      64       1   .text       
-     tim_GetTimer                              1677      20      32       2   .text       
-     tim_AssignTimer                           1697      3B      59       1   .text       
-     tim_dDisableInterrupts                    16D2      32      50       2   .text       
-     tim_EnableOvfInterrupts                   1704       9       9       1   .text       
-     tim_DisableOvfInterrupts                  170D       7       7       2   .text       
-     tim0_Service                              1714       9       9       1   .text       
-     tim1_Service                              171D       9       9       1   .text       
-     tim2_Service                              1726       9       9       1   .text       
-     tim3_Service                              172F       9       9       1   .text       
-     tim4_Service                              1738       9       9       1   .text       
-     tim5_Service                              1741       9       9       1   .text       
-     tim6_Service                              174A       9       9       1   .text       
-     tim7_Service                              1753       9       9       1   .text       
-     timOvf_Service                            175C      2A      42       1   .text       
+     tim_Init                                  162E      40      64       1   .text       
+     tim_GetTimer                              166E      20      32       2   .text       
+     tim_AssignTimer                           168E      3B      59       1   .text       
+     tim_dDisableInterrupts                    16C9      32      50       2   .text       
+     tim_EnableOvfInterrupts                   16FB       9       9       1   .text       
+     tim_DisableOvfInterrupts                  1704       7       7       2   .text       
+     tim0_Service                              170B       9       9       1   .text       
+     tim1_Service                              1714       9       9       1   .text       
+     tim2_Service                              171D       9       9       1   .text       
+     tim3_Service                              1726       9       9       1   .text       
+     tim4_Service                              172F       9       9       1   .text       
+     tim5_Service                              1738       9       9       1   .text       
+     tim6_Service                              1741       9       9       1   .text       
+     tim7_Service                              174A       9       9       1   .text       
+     timOvf_Service                            1753      2A      42       1   .text       
 - VARIABLES:
      tim_isInit                                3107       1       1       2   .bss        
      tim_data                                  31B2      30      48      22   .common     
 MODULE:                 -- iic.c.o --
 - PROCEDURES:
-     iic0_srv                                  1786      42      66       1   .text       
+     iic0_srv                                  177D      42      66       1   .text       
 - VARIABLES:
      iic_data                                  3108       9       9       8   .bss        
      iic_commData                              31E2     101     257       1   .common     
 MODULE:                 -- common.c.o --
 - PROCEDURES:
-     TERMIO_PutChar                            17C8       9       9       1   .text       
+     TERMIO_PutChar                            17BF       9       9       1   .text       
 - VARIABLES:
 MODULE:                 -- startup.c.o --
 - PROCEDURES:
@@ -1443,25 +1443,24 @@ MODULE:                 -- startup.c.o --
      __SEG_END_SSTACK                          3100       0       0       1               
 MODULE:                 -- usonic.c.o --
 - PROCEDURES:
-     usonic_Init                               17D1      68     104       1   .text       
-     usonic_Measure                            1839      38      56       1   .text       
-     usonic_TriggerCallback                    1871      23      35       1   .text       
-     usonic_EchoCallback                       1894      6F     111       1   .text       
-     usonic_EchoOverflow                       1903       4       4       1   .text       
-     usonic_SolveTiming                        1907      47      71       2   .text       
-     usonic_Timeout                            194E      1E      30       1   .text       
+     usonic_Init                               17C8      68     104       1   .text       
+     usonic_Measure                            1830      38      56       1   .text       
+     usonic_TriggerCallback                    1868      23      35       1   .text       
+     usonic_EchoCallback                       188B      6F     111       1   .text       
+     usonic_EchoOverflow                       18FA       4       4       1   .text       
+     usonic_SolveTiming                        18FE      47      71       2   .text       
+     usonic_Timeout                            1945      15      21       1   .text       
 - VARIABLES:
-     STRING.timeout..1                         10C8       9       9       1   .rodata1    
      usonic_IsInit                             3111       1       1       2   .bss        
      usonic_data                               32E3       B      11      30   .common     
 MODULE:                 -- main.c.o --
 - PROCEDURES:
-     main                                      196C       B      11       1   .text       
-     Init                                      1977       6       6       1   .text       
-     PrintMeas                                 197D      25      37       1   .text       
+     main                                      195A       B      11       1   .text       
+     Init                                      1965       6       6       1   .text       
+     PrintMeas                                 196B      25      37       1   .text       
 - VARIABLES:
-     STRING.invalid..1                         10D1       9       9       1   .rodata1    
-     STRING.imprimo..ld..2                     10DA       D      13       1   .rodata1    
+     STRING.invalid..1                         10C8       9       9       1   .rodata1    
+     STRING.imprimo..ld..2                     10D1       D      13       1   .rodata1    
 
 *********************************************************************************************
 MODULE STATISTIC
@@ -1477,7 +1476,7 @@ MODULE STATISTIC
   iic.c.o                                    266     66      0
   common.c.o                                   0      9      0
   startup.c.o                                  0     50      0
-  usonic.c.o                                  12    411      9
+  usonic.c.o                                  12    402      0
   main.c.o                                     0     54     22
   other                                      256     34      2
 
@@ -1499,7 +1498,7 @@ SECTION: ".init"
 SECTION: ".rodata"
   pow10 pow16 pow8 
 SECTION: ".rodata1"
-  STRING.timeout..1 STRING.invalid..1 STRING.imprimo..ld..2 
+  STRING.invalid..1 STRING.imprimo..ld..2 
 SECTION: "VECTORS"
   interrupt_vector_table 
 SECTION: ".abs_section_8"
@@ -3457,55 +3456,54 @@ OBJECT LIST SORTED BY ADDRESS
      pow10                                     1054      28      40       4   .rodata     
      pow16                                     107C      20      32       4   .rodata     
      pow8                                      109C      2C      44       4   .rodata     
-     STRING.timeout..1                         10C8       9       9       1   .rodata1    
-     STRING.invalid..1                         10D1       9       9       1   .rodata1    
-     STRING.imprimo..ld..2                     10DA       D      13       1   .rodata1    
-     printf                                    10E7      13      19       3   .text       
-     vprintf                                   10FA     44C    1100      45   .text       
-     _out                                      1546       9       9       9   .text       
-     set_printf                                154F       C      12       1   .text       
-     rti_Init                                  155B      2A      42       1   .text       
-     rti_Register                              1585      46      70       3   .text       
-     rti_Cancel                                15CB      11      17       1   .text       
-     rti_Service                               15DC      5B      91       1   .text       
-     tim_Init                                  1637      40      64       1   .text       
-     tim_GetTimer                              1677      20      32       2   .text       
-     tim_AssignTimer                           1697      3B      59       1   .text       
-     tim_dDisableInterrupts                    16D2      32      50       2   .text       
-     tim_EnableOvfInterrupts                   1704       9       9       1   .text       
-     tim_DisableOvfInterrupts                  170D       7       7       2   .text       
-     tim0_Service                              1714       9       9       1   .text       
-     tim1_Service                              171D       9       9       1   .text       
-     tim2_Service                              1726       9       9       1   .text       
-     tim3_Service                              172F       9       9       1   .text       
-     tim4_Service                              1738       9       9       1   .text       
-     tim5_Service                              1741       9       9       1   .text       
-     tim6_Service                              174A       9       9       1   .text       
-     tim7_Service                              1753       9       9       1   .text       
-     timOvf_Service                            175C      2A      42       1   .text       
-     iic0_srv                                  1786      42      66       1   .text       
-     TERMIO_PutChar                            17C8       9       9       1   .text       
-     usonic_Init                               17D1      68     104       1   .text       
-     usonic_Measure                            1839      38      56       1   .text       
-     usonic_TriggerCallback                    1871      23      35       1   .text       
-     usonic_EchoCallback                       1894      6F     111       1   .text       
-     usonic_EchoOverflow                       1903       4       4       1   .text       
-     usonic_SolveTiming                        1907      47      71       2   .text       
-     usonic_Timeout                            194E      1E      30       1   .text       
-     main                                      196C       B      11       1   .text       
-     Init                                      1977       6       6       1   .text       
-     PrintMeas                                 197D      25      37       1   .text       
-     _BSHL                                     19A2       8       8       1   RUNTIME     
-     _LNEG                                     19AA       9       9       2   RUNTIME     
-     _LINC                                     19B3       5       5       1   RUNTIME     
-     _LMULS16x32                               19B8      1C      28       1   RUNTIME     
-     _lDivMod                                  19D4      B9     185       2   RUNTIME     
-     _NEG_P                                    1A8D       C      12       4   RUNTIME     
-     _LDIVS                                    1A99      35      53       1   RUNTIME     
-     _CASE_DIRECT_BYTE                         1ACE       5       5       1   RUNTIME     
-     _CASE_CHECKED_BYTE                        1AD3      14      20       1   RUNTIME     
-     _CASE_SEARCH_8                            1AE7      17      23       1   RUNTIME     
-     _CASE_SEARCH_8_BYTE                       1AFE      1A      26       1   RUNTIME     
+     STRING.invalid..1                         10C8       9       9       1   .rodata1    
+     STRING.imprimo..ld..2                     10D1       D      13       1   .rodata1    
+     printf                                    10DE      13      19       2   .text       
+     vprintf                                   10F1     44C    1100      45   .text       
+     _out                                      153D       9       9       9   .text       
+     set_printf                                1546       C      12       1   .text       
+     rti_Init                                  1552      2A      42       1   .text       
+     rti_Register                              157C      46      70       3   .text       
+     rti_Cancel                                15C2      11      17       1   .text       
+     rti_Service                               15D3      5B      91       1   .text       
+     tim_Init                                  162E      40      64       1   .text       
+     tim_GetTimer                              166E      20      32       2   .text       
+     tim_AssignTimer                           168E      3B      59       1   .text       
+     tim_dDisableInterrupts                    16C9      32      50       2   .text       
+     tim_EnableOvfInterrupts                   16FB       9       9       1   .text       
+     tim_DisableOvfInterrupts                  1704       7       7       2   .text       
+     tim0_Service                              170B       9       9       1   .text       
+     tim1_Service                              1714       9       9       1   .text       
+     tim2_Service                              171D       9       9       1   .text       
+     tim3_Service                              1726       9       9       1   .text       
+     tim4_Service                              172F       9       9       1   .text       
+     tim5_Service                              1738       9       9       1   .text       
+     tim6_Service                              1741       9       9       1   .text       
+     tim7_Service                              174A       9       9       1   .text       
+     timOvf_Service                            1753      2A      42       1   .text       
+     iic0_srv                                  177D      42      66       1   .text       
+     TERMIO_PutChar                            17BF       9       9       1   .text       
+     usonic_Init                               17C8      68     104       1   .text       
+     usonic_Measure                            1830      38      56       1   .text       
+     usonic_TriggerCallback                    1868      23      35       1   .text       
+     usonic_EchoCallback                       188B      6F     111       1   .text       
+     usonic_EchoOverflow                       18FA       4       4       1   .text       
+     usonic_SolveTiming                        18FE      47      71       2   .text       
+     usonic_Timeout                            1945      15      21       1   .text       
+     main                                      195A       B      11       1   .text       
+     Init                                      1965       6       6       1   .text       
+     PrintMeas                                 196B      25      37       1   .text       
+     _BSHL                                     1990       8       8       1   RUNTIME     
+     _LNEG                                     1998       9       9       2   RUNTIME     
+     _LINC                                     19A1       5       5       1   RUNTIME     
+     _LMULS16x32                               19A6      1C      28       1   RUNTIME     
+     _lDivMod                                  19C2      B9     185       2   RUNTIME     
+     _NEG_P                                    1A7B       C      12       4   RUNTIME     
+     _LDIVS                                    1A87      35      53       1   RUNTIME     
+     _CASE_DIRECT_BYTE                         1ABC       5       5       1   RUNTIME     
+     _CASE_CHECKED_BYTE                        1AC1      14      20       1   RUNTIME     
+     _CASE_SEARCH_8                            1AD5      17      23       1   RUNTIME     
+     _CASE_SEARCH_8_BYTE                       1AEC      1A      26       1   RUNTIME     
      pbuf                                      3100       6       6       9   .bss        
      rti_isInit                                3106       1       1       2   .bss        
      tim_isInit                                3107       1       1       2   .bss        
@@ -3555,7 +3553,7 @@ usonic.c.o:
 *********************************************************************************************
 COPYDOWN SECTION
 ---------------------------------------------------------------------------------------------
-------- ROM-ADDRESS: 0x1B18 ---- SIZE       2 ---
+------- ROM-ADDRESS: 0x1B06 ---- SIZE       2 ---
 Filling bytes inserted
  0000
 
@@ -3604,7 +3602,6 @@ usonic_EchoCallback       USES usonic_data _TC5 _TCTL3 tim_EnableOvfInterrupts
 usonic_EchoOverflow       USES usonic_data 
 usonic_SolveTiming        USES usonic_data rti_Cancel _LMULS16x32 _LDIVS 
 usonic_Timeout            USES _TIE tim_DisableOvfInterrupts usonic_data 
-                                STRING.timeout..1 printf 
 main                      USES Init PrintMeas usonic_Measure 
 Init                      USES usonic_Init 
 PrintMeas                 USES STRING.invalid..1 printf STRING.imprimo..ld..2 
@@ -3650,25 +3647,7 @@ DEPENDENCY TREE
  |  |     |  +- usonic_Timeout      
  |  |     |  |  | 
  |  |     |  |  +- tim_DisableOvfInterrupts
- |  |     |  |  |    
- |  |     |  |  +- printf              
- |  |     |  |     | 
- |  |     |  |     +- TERMIO_PutChar      
- |  |     |  |     |    
- |  |     |  |     +- set_printf          
- |  |     |  |     |    
- |  |     |  |     +- vprintf             
- |  |     |  |        | 
- |  |     |  |        +- _out                
- |  |     |  |        |    
- |  |     |  |        +- _CASE_SEARCH_8_BYTE 
- |  |     |  |        |    
- |  |     |  |        +- _CASE_DIRECT_BYTE   
- |  |     |  |        |    
- |  |     |  |        +- _CASE_SEARCH_8      
- |  |     |  |        |    
- |  |     |  |        +- _LNEG               
- |  |     |  |             
+ |  |     |  |       
  |  |     |  +- rti_Register        
  |  |     |  |    
  |  |     |  +- tim_DisableOvfInterrupts (see above)
@@ -3679,8 +3658,8 @@ DEPENDENCY TREE
  |  |     |     |    
  |  |     |     +- _LMULS16x32         
  |  |     |     |  | 
- |  |     |     |  +- _LNEG                (see above)
- |  |     |     |     
+ |  |     |     |  +- _LNEG               
+ |  |     |     |       
  |  |     |     +- _LDIVS              
  |  |     |        | 
  |  |     |        +- _NEG_P              
@@ -3693,8 +3672,24 @@ DEPENDENCY TREE
  |  |          
  |  +- PrintMeas           
  |  |  | 
- |  |  +- printf               (see above)
- |  |     
+ |  |  +- printf              
+ |  |     | 
+ |  |     +- TERMIO_PutChar      
+ |  |     |    
+ |  |     +- set_printf          
+ |  |     |    
+ |  |     +- vprintf             
+ |  |        | 
+ |  |        +- _out                
+ |  |        |    
+ |  |        +- _CASE_SEARCH_8_BYTE 
+ |  |        |    
+ |  |        +- _CASE_DIRECT_BYTE   
+ |  |        |    
+ |  |        +- _CASE_SEARCH_8      
+ |  |        |    
+ |  |        +- _LNEG                (see above)
+ |  |           
  |  +- usonic_Measure      
  |     | 
  |     +- usonic_SolveTiming   (see above)
@@ -3738,5 +3733,5 @@ STATISTIC SECTION
 ExeFile:
 --------
 Number of blocks to be downloaded: 7
-Total size of all blocks to be downloaded: 3082
+Total size of all blocks to be downloaded: 3064
 

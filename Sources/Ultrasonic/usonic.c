@@ -2,7 +2,6 @@
 #include "timers.h"
 #include "rti.h"
 #include "mc9s12xdp512.h"
-#include <stdio.h>
  
 #define USONIC_TRIGG GLUE(PTT_PTT,USONIC_TRIGG_TIMER)
 #define USONIC_TRIGG_DDR GLUE(DDRT_DDRT,USONIC_TRIGG_TIMER)
@@ -153,7 +152,7 @@ void usonic_SolveTiming (void *data, rti_time period, rti_id id)
 	{
 		rti_Cancel(usonic_data.timeOut);
 		usonic_data.stage = IDLE;
-		(*usonic_data.callback) (USONIC_CONVERSION (usonic_data.measuredValue));
+		usonic_data.callback (USONIC_CONVERSION (usonic_data.measuredValue));
 	}
 	return;
 }
@@ -164,8 +163,7 @@ void usonic_Timeout (void *data, rti_time period, rti_id id)
 	tim_DisableOvfInterrupts (USONIC_ECHO_TIMER);
 
 	usonic_data.stage = IDLE;
-	(*usonic_data.callback) (USONIC_INVALID_MEAS);
+	usonic_data.callback (USONIC_INVALID_MEAS);
 	
-	printf("timeout\n");
 	return;
 }
