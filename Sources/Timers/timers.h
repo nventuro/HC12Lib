@@ -28,6 +28,7 @@ tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow);
 // When the timer interrupts, callback is called. 
 // When the global timer (TCNT) overflows, overflow is called.
 // callback and overflow are called with interrupts inhibited and MUST NOT disinhibit them.
+// callback must not be NULL, otherwise, the timer is not assigned.
 // The received timer has normal an overflow interrupts (they have to be enabled using tim_EnableInterrupts and tim_EnableOvfInterrupts).
 // Returns the tim_id of the assigned timer. 
 

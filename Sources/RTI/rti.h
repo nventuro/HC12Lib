@@ -9,7 +9,7 @@
 
 typedef u16 rti_time; // An integer multiple of RTI_PER (in miliseconds)
 
-#define RTI_MS2PERIOD(ms) (DIV_CEIL((((u32)ms)>0?ms:0)*RTI_FREQ,1000)) // Converts miliseconds to rti_time
+#define RTI_MS2PERIOD(ms) (DIV_CEIL(((u32)ms)*RTI_FREQ,1000)) // Converts miliseconds to rti_time
 
 typedef s8 rti_id; // An id for a registered callback
 
@@ -29,7 +29,7 @@ rti_id rti_Register(rti_ptr callback, void *data, rti_time period, rti_time dela
 #define RTI_INVALID_ID (-1) // Returned by rti_Register if the RTI memory is full and callback registration can't be done.
 	 
 #define RTI_ALWAYS 1 // period for a function that will always be called (its frequency is RTI_FREQ)
-#define RTI_ONCE 0 // delay for a function that will only be called once (in this case, period is irrelevant)
+#define RTI_ONCE 0 // period for a function that will only be called once after a certain delay
 #define RTI_NOW 1 // delay for a function that will be called for the first time as soon as the RTI interrupts the CPU
 
 void rti_SetPeriod(rti_id id, rti_time period); 

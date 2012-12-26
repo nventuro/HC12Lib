@@ -1,49 +1,49 @@
-g C000
-regs
-regs
-regs
-regs
-regs
-regs
 load ram.s19
-g c0000 -t
-g c0000 -t
-regs
-g c0000 -t
-g c0000 -t
-regs
-g c0000 -t
-g c0000 -t
-g c0000 -t
-regs
-load ram.s19
-g c0000 -t
-load ram.s19
-g c0000 -t
-g c0000 -t
-g c0000 -t
-g c0000 -t
-load ram.s19
-g c0000 -t
-g c0000 -t
-load ram.s19
-load ram.s19
-load ram.s19
-load ram.s19
-dump 
-dump c000 ffff p.bin
-dump c000 ffff
-help
-dump c0000 16384 p.bin
-dump c000 16384 p.bin
-load ram.s19
-g c0000 -t
-g c0000 -t
-g c0000 -t
-g c0000 -t
-g c0000 -t
-help
-regs
-reset
+g -t
 reset
 load ram.s19
+g -
+g -t
+reset
+load ram.s19
+g -t
+reset
+load ram.s19
+g -t
+reset
+load ram.s19
+g -t
+load ram.s19
+g -t
+reset
+load ram.s19
+g -t
+reset
+load ram.s19
+g -t
+reset
+load ram.s19
+g -t
+reset
+port com3
+reset
+load ram.s19
+reset
+load ram.s19
+g -t
+reset
+load ram.s10
+load ram.s19
+g -t
+rese
+reset
+load ram.s19
+g -t
+reset
+res
+load ram.s19
+g -t
+reset
+load ram.s19
+g -t
+reset

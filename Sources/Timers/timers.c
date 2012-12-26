@@ -49,7 +49,7 @@ void tim_Init(void)
 
 tim_id tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 {
-	if (tim_data.isTimerUsed[timNumber] == _TRUE)
+	if ((tim_data.isTimerUsed[timNumber] == _TRUE) || (cb == NULL))
 		return TIM_INVALID_ID;
 	
 	tim_AssignTimer(reqType, cb, ovf, timNumber);
@@ -61,6 +61,10 @@ tim_id tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 {
 	tim_id i;
+
+	if (cb == NULL)
+		return TIM_INVALID_ID;
+
 	for (i = 0; i < TIM_AMOUNT; i++)
 		if (tim_data.isTimerUsed[i] == _FALSE)
 		{
@@ -594,8 +598,7 @@ void interrupt tim0_Service(void)
 {
 	tim_ClearFlag(0);
 
-	if (tim_data.cbArray[0] != NULL)
-		(*tim_data.cbArray[0])();
+	tim_data.cbArray[0]();
 	
 	return;
 }
@@ -604,9 +607,8 @@ void interrupt tim0_Service(void)
 void interrupt tim1_Service(void)
 {
 	tim_ClearFlag(1);
-
-	if (tim_data.cbArray[1] != NULL)
-		(*tim_data.cbArray[1])();
+	
+	tim_data.cbArray[1]();
 	
 	return;
 }
@@ -616,8 +618,7 @@ void interrupt tim2_Service(void)
 {
 	tim_ClearFlag(2);
 
-	if (tim_data.cbArray[2] != NULL)
-		(*tim_data.cbArray[2])();
+	tim_data.cbArray[2]();
 	
 	return;
 }
@@ -627,8 +628,7 @@ void interrupt tim3_Service(void)
 {
 	tim_ClearFlag(3);
 
-	if (tim_data.cbArray[3] != NULL)
-		(*tim_data.cbArray[3])();
+	tim_data.cbArray[3]();
 	
 	return;
 }
@@ -638,8 +638,7 @@ void interrupt tim4_Service(void)
 {
 	tim_ClearFlag(4);
 
-	if (tim_data.cbArray[4] != NULL)
-		(*tim_data.cbArray[4])();
+	tim_data.cbArray[4]();
 	
 	return;
 }
@@ -649,8 +648,7 @@ void interrupt tim5_Service(void)
 {
 	tim_ClearFlag(5);
 
-	if (tim_data.cbArray[5] != NULL)
-		(*tim_data.cbArray[5])();
+	tim_data.cbArray[5]();
 	
 	return;
 }
@@ -660,8 +658,7 @@ void interrupt tim6_Service(void)
 {
 	tim_ClearFlag(6);
 
-	if (tim_data.cbArray[6] != NULL)
-		(*tim_data.cbArray[6])();
+	tim_data.cbArray[6]();
 	
 	return;
 }
@@ -671,8 +668,7 @@ void interrupt tim7_Service(void)
 {
 	tim_ClearFlag(7);
 
-	if (tim_data.cbArray[7] != NULL)
-		(*tim_data.cbArray[7])();
+	tim_data.cbArray[7]();
 	
 	return;
 }

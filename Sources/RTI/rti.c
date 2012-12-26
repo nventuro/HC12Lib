@@ -1,7 +1,7 @@
 #include <mc9s12xdp512.h>
 #include "rti.h"
 
-#define RTI_PRESCALER (0x2B)
+#define RTI_PRESCALER (0x27) // 16MHz / (8*2^11) = 976 Hz.
 #define RTI_SETPRESCALER(presc) (RTICTL = presc)
 #define RTI_ENABLE_INTERRUPTS() (CRGINT_RTIE = 1)
 #define RTI_CLEAR_FLAG() (CRGFLG_RTIF = 1)
@@ -90,15 +90,17 @@ void interrupt rti_Service(void)
 	{
 		if (rti_tbl[i].callback != NULL) 
 		{
-			if (rti_tbl[i].count == RTI_ONCE) 
-			{
-				rti_tbl[i].callback(rti_tbl[i].data, rti_tbl[i].period, i);
-				rti_tbl[i].callback = NULL;
-			} 
-			else if ((--rti_tbl[i].count) == 0) 
+			if ((--rti_tbl[i].count) == 0) 
 			{	
 				rti_tbl[i].callback(rti_tbl[i].data, rti_tbl[i].period, i);
-				rti_tbl[i].count = rti_tbl[i].period;
+				
+				if (rti_tbl[i].count != 0) // If the callback deleted itself and registered another function in the same place, count wont be 0
+					break;
+				
+				if (rti_tbl[i].period == RTI_ONCE)
+					rti_tbl[i].callback = NULL;
+				else
+					rti_tbl[i].count = rti_tbl[i].period;
 			}
 		}
 	}
