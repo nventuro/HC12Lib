@@ -84,6 +84,7 @@ void usonic_Measure (usonic_ptr callback)
 	tim_EnableInterrupts (USONIC_TRIGG_TIMER);
 	
 	rti_Register (usonic_SolveTiming, NULL, RTI_ONCE, RTI_MS2PERIOD(USONIC_SAMPLE_PERIOD_MS));
+	usonic_data.timeOut = rti_Register(usonic_Timeout, NULL, RTI_ONCE, RTI_MS2PERIOD(USONIC_TIMEOUT_MS));
 	
 	usonic_data.stage = TRIGGERING;
 	
@@ -118,8 +119,6 @@ void usonic_EchoCallback (void)
 			usonic_data.overflowCount = 0;
 			tim_SetFallingEdge (USONIC_ECHO_TIMER);
 			tim_EnableOvfInterrupts (USONIC_ECHO_TIMER);
-
-			usonic_data.timeOut = rti_Register(usonic_Timeout, NULL, RTI_ONCE, RTI_MS2PERIOD(USONIC_TIMEOUT_MS));
 			
 			usonic_data.stage = WAITING_FOR_ECHO_TO_END;
 			
@@ -143,7 +142,7 @@ void usonic_EchoOverflow (void)
 	usonic_data.overflowCount++;
 }
 
-// Callback that counts 30ms or 1 ms
+
 void usonic_SolveTiming (void *data, rti_time period, rti_id id)
 {
 	if (usonic_data.halfReady == _FALSE)
@@ -159,6 +158,7 @@ void usonic_SolveTiming (void *data, rti_time period, rti_id id)
 
 void usonic_Timeout (void *data, rti_time period, rti_id id)
 {
+	tim_DisableInterrupts (USONIC_TRIGG_TIMER);
 	tim_DisableInterrupts (USONIC_ECHO_TIMER);
 	tim_DisableOvfInterrupts (USONIC_ECHO_TIMER);
 

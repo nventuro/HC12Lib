@@ -1,17 +1,3 @@
-load ram.s19
-g -t
-reset
-load ram.s19
-g -
-g -t
-reset
-load ram.s19
-g -t
-reset
-load ram.s19
-g -t
-reset
-load ram.s19
 g -t
 load ram.s19
 g -t
@@ -46,4 +32,18 @@ g -t
 reset
 load ram.s19
 g -t
+reset
+reset
+load ram.s19
+g
+reset
+load ram.s19
+g
+reset
+load ram.s19
+g
+reset
+load rams19
+load ram.s19
+g
 reset
