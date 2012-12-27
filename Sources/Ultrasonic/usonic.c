@@ -1,10 +1,11 @@
 #include "usonic.h"
 #include "timers.h"
 #include "rti.h"
-#include "mc9s12xdp512.h"
  
 #define USONIC_TRIGG GLUE(PTT_PTT,USONIC_TRIGG_TIMER)
 #define USONIC_TRIGG_DDR GLUE(DDRT_DDRT,USONIC_TRIGG_TIMER)
+
+#define USONIC_STARTUP_DELAY_MS 20
 
 #define USONIC_PULSE_TIME DIV_CEIL(10000,TIM_TICK_NS)
 #define USONIC_SAMPLE_PERIOD_MS 30
@@ -34,26 +35,23 @@ struct
 	rti_id timeOut;
 } usonic_data;
 
-bool usonic_IsInit = _FALSE;
+bool usonic_isInit = _FALSE;
 
 void usonic_TriggerCallback (void);
 void usonic_EchoCallback (void);
 void usonic_EchoOverflow (void);
 
+void usonic_InitCallback (void *data, rti_time period, rti_id id);
 void usonic_SolveTiming (void *data, rti_time period, rti_id id);
 void usonic_Timeout (void *data, rti_time period, rti_id id);
 
 void usonic_Init (void)
 {
-	u32 i;
-	if (usonic_IsInit == _TRUE)
-		return;
-	
-	usonic_IsInit = _TRUE;	
+	if (usonic_isInit == _TRUE)
+		return;	
 
 	usonic_data.stage = IDLE;
-
-	rti_Init();
+	
 	tim_Init();	
 	
 	tim_GetTimer (TIM_OC, usonic_TriggerCallback, NULL, USONIC_TRIGG_TIMER);
@@ -63,16 +61,24 @@ void usonic_Init (void)
 	USONIC_TRIGG_DDR = DDR_OUT;
 	USONIC_TRIGG = 0;
 	
-	for (i = 0; i < 10000; i++)
-		asm nop;
-
+	rti_Init();
+	rti_Register(usonic_InitCallback, NULL, RTI_ONCE, RTI_MS2PERIOD(USONIC_STARTUP_DELAY_MS));
+	
+	while (usonic_isInit != _TRUE)
+		;
+	
 	return;
 }
 
-void usonic_Measure (usonic_ptr callback)
+void usonic_InitCallback (void *data, rti_time period, rti_id id)
+{
+	usonic_isInit = _TRUE;
+}
+
+bool usonic_Measure (usonic_ptr callback)
 {
 	if ((usonic_data.stage != IDLE) || (callback == NULL))
-		return;
+		return _FALSE;
 	
 	usonic_data.callback = callback;
 	usonic_data.halfReady = _FALSE;
@@ -88,7 +94,7 @@ void usonic_Measure (usonic_ptr callback)
 	
 	usonic_data.stage = TRIGGERING;
 	
-	return;
+	return _TRUE;
 }
 
 void usonic_TriggerCallback (void)
@@ -145,6 +151,7 @@ void usonic_EchoOverflow (void)
 
 void usonic_SolveTiming (void *data, rti_time period, rti_id id)
 {
+	// SolveTiming has to be called twice for a measurement to end: once ~30ms after the trigger pulse, and once ~2ms after the echo ended.
 	if (usonic_data.halfReady == _FALSE)
 		usonic_data.halfReady = _TRUE;
 	else

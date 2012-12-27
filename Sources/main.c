@@ -1,7 +1,6 @@
 #include "mc9s12xdp512.h"
 #include "common.h"
 #include "usonic.h"
-#include "rti.h"
 #include "lcd.h"
 
 void Init (void);
@@ -18,11 +17,11 @@ void main (void)
 void Init (void)
 {
 	// Modules that don't require interrupts to be enabled
-	usonic_Init ();
 	
 	asm cli;
 	
 	// Modules that do require interrupts to be enabled
+	usonic_Init ();
 	lcd_Init (LCD_2004);
 	
 	return;
