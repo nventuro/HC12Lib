@@ -5,15 +5,16 @@
 #define USONIC_TRIGG GLUE(PTT_PTT,USONIC_TRIGG_TIMER)
 #define USONIC_TRIGG_DDR GLUE(DDRT_DDRT,USONIC_TRIGG_TIMER)
 
-#define USONIC_STARTUP_DELAY_MS 20
+#define USONIC_STARTUP_DELAY_MS 200
 
-#define USONIC_PULSE_TIME DIV_CEIL(10000,TIM_TICK_NS)
+#define USONIC_PULSE_TIME_US 10
 #define USONIC_SAMPLE_PERIOD_MS 30
 #define USONIC_COOLDOWN_MS 3
 #define USONIC_TIMEOUT_MS 300
 
-#define USONIC_OUT_OF_RANGE (((u32)50)*1000*1000/TIM_TICK_NS)
-#define USONIC_CONVERSION(x) (x<USONIC_OUT_OF_RANGE?((x)*TIM_TICK_NS/58000):USONIC_INVALID_MEAS)
+#define USONIC_OUT_OF_RANGE_MS 50
+#define USONIC_US_TO_CM(us) (us/58)
+#define USONIC_CONVERSION(x) (x < TIM_US_TO_TICKS(USONIC_OUT_OF_RANGE_MS*1e3) ? USONIC_US_TO_CM(TIM_TICKS_TO_US(x)):USONIC_INVALID_MEAS)
 
 typedef enum
 {
@@ -62,7 +63,7 @@ void usonic_Init (void)
 	USONIC_TRIGG = 0;
 	
 	rti_Init();
-	rti_Register(usonic_InitCallback, NULL, RTI_ONCE, RTI_MS2PERIOD(USONIC_STARTUP_DELAY_MS));
+	rti_Register(usonic_InitCallback, NULL, RTI_ONCE, RTI_MS_TO_TICKS(USONIC_STARTUP_DELAY_MS));
 	
 	while (usonic_isInit != _TRUE)
 		;
@@ -85,12 +86,12 @@ bool usonic_Measure (usonic_ptr callback)
 	
 	USONIC_TRIGG = 1;
 
-	tim_SetValue (USONIC_TRIGG_TIMER, tim_GetGlobalValue() + USONIC_PULSE_TIME);
+	tim_SetValue (USONIC_TRIGG_TIMER, tim_GetGlobalValue() + TIM_US_TO_TICKS(USONIC_PULSE_TIME_US));
 	tim_ClearFlag (USONIC_TRIGG_TIMER);
 	tim_EnableInterrupts (USONIC_TRIGG_TIMER);
 	
-	rti_Register (usonic_SolveTiming, NULL, RTI_ONCE, RTI_MS2PERIOD(USONIC_SAMPLE_PERIOD_MS));
-	usonic_data.timeOut = rti_Register(usonic_Timeout, NULL, RTI_ONCE, RTI_MS2PERIOD(USONIC_TIMEOUT_MS));
+	rti_Register (usonic_SolveTiming, NULL, RTI_ONCE, RTI_MS_TO_TICKS(USONIC_SAMPLE_PERIOD_MS));
+	usonic_data.timeOut = rti_Register(usonic_Timeout, NULL, RTI_ONCE, RTI_MS_TO_TICKS(USONIC_TIMEOUT_MS));
 	
 	usonic_data.stage = TRIGGERING;
 	
@@ -136,7 +137,7 @@ void usonic_EchoCallback (void)
 			tim_DisableInterrupts (USONIC_ECHO_TIMER);
 			tim_DisableOvfInterrupts (USONIC_ECHO_TIMER);
 
-			rti_Register (usonic_SolveTiming, NULL, RTI_ONCE, RTI_MS2PERIOD(USONIC_COOLDOWN_MS));	
+			rti_Register (usonic_SolveTiming, NULL, RTI_ONCE, RTI_MS_TO_TICKS(USONIC_COOLDOWN_MS));	
 			
 			break;
 	}
