@@ -7,9 +7,9 @@
 // In order to change this value, RTI_PRESCALER in rti.c must be changed and recompiled.
 #define RTI_PER (1.0/RTI_FREQ) // seconds
 
-typedef u16 rti_time; // An integer multiple of RTI_PER (in miliseconds)
+typedef u16 rti_time; // A type for expressing time, each rti_time equals one RTI_PER
 
-#define RTI_MS2PERIOD(ms) (DIV_CEIL(((u32)ms)*RTI_FREQ,1000)) // Converts miliseconds to rti_time
+#define RTI_MS_TO_TICKS(ms) (DIV_CEIL(((u32)ms)*RTI_FREQ,1000)) // Converts miliseconds to rti_time
 
 typedef s8 rti_id; // An id for a registered callback
 
