@@ -7,6 +7,8 @@
 *.o
 *.tdt
 *.abs
+*.s19
+*.map
 
 ############
 ## Monitor
