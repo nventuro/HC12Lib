@@ -2,6 +2,7 @@
 #include "common.h"
 #include "usonic.h"
 #include "lcd.h"
+#include <stdio.h>
 
 void Init (void);
 void PrintMeas (s32 measurement);
@@ -21,16 +22,13 @@ void Init (void)
 	asm cli;
 	
 	// Modules that do require interrupts to be enabled
-	usonic_Init ();
 	lcd_Init (LCD_2004);
+	usonic_Init ();
 	
 	return;
 }
 
 void PrintMeas (s32 measurement)
 {
-	if (measurement == USONIC_INVALID_MEAS)
-		lcd_Print ("Medicion invalida.");
-	else
-		lcd_Print ("Distancia: algo cm");
+	printf("%ld\n", measurement);
 }
