@@ -6,6 +6,15 @@
 *.lst
 *.o
 *.tdt
+*.abs
+*.map
+*.s19
+
+############
+## Monitor
+############
+
+*buffer.txt
 
 ############
 ## Windows
