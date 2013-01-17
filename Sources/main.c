@@ -1,10 +1,9 @@
 #include "mc9s12xdp512.h"
 #include "common.h"
-#include "usonic.h"
-#include "lcd.h"
+#include "dmu.h"
 #include <stdio.h>
 
-extern struct dmu_data;
+extern struct dmu_data_T dmu_data;
 
 
 void Init (void);
@@ -15,7 +14,7 @@ void main (void)
 	Init ();
 	
 	while (1)
-		usonic_Measure (PrintMeas);
+		dmu_GetMeasurements();
 }
 
 void Init (void)

@@ -1,8 +1,8 @@
 #include "dmu.h"
-#include "iic.h"
 #include <stdio.h>
 
 #define MPU_ADDRESS 0b01101000
+
 
 struct dmu_measurements_T
 {
@@ -18,14 +18,7 @@ struct dmu_measurements_T
 
 } dmu_measurements;
 
-struct 
-{
-	bool init;
-	
-	iic_ptr cb;
-	u8 stage;
-	
-}dmu_data = {_FALSE, NULL, 0};
+struct dmu_data_T dmu_data = {_FALSE, NULL, 0};
 
 void dmu_Print(void);
 void dmu_fifoStageRead(void);
@@ -41,7 +34,7 @@ void dmu_fifoStageRead(void);
 #define dmu_SignalReset(g, a, t, cb) do {			\
 	iic_commData.data[0] = ADD_SIGNAL_PATH_RESET;	\
 	iic_commData.data[1] = RESET_SIGNAL(g,a,t);		\
-	dmu_Send(cb, NULL, 2, NULL);		\
+	dmu_Send(cb, NULL, 2, NULL);					\
 } while(0)
 
 #define dmu_FifoReset(cb) do {												\
@@ -101,6 +94,7 @@ void dmu_Init()
 	switch (dmu_data.stage)
 	{
 	case 0:
+		
 		iic_commData.data[0] = ADD_SAMPLE_RATE_DIVIDER;
 		iic_commData.data[1] = SAMPLE_RATE_DIVIDER;	// 25
 		iic_commData.data[2] = CONFIG;				// 26
@@ -117,6 +111,7 @@ void dmu_Init()
 		if (dmu_Send (dmu_Init, NULL, 12, NULL) == _FALSE)
 			return;
 		dmu_data.stage++;
+		iic_MakeBusReservation();
 		break;
 	
 	case 1:
@@ -131,6 +126,7 @@ void dmu_Init()
 		
 	case 2:		// Done for now - No need of resets or pwr mgmt.
 		dmu_data.init = _TRUE;
+		iic_FreeBusReservation();
 		break;
 		
 	default: 

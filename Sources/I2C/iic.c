@@ -2,7 +2,7 @@
 #include "mc9s12xdp512.h"
 
 #define IIC_START()	(IIC0_IBCR_MS_SL = 1)
-#define IIC_STOP() do {IIC0_IBCR_MS_SL = 0; iic_data.stoppingBus = _TRUE;} while(0)
+#define IIC_STOP() do {IIC0_IBCR_MS_SL = 0; } while(0)
 #define IIC_SEND(a) (IIC0_IBDR = a)
 #define IIC_RECEIVE() (IIC0_IBDR)
 #define READ 1
@@ -23,14 +23,10 @@
 
 iic_commData_T iic_commData;
 
-struct {
-    iic_ptr currCB;
-    iic_ptr eotCB;
-    iic_ptr commFailedCB;
-    u8 dataIdx;
-    bool init;
-    bool stoppingBus;
-}iic_data = {NULL,NULL,NULL,0,_FALSE,_FALSE};
+iic_data_T iic_data = {NULL,NULL,NULL,0,_FALSE,_FALSE};
+
+bool* const busIsFreePtr = &iic_data.busIsFree;
+
 
 typedef struct 
 {
@@ -56,7 +52,7 @@ void iic_Init (void)
 		return;
 	
 	iic_data.init = _TRUE;
-	iic_data.stoppingBus = _FALSE;
+	iic_data.busIsFree = _TRUE;		// Used in multi-stage transmissions.
 	IIC_MODULE_ENABLE();
 	IIC_SET_BAUD();
 	IIC_FLG_CLEAR();
@@ -68,10 +64,8 @@ void iic_Init (void)
 
 bool iic_Send (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toSend, u8* sendBuffer)
 {
-    if ((iic_IsBusy()) && (iic_data.stoppingBus))
+    if ((iic_IsBusy()) || !(iic_data.busIsFree))
     	while (iic_IsBusy()); // Se espera a que se termine de liberar el bus     
-        	   
-	iic_data.stoppingBus = _FALSE;    
     
     iic_data.eotCB = eotCB;
     iic_data.commFailedCB = commFailedCB;
@@ -96,10 +90,8 @@ bool iic_Send (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toSend, u8
 
 bool iic_Receive (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead, u8* receiveBuffer)
 {
-	if ((iic_IsBusy()) && (iic_data.stoppingBus))
+	if ((iic_IsBusy()) || !(iic_data.busIsFree))
     	while (iic_IsBusy()); // Se espera a que se termine de liberar el bus     
-        	   
-	iic_data.stoppingBus = _FALSE;    
 	
     iic_data.eotCB = eotCB;
     iic_data.commFailedCB = commFailedCB;
@@ -157,10 +149,12 @@ void iic_FullStagesReceive (void)
 	
 		iic_Send(rData->slaveAddress, iic_FullStagesReceive, NULL, 1, &(rData->regAddress));	// Write start read address to slave device
 		rData->stage++;
+		iic_data.busIsFree = _FALSE;	// Disable bus for other transfers.
 		
 		break;
 
 	case 1:		// Start reception itself. Data needed to call iic_Receive can be overwritten in global array if receiveBuffer is NULL, but its OK.
+		iic_data.busIsFree = _TRUE;		// Re-Enable for reception.
 		iic_Receive(rData->slaveAddress, rData->eotCB, rData->commFailedCB, 
 											rData->toRead, rData->receiveBuffer);
 		break;

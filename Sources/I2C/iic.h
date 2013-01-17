@@ -13,7 +13,20 @@ typedef struct {
     u8* dataPtr;
 } iic_commData_T;
 
+typedef struct {
+    iic_ptr currCB;
+    iic_ptr eotCB;
+    iic_ptr commFailedCB;
+    u8 dataIdx;
+    bool init;
+    bool busIsFree;
+}iic_data_T;
+
+
+extern bool * const busIsFreePtr;
+
 extern iic_commData_T iic_commData;
+
 
 void iic_Init (void);
 /*	Inits I2C module. Must be called at the beginning of the program.
@@ -50,6 +63,9 @@ bool iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic
 
 #define iic_IsBusy() (IIC0_IBSR_IBB == 1) ? (_TRUE) : (_FALSE)
 /*	Checks the bus' status. */
+
+#define iic_MakeBusReservation() (*busIsFreePtr = _FALSE)
+#define iic_FreeBusReservation() (*busIsFreePtr = _TRUE)
 
 
 void interrupt iic0_srv (void);
