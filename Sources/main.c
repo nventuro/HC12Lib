@@ -4,6 +4,9 @@
 #include "lcd.h"
 #include <stdio.h>
 
+extern struct dmu_data;
+
+
 void Init (void);
 void PrintMeas (s32 measurement);
 
@@ -22,8 +25,12 @@ void Init (void)
 	asm cli;
 	
 	// Modules that do require interrupts to be enabled
-	lcd_Init (LCD_2004);
-	usonic_Init ();
+	iic_Init();
+	dmu_Init();
+	
+	while (dmu_data.init == _FALSE)
+		;
+	printf("Init done\n");
 	
 	return;
 }
