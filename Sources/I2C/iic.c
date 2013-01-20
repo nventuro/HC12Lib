@@ -1,6 +1,8 @@
 #include "iic.h"
 #include "mc9s12xdp512.h"
 
+#include <stdio.h>
+
 #define IIC_START()	(IIC0_IBCR_MS_SL = 1)
 #define IIC_STOP() do {IIC0_IBCR_MS_SL = 0; } while(0)
 #define IIC_SEND(a) (IIC0_IBDR = a)
@@ -127,10 +129,15 @@ bool iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic
 {
 	iic_receiveData_T receiveData;
 	iic_receiveData_T* dataReference = (iic_receiveData_T*)((void*)iic_commData.data);
-	
-	if (iic_IsBusy())
+	 
+	if (iic_IsBusy() || (!iic_data.busIsFree) )
+	{
+		if (iic_data.busIsFree == _FALSE)
+			printf("bus not free\n");
+		else
+			printf("bus busy\n");
 		return _FALSE;
-	
+	}
 	receive_dataCopy(receiveData, regAddress, slaveAddress, eotCB, commFailedCB, toRead, receiveBuffer, 0);
 	*dataReference = receiveData;	// automatic MemCpy to iic buffer.
 	
@@ -139,6 +146,7 @@ bool iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic
 	return _TRUE;				// Reception in process.
 }
 
+#include "dmu.h"
 
 void iic_FullStagesReceive (void)
 {
@@ -147,16 +155,18 @@ void iic_FullStagesReceive (void)
 	{
 	case 0:		// Prepare to read: send read address to slave device.
 	
-		iic_Send(rData->slaveAddress, iic_FullStagesReceive, NULL, 1, &(rData->regAddress));	// Write start read address to slave device
+		iic_Send(rData->slaveAddress, iic_FullStagesReceive, dmu_ImFucked, 1, &(rData->regAddress));	// Write start read address to slave device
 		rData->stage++;
 		iic_data.busIsFree = _FALSE;	// Disable bus for other transfers.
-		
+		putchar('b');putchar('u');putchar('s');putchar('y');putchar('\n');
+
 		break;
 
 	case 1:		// Start reception itself. Data needed to call iic_Receive can be overwritten in global array if receiveBuffer is NULL, but its OK.
 		iic_data.busIsFree = _TRUE;		// Re-Enable for reception.
 		iic_Receive(rData->slaveAddress, rData->eotCB, rData->commFailedCB, 
 											rData->toRead, rData->receiveBuffer);
+		putchar('f');putchar('r');putchar('e');putchar('e');putchar('\n');
 		break;
 		
 	default:
@@ -170,20 +180,29 @@ void iic_FullStagesReceive (void)
 
 void interrupt iic0_srv (void)
 {
-    IIC_FLG_CLEAR();   
+    IIC_FLG_CLEAR();
+//    putchar('i');putchar('i');putchar('c');putchar('\n');
   
     // Deteccion de eot
     if (iic_data.currCB == iic_data.eotCB)
     {
+
         IIC_STOP();		
+
+    	while (iic_IsBusy())
+    		putchar('-');
        	 
     	if (IIC0_IBCR_TX_RX == 0)
     		iic_commData.dataPtr[iic_data.dataIdx] = IIC_RECEIVE();
+  		
+  		putchar('e');putchar('o');putchar('t');putchar('C');putchar('B');putchar('\n');   	    
+    
     }
     
     // Deteccion de errores
     if (((IIC0_IBSR_RXAK == 1) && (IIC0_IBCR_TX_RX == 1)) || (IIC0_IBSR_IBAL == IIC_ARBITRATION_LOST))
     {
+   	    printf("commFail\n");
 		IIC_STOP();
 		
     	iic_data.currCB = iic_data.commFailedCB;
@@ -236,6 +255,15 @@ void iic_write (void)
     
     IIC_SEND(iic_commData.dataPtr[iic_data.dataIdx]);
     iic_data.dataIdx++;
-        
+ 
     return;
+}
+
+void iic_FlushBuffer(void)
+{
+	u16 i;
+	for (i = 0; i < IIC_MEM_SIZE; i++)
+		iic_commData.data[i] = 0;
+	
+	return;
 }

@@ -29,13 +29,13 @@ typedef enum
 
 // Reg 26 - ADD_CONFIG - HEADER
 #define EXT_SYNC_SET (0 << 3)
-#define LP_FILTER_CONFIG (0)	// 0 to 6 
+#define LP_FILTER_CONFIG (1)	// 0 to 6 
 
 // Reg 26 - ADD_CONFIG - DATA
 #define CONFIG (LP_FILTER_CONFIG | EXT_SYNC_SET)
 
 // Set this value; an approximation will be used as sample rate according to the divider.
-#define SAMPLE_RATE (2000)
+#define SAMPLE_RATE (5)
 
 // Reg 25: ADD_SAMPLE_RATE_DIVIDER - DATA:
 #define SAMPLE_RATE_DIVIDER ((LP_FILTER_CONFIG == 0 ) ? (8000/SAMPLE_RATE-1) : (1000/SAMPLE_RATE-1))	// u8 - reg 25 ADD_SAMPLE_RATE_DIVIDER
@@ -65,16 +65,16 @@ typedef enum
 #define ACCEL_CONFIG(x, y, z) (ACCEL_FULLSCALE | ACCEL_SELFTEST(x, y, z))	// ADD_ACCEL_CONFIG (28)
 
 // Reg 29 and Reg 30 DATA
-#define FREE_FALL_THRESHOLD	30	// u8 - ADD_FREE_FALL_THRESHOLD	(reg 29)
-#define FREE_FALL_DURATION	5	// u8 - ADD_FREE_FALL_DURATION (reg 30)
+#define FREE_FALL_THRESHOLD	0	// u8 - ADD_FREE_FALL_THRESHOLD	(reg 29)
+#define FREE_FALL_DURATION	0	// u8 - ADD_FREE_FALL_DURATION (reg 30)
 
 // Reg 31 and Reg 32: int threshold/ duration - DATA & HEADER
-#define MOTION_INT_THRESHOLD 30	// u8 - ADD_MOTION_THRESHOLD (reg 31)
-#define MOTION_INT_DURATION 5 // u8 - ADD_MOTION_DURATION (reg 32)
+#define MOTION_INT_THRESHOLD 0	// u8 - ADD_MOTION_THRESHOLD (reg 31)
+#define MOTION_INT_DURATION 0 // u8 - ADD_MOTION_DURATION (reg 32)
 
 // Reg 33 and Reg 34: Zero motion interrupt - DATA & HEADER
-#define ZERO_MOTION_THRESHOLD 30	// u8 - ADD_ZERO_MOTION_THRESHOLD (reg 33)
-#define ZERO_MOTION_DURATION 5		// u8 - ADD_ZERO_MOTION_DURATION (reg 34)
+#define ZERO_MOTION_THRESHOLD 0	// u8 - ADD_ZERO_MOTION_THRESHOLD (reg 33)
+#define ZERO_MOTION_DURATION 0		// u8 - ADD_ZERO_MOTION_DURATION (reg 34)
 // Reg 35 - ADD_FIFO_ENABLE - HEADER
 // Note: see reg 106 (FIFO MASTER ENABLE)
 #define FIFO_XG_ENABLE 0
@@ -91,7 +91,7 @@ enum {HIGH = 0, LOW};
 #define INT_OPEN_DRAIN 0	// Pin logic
 #define INT_LATCH_ENABLE 1	// Create pulse or latch pin to INT_LEVEL when interrupt is generated.
 #define INT_FAST_CLEAR 1	// If enabled, any read operation clears interrupt.
-#define I2C_BYPASS_ENABLE 1	// Not used yet.
+#define I2C_BYPASS_ENABLE 0	// Not used yet.
 
 // Reg 55: ADD_INT_PIN_CFG - DATA:
 #define INT_PIN_CFG ( (INT_LEVEL << 7) | (INT_OPEN_DRAIN << 6) |		\
@@ -129,26 +129,27 @@ enum {DEC_RESET = 0, DEC_1, DEC_2, DEC_4};
 
 // Reg 106 - USER_CTRL
 // Note: all resets are cleared to 0 after reset is triggered
-#define FIFO_MASTER_ENABLE 0
-#define I2C_MASTER_ENABLE 0
-#define MPU_SPI_ENABLE 0
-#define FIFO_RESET 0
-#define I2C_MASTER_RESET 0
-#define SIGNAL_PATH_RESET 0		
+enum {FIFO_MASTER_DISABLE = 0, FIFO_MASTER_ENABLE};
+enum {I2C_MASTER_DISABLE = 0, I2C_MASTER_ENABLE};
+enum {MPU_SPI_DISABLE = 0, MPU_SPI_ENABLE};
+enum {FIFO_RUN = 0, FIFO_RESET};	// Run as opposite of reset (not reset)
+enum {I2C_MASTER_RUN = 0, I2C_MASTER_RESET};
+enum {SIGNAL_PATH_RUN = 0, SIGNAL_PATH_RESET};
 
-#define USER_CTRL(fifo_en, fifo_res, signal_res) ( (fifo_en << 6) | (I2C_MASTER_ENABLE << 5) | \
-	(MPU_SPI_ENABLE << 4) | (fifo_res << 2) | (I2C_MASTER_RESET << 1) | (signal_res <<0 ))
+#define USER_CTRL(fifo_en, fifo_res, signal_res) ( (fifo_en << 6) | (I2C_MASTER_DISABLE << 5) | \
+	(MPU_SPI_DISABLE << 4) | (fifo_res << 2) | (I2C_MASTER_RUN << 1) | (signal_res <<0 ))
 
 // Reg 107 - PWR_MGMT_1 - HEADER
-#define PWR_SLEEP 0		// Send device to sleep mode.
+enum {PWR_SLEEP_OFF=0, PWR_SLEEP_ON};		// Send device to sleep mode.
 #define PWR_CYCLE 0		// Cycle between sleep and wake; see reg 108
 enum {CLK_INTERNAL=0, CLK_PLL_X, CLK_PLL_Y, CLK_PLL_Z, CLK_EXT_32K, CLK_EXT_19M, CLK_STOP=7 };
 #define PWR_CLK_SOURCE CLK_INTERNAL
-#define PWR_RESET 0
-#define PWR_TEMP_DISABLE 1	// Temp disabled
+enum {PWR_RUN=0, PWR_RESET};
+#define PWR_TEMP_DISABLE 0	// Temp disabled
 
 // Reg 107 - PWR_MGMT_1 - DATA
-#define PWR_MGMT_1 ( (PWR_RESET << 7) | (PWR_SLEEP << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
+#define PWR_MGMT_1_RESET ( (PWR_RESET << 7) | (PWR_SLEEP_ON << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
+#define PWR_MGMT_1_RUN 	 ( (PWR_RUN << 7) | (PWR_SLEEP_OFF << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
 
 // Reg 108 - PWR_MGMT_2 - HEADER
 // To use wake mode, cycle = 1, sleep = 0, temp_dis = 1, stdby =1

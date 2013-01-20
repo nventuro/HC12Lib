@@ -61,11 +61,14 @@ bool iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic
 	Note: slaveAddress is composed by 7 bits, aligned RIGHT (X as MSB).
 */
 
-#define iic_IsBusy() (IIC0_IBSR_IBB == 1) ? (_TRUE) : (_FALSE)
+#define iic_IsBusy() ((IIC0_IBSR_IBB == 1) ? (_TRUE) : (_FALSE) )
 /*	Checks the bus' status. */
 
 #define iic_MakeBusReservation() (*busIsFreePtr = _FALSE)
 #define iic_FreeBusReservation() (*busIsFreePtr = _TRUE)
+
+
+void iic_FlushBuffer(void);
 
 
 void interrupt iic0_srv (void);
