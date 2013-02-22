@@ -1,11 +1,14 @@
 #include "dmu.h"
 #include <stdio.h>
 
-#define PRINT_LENGTH (ADD_WHO_AM_I - ADD_SAMPLE_RATE_DIVIDER)+1
+#define PRINT_START 1
+#define PRINT_LENGTH (ADD_WHO_AM_I - PRINT_START)+1
 
 
 void dmu_printI2CData(void);
 
+extern void printI2CData(void);
+extern u8 buf[];
 
 struct dmu_measurements_T
 {
@@ -25,6 +28,8 @@ struct dmu_data_T dmu_data = {_FALSE, NULL, 0};
 
 void dmu_Print(void);
 void dmu_fifoStageRead(void);
+void dmu_CommFailed(void);
+
 
 
 // Reset macro - g, a, t are booleans (1/0), cb is callback after reset is done..
@@ -100,11 +105,56 @@ void dmu_Init()
 			return;
 		dmu_data.stage++;
 		iic_MakeBusReservation();
-		dmu_Init();
+		
 		break;
-	
+
+
 	case 1:
+
+//		for (i = 0; i < 50000 ; i++)
+//			for (j = 0; j < 40; j++)
+//				;
+		
+		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
+
+		iic_commData.data[0] = 1;
+		iic_commData.data[1] = 0xFF;
+
+		iic_FreeBusReservation();
+		if (dmu_Send (dmu_Init, dmu_ImFucked, 2, NULL) == _FALSE)
+			return;
+		dmu_data.stage++;
+		iic_MakeBusReservation();
+		
+		break;
+
+		
+	case 2:
+
+		for (i = 0; i < 50000 ; i++)
+			for (j = 0; j < 40; j++)
+				;
+		
+		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
+
+		iic_commData.data[0] = ADD_PWR_MGMT_1;
+		iic_commData.data[1] = PWR_MGMT_1_RUN;
+
+		iic_FreeBusReservation();
+		if (dmu_Send (dmu_Init, dmu_ImFucked, 2, NULL) == _FALSE)
+			return;
+		dmu_data.stage++;
+		iic_MakeBusReservation();
+		
+		break;
+
+		
+	case 71:
 	
+//		for (i = 0; i < 50000 ; i++)
+//			for (j = 0; j < 40; j++)
+//				;
+
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 			
 		iic_commData.data[0] = ADD_SAMPLE_RATE_DIVIDER;
@@ -127,8 +177,12 @@ void dmu_Init()
 		iic_MakeBusReservation();
 		break;
 	
-	case 2:
+	case 24:
 //			printf("stage: %d\n", dmu_data.stage);
+//		for (i = 0; i < 50000 ; i++)
+//			for (j = 0; j < 30; j++)
+//				;
+
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 		iic_commData.data[0] = ADD_INT_PIN_CFG;
 		iic_commData.data[1] = INT_PIN_CFG;		// 55
@@ -142,50 +196,66 @@ void dmu_Init()
 		iic_MakeBusReservation();
 		dmu_data.stage++;
 		break;
-		
+
 	case 3:
 		
 //		for (i = 0; i < 50000 ; i++)
-//			for (j = 0; j < 100; j++)
+//			for (j = 0; j < 40; j++)
 //				;
 	
 		putchar('r');putchar('e');putchar('a');putchar('d');putchar('\n');
 		
 		iic_FreeBusReservation();
 	
-		dmu_ReceiveFromRegister(ADD_SAMPLE_RATE_DIVIDER, dmu_printI2CData, dmu_ImFucked, PRINT_LENGTH, NULL);
+		dmu_ReceiveFromRegister(PRINT_START, dmu_printI2CData, dmu_ImFucked, PRINT_LENGTH, NULL);
 
 		iic_MakeBusReservation();
 		dmu_data.stage++;
 
+		dmu_data.init = _TRUE;
+
+//		for (i = 0; i < 50000 ; i++)
+//			for (j = 0; j < 30; j++)
+//				;
+
+//		dmu_Init();
+		
 		break;
+
 		
-		
-	case 4:
+	case 32:
+
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 	
-		iic_commData.data[0] = ADD_MOTION_DETECT_CTRL;
-		iic_commData.data[1] = MOTION_DETECT_CTRL;
-		iic_commData.data[2] = USER_CTRL(FIFO_MASTER_DISABLE, FIFO_RUN, SIGNAL_PATH_RUN);	// Run means not reset.
-		iic_commData.data[3] = PWR_MGMT_1_RUN;
+		iic_commData.data[0] = ADD_SIGNAL_PATH_RESET;
+		iic_commData.data[1] = RESET_SIGNAL(1,1,1);
+		iic_commData.data[2] = MOTION_DETECT_CTRL;
+		iic_commData.data[3] = USER_CTRL(FIFO_MASTER_DISABLE, FIFO_RUN, SIGNAL_PATH_RESET);	// Run means not reset.
+		iic_commData.data[4] = PWR_MGMT_1_RUN;
 		// PWR_MGMT_2 stays in 0 (reset value).
 		iic_FreeBusReservation();
 		
-		if (dmu_Send(dmu_Init, dmu_ImFucked, 4, NULL) == _FALSE)
+		if (dmu_Send(dmu_Init, dmu_CommFailed, 5, NULL) == _FALSE)
 			return;
 		
-		iic_MakeBusReservation();
+		//iic_MakeBusReservation();
 		
 		dmu_data.stage++;
 		break;
 		
-	case 5:		// Done for now - No need of resets or pwr mgmt.
+	case 4:		// Done for now - No need of resets or pwr mgmt.
+		
 		
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 		
 		dmu_data.init = _TRUE;
 		dmu_data.stage = 0;
 		iic_FreeBusReservation();
+
+//		dmu_ReceiveFromRegister(PRINT_START, dmu_printI2CData, dmu_ImFucked, PRINT_LENGTH, NULL);
+
+//		dmu_ReceiveFromRegister(ADD_PWR_MGMT_1, printI2CData, dmu_ImFucked, 1, buf);
+
 		break;
 		
 	default: 
@@ -238,9 +308,16 @@ void dmu_printI2CData(void)
 	int i;
 	for (i = 0; i < PRINT_LENGTH; i++)
 	{
-		printf("%d %x\n",ADD_SAMPLE_RATE_DIVIDER + i, iic_commData.data[i]);
+		printf("%d %x\n", PRINT_START + i, iic_commData.data[i]);
 		iic_commData.data[i] = '\0';
 	}
 }
 
+void dmu_CommFailed()
+{
+	printf("comm failed, stage %d\n", dmu_data.stage);
+	dmu_data.init = _TRUE;
+	dmu_data.stage = 0;
+	iic_FreeBusReservation();
 
+}

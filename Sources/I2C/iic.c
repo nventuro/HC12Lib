@@ -189,8 +189,8 @@ void interrupt iic0_srv (void)
 
         IIC_STOP();		
 
-    	while (iic_IsBusy())
-    		putchar('-');
+//    	while (iic_IsBusy())
+//    		putchar('-');
        	 
     	if (IIC0_IBCR_TX_RX == 0)
     		iic_commData.dataPtr[iic_data.dataIdx] = IIC_RECEIVE();

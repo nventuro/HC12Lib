@@ -2,7 +2,11 @@
 #include "common.h"
 #include "dmu.h"
 #include "rti.h"
+#include "timers.h"
 #include <stdio.h>
+
+
+#define DMU_TIMER 0
 
 extern struct dmu_data_T dmu_data;
 
@@ -12,17 +16,20 @@ void PrintMeas (s32 measurement);
 void GetMeasurementsMask(void *data, rti_time period, rti_id id);
 void printI2CData(void);
 void ReadWhoAmIMask(void *data, rti_time period, rti_id id);
+void dataReady_srv(void);
 
-
-static u8 buf[20];
+u8 buf[20];
 
 
 void main (void)
 {
 	Init ();
 	
-	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(1000), RTI_MS_TO_TICKS(1000));
+	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(200), RTI_MS_TO_TICKS(0));
 //	rti_Register(ReadWhoAmIMask, NULL, RTI_MS_TO_TICKS(1000), RTI_MS_TO_TICKS(500));
+	
+//	tim_GetTimer(TIM_IC, tim_ptr callback, tim_ptr overflow, tim_id timNumber);
+
 	
 	while (1)
 		;
@@ -32,12 +39,12 @@ void Init (void)
 {
 	u16 i,j;
 	for(i=0; i < 50000; i++)
-		for(j=0; j < 100; j++)
+		for(j=0; j < 40; j++)
 			;
 
 	iic_FlushBuffer();
-	dmu_printI2CData();
-		
+//	tim_Init();
+	
 	// Modules that don't require interrupts to be enabled
 	
 	asm cli;
@@ -49,7 +56,11 @@ void Init (void)
 	
 	while (dmu_data.init == _FALSE)
 		;
-	printf("Init done\n");
+		
+//	printf("Init done\n");
+	
+	iic_FreeBusReservation();
+
 	
 	return;
 }
@@ -88,3 +99,9 @@ void printI2CData(void)
 		buf[i] = '\0';
 	}
 }
+
+
+void dataReady_srv(void)
+{
+}
+
