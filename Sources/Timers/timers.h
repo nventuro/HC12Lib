@@ -13,6 +13,15 @@
 #define TIM_US_TO_TICKS(us) (DIV_CEIL(((u32)us)*1e3,TIM_TICK_NS)) // Converts microseconds to timer ticks
 #define TIM_TICKS_TO_US(ticks) (DIV_CEIL(ticks*TIM_TICK_NS,1e3)) // Converts timer ticks to microseconds
 
+#define TIM_CNT_MAX ((u32)65536)
+
+struct tim_channelData
+{
+	u16 overflowCnt;
+	u16 lastEdge;
+};
+
+
 typedef enum
 {
 	TIM_IC,	// Input Capture

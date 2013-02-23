@@ -94,67 +94,24 @@ void dmu_Init()
 	iic_Init();
 	
 	switch (dmu_data.stage)
-	{volatile u16 i,j;
+	{
+	
 	case 0:
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 			
 		iic_commData.data[0] = ADD_PWR_MGMT_1;
 		iic_commData.data[1] = PWR_MGMT_1_RESET;
 
-		if (dmu_Send (dmu_Init, dmu_ImFucked, 2, NULL) == _FALSE)
-			return;
+		dmu_Send (dmu_Init, dmu_ImFucked, 2, NULL);
+		
 		dmu_data.stage++;
 		iic_MakeBusReservation();
 		
 		break;
-
-
+		
 	case 1:
-
-//		for (i = 0; i < 50000 ; i++)
-//			for (j = 0; j < 40; j++)
-//				;
-		
-		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
-
-		iic_commData.data[0] = 1;
-		iic_commData.data[1] = 0xFF;
-
-		iic_FreeBusReservation();
-		if (dmu_Send (dmu_Init, dmu_ImFucked, 2, NULL) == _FALSE)
-			return;
-		dmu_data.stage++;
-		iic_MakeBusReservation();
-		
-		break;
-
-		
-	case 2:
-
-		for (i = 0; i < 50000 ; i++)
-			for (j = 0; j < 40; j++)
-				;
-		
-		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
-
-		iic_commData.data[0] = ADD_PWR_MGMT_1;
-		iic_commData.data[1] = PWR_MGMT_1_RUN;
-
-		iic_FreeBusReservation();
-		if (dmu_Send (dmu_Init, dmu_ImFucked, 2, NULL) == _FALSE)
-			return;
-		dmu_data.stage++;
-		iic_MakeBusReservation();
-		
-		break;
-
-		
-	case 71:
+		// Note: inserting delay here screws configuration up.
 	
-//		for (i = 0; i < 50000 ; i++)
-//			for (j = 0; j < 40; j++)
-//				;
-
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 			
 		iic_commData.data[0] = ADD_SAMPLE_RATE_DIVIDER;
@@ -171,18 +128,15 @@ void dmu_Init()
 		iic_commData.data[11] = FIFO_ENABLE;
 		
 		iic_FreeBusReservation();
-		if (dmu_Send (dmu_Init, dmu_ImFucked, 12, NULL) == _FALSE)
-			return;
+		dmu_Send (dmu_Init, dmu_ImFucked, 12, NULL);
+		
 		dmu_data.stage++;
 		iic_MakeBusReservation();
+		
 		break;
 	
-	case 24:
-//			printf("stage: %d\n", dmu_data.stage);
-//		for (i = 0; i < 50000 ; i++)
-//			for (j = 0; j < 30; j++)
-//				;
-
+	case 2:
+	
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 		iic_commData.data[0] = ADD_INT_PIN_CFG;
 		iic_commData.data[1] = INT_PIN_CFG;		// 55
@@ -190,40 +144,14 @@ void dmu_Init()
 
 		iic_FreeBusReservation();		
 		
-		if (dmu_Send(dmu_Init, dmu_ImFucked, 3, NULL) == _FALSE)
-			return;
+		dmu_Send(dmu_Init, dmu_ImFucked, 3, NULL);
 		
 		iic_MakeBusReservation();
 		dmu_data.stage++;
+		
 		break;
-
+		
 	case 3:
-		
-//		for (i = 0; i < 50000 ; i++)
-//			for (j = 0; j < 40; j++)
-//				;
-	
-		putchar('r');putchar('e');putchar('a');putchar('d');putchar('\n');
-		
-		iic_FreeBusReservation();
-	
-		dmu_ReceiveFromRegister(PRINT_START, dmu_printI2CData, dmu_ImFucked, PRINT_LENGTH, NULL);
-
-		iic_MakeBusReservation();
-		dmu_data.stage++;
-
-		dmu_data.init = _TRUE;
-
-//		for (i = 0; i < 50000 ; i++)
-//			for (j = 0; j < 30; j++)
-//				;
-
-//		dmu_Init();
-		
-		break;
-
-		
-	case 32:
 
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 	
@@ -235,26 +163,22 @@ void dmu_Init()
 		// PWR_MGMT_2 stays in 0 (reset value).
 		iic_FreeBusReservation();
 		
-		if (dmu_Send(dmu_Init, dmu_CommFailed, 5, NULL) == _FALSE)
-			return;
-		
-		//iic_MakeBusReservation();
-		
+		dmu_Send(dmu_Init, dmu_CommFailed, 5, NULL);
+
+		iic_MakeBusReservation();
 		dmu_data.stage++;
-		break;
-		
+
+		break;		
+
 	case 4:		// Done for now - No need of resets or pwr mgmt.
-		
-		
+				
 		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 		
 		dmu_data.init = _TRUE;
 		dmu_data.stage = 0;
 		iic_FreeBusReservation();
 
-//		dmu_ReceiveFromRegister(PRINT_START, dmu_printI2CData, dmu_ImFucked, PRINT_LENGTH, NULL);
-
-//		dmu_ReceiveFromRegister(ADD_PWR_MGMT_1, printI2CData, dmu_ImFucked, 1, buf);
+		dmu_ReceiveFromRegister(PRINT_START, dmu_printI2CData, dmu_ImFucked, PRINT_LENGTH, NULL);
 
 		break;
 		
@@ -265,10 +189,10 @@ void dmu_Init()
 }
 
 
-bool dmu_GetMeasurements(void)
+void dmu_GetMeasurements(void)
 {
 	u8* dataPtr = (u8*)&dmu_measurements;
-	return dmu_ReceiveFromRegister(ADD_ACCEL_OUT, dmu_Print, NULL, sizeof(dmu_measurements), dataPtr);
+	dmu_ReceiveFromRegister(ADD_ACCEL_OUT, dmu_Print, NULL, sizeof(dmu_measurements), dataPtr);
 }
 
 

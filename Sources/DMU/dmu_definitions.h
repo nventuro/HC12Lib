@@ -24,21 +24,25 @@ typedef enum
 	If LP_FILTER_CONFIG is 0, Gyro sample rate is 8 kHz, 
 	otherwise is 1 kHz.
 	Sample rate affects Gyro and Accel only if it is less
-	than 1 kHz, whick is Accel's max sample rate.
+	than 1 kHz, which is Accel's max sample rate.
 */
 
 // Reg 26 - ADD_CONFIG - HEADER
-#define EXT_SYNC_SET (0 << 3)
-#define LP_FILTER_CONFIG (0)	// 0 to 6 
+#define EXT_SYNC_SET (0)
+#define LP_FILTER_CONFIG (1)	// 0 to 6 
 
 // Reg 26 - ADD_CONFIG - DATA
-#define CONFIG (LP_FILTER_CONFIG | EXT_SYNC_SET)
+#define CONFIG (LP_FILTER_CONFIG | (EXT_SYNC_SET << 3) )
 
 // Set this value; an approximation will be used as sample rate according to the divider.
-#define SAMPLE_RATE (1000)
+#define SAMPLE_RATE (10)
 
 // Reg 25: ADD_SAMPLE_RATE_DIVIDER - DATA:
 #define SAMPLE_RATE_DIVIDER ((LP_FILTER_CONFIG == 0 ) ? (8000/SAMPLE_RATE-1) : (1000/SAMPLE_RATE-1))	// u8 - reg 25 ADD_SAMPLE_RATE_DIVIDER
+
+#if SAMPLE_RATE_DIVIDER > 256
+#warning "Check LP_FILTER_CONFIG and SAMPLE_RATE"
+#endif
 
 // Real sampling rates after setting divider based in desired sample rate.
 #define GYRO_SAMPLE_RATE ((LP_FILTER_CONFIG == 0) ? (8000/(1+SAMPLE_RATE_DIVIDER)) : (1000/(1+SAMPLE_RATE_DIVIDER)))
@@ -46,8 +50,8 @@ typedef enum
 
 // Reg 27 and Reg 28: Gyro and Accel config - HEADER.
 // also trigger selfTest. Not used yet.
-#define GYRO_FULLSCALE (FS_500 << 3)	
-#define ACCEL_FULLSCALE (FS_8G << 3)
+#define GYRO_FULLSCALE (FS_2000)	
+#define ACCEL_FULLSCALE (FS_16G)
 
 #define GYRO_X_SELFTEST 0
 #define GYRO_Y_SELFTEST 0
@@ -60,9 +64,9 @@ typedef enum
 #define ACCEL_SELFTEST(x, y, z) ((x << 7) | (y << 6) | (z << 5))
 
 // Reg 27 - ADD_GYRO_CONFIG - DATA:
-#define GYRO_CONFIG(x, y, z) (GYRO_FULLSCALE | GYRO_SELFTEST(x, y, z))		// ADD_GYRO_CONFIG (27)
+#define GYRO_CONFIG(x, y, z) ((GYRO_FULLSCALE << 3) | GYRO_SELFTEST(x, y, z))		// ADD_GYRO_CONFIG (27)
 // Reg 28 - ADD_ACCEL_CONFIG - DATA:
-#define ACCEL_CONFIG(x, y, z) (ACCEL_FULLSCALE | ACCEL_SELFTEST(x, y, z))	// ADD_ACCEL_CONFIG (28)
+#define ACCEL_CONFIG(x, y, z) ((ACCEL_FULLSCALE << 3) | ACCEL_SELFTEST(x, y, z))	// ADD_ACCEL_CONFIG (28)
 
 // Reg 29 and Reg 30 DATA
 #define FREE_FALL_THRESHOLD	0	// u8 - ADD_FREE_FALL_THRESHOLD	(reg 29)
@@ -91,7 +95,7 @@ enum {HIGH = 0, LOW};
 #define INT_OPEN_DRAIN 0	// Pin logic
 #define INT_LATCH_ENABLE 0	// Create pulse or latch pin to INT_LEVEL when interrupt is generated.
 #define INT_FAST_CLEAR 1	// If enabled, any read operation clears interrupt.
-#define I2C_BYPASS_ENABLE 1	// Not used yet.
+#define I2C_BYPASS_ENABLE 0	// Not used yet.
 
 // Reg 55: ADD_INT_PIN_CFG - DATA:
 #define INT_PIN_CFG ( (INT_LEVEL << 7) | (INT_OPEN_DRAIN << 6) |		\

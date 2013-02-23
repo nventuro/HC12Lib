@@ -25,7 +25,7 @@ struct dmu_data_T
 
 
 void dmu_Init(void);
-bool dmu_GetMeasurements(void);
+void dmu_GetMeasurements(void);
 
 void dmu_ImFucked(void);
 

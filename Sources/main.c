@@ -10,23 +10,27 @@
 
 extern struct dmu_data_T dmu_data;
 
-
 void Init (void);
 void PrintMeas (s32 measurement);
 void GetMeasurementsMask(void *data, rti_time period, rti_id id);
 void printI2CData(void);
 void ReadWhoAmIMask(void *data, rti_time period, rti_id id);
-void dataReady_srv(void);
+void dataReady_Srv(void);
+void dataReady_Ovf(void);
 
-u8 buf[20];
 
+struct tim_channelData dmu_timerData = {0,0};
 
+ 
 void main (void)
 {
 	Init ();
+//	tim_GetTimer(TIM_IC, dataReady_Srv, dataReady_Ovf, DMU_TIMER);
+//	tim_EnableInterrupts(DMU_TIMER);
+//	tim_SetRisingEdge(DMU_TIMER); 
+
 	
 	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(200), RTI_MS_TO_TICKS(0));
-//	rti_Register(ReadWhoAmIMask, NULL, RTI_MS_TO_TICKS(1000), RTI_MS_TO_TICKS(500));
 	
 //	tim_GetTimer(TIM_IC, tim_ptr callback, tim_ptr overflow, tim_id timNumber);
 
@@ -39,11 +43,12 @@ void Init (void)
 {
 	u16 i,j;
 	for(i=0; i < 50000; i++)
-		for(j=0; j < 40; j++)
+		for(j=0; j < 4; j++)
 			;
 
 	iic_FlushBuffer();
-//	tim_Init();
+	tim_Init();
+	
 	
 	// Modules that don't require interrupts to be enabled
 	
@@ -57,21 +62,15 @@ void Init (void)
 	while (dmu_data.init == _FALSE)
 		;
 		
-//	printf("Init done\n");
-	
-	iic_FreeBusReservation();
-
+	printf("Init done\n");
 	
 	return;
 }
 
 void GetMeasurementsMask(void *data, rti_time period, rti_id id)
 {
-	putchar('g');
-	if (dmu_GetMeasurements() == _FALSE)
-		putchar('f');
-	else
-		putchar('t');
+	dmu_GetMeasurements();
+	
 	return;
 }
 
@@ -80,7 +79,7 @@ void GetMeasurementsMask(void *data, rti_time period, rti_id id)
 void ReadWhoAmIMask(void *data, rti_time period, rti_id id)
 {
 	putchar('w');
-	dmu_ReceiveFromRegister(ADD_WHO_AM_I, printI2CData, dmu_ImFucked, BUFFER2PRINT, buf);
+	dmu_ReceiveFromRegister(ADD_WHO_AM_I, printI2CData, dmu_ImFucked, BUFFER2PRINT, NULL);
 	return;
 }
 
@@ -94,14 +93,25 @@ void printI2CData(void)
 {
 	int i;
 	for (i = 0; i < BUFFER2PRINT; i++)
-	{
-		printf("%d %x\n",i, buf[i]);
-		buf[i] = '\0';
-	}
+		printf("%d %x\n",i, iic_commData.dataPtr[i]);
 }
 
 
-void dataReady_srv(void)
+void dataReady_Srv(void)
 {
+	putchar('r');
+	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING)
+	{
+		tim_SetFallingEdge(DMU_TIMER);	
+		dmu_GetMeasurements();
+	}
+	else 
+		tim_SetRisingEdge(DMU_TIMER);
 }
 
+void dataReady_Ovf(void)
+{
+	putchar('o');
+	dmu_timerData.overflowCnt++;
+	return;
+}

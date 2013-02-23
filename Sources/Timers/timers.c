@@ -593,6 +593,10 @@ void tim_dSetValue(tim_id timId, u16 value)
 	return;
 }
 
+u32 tim_dGetTimeElapsed(u16 overflowCnt, tim_id timId, u16 lastEdge)
+{
+	return ( (overflowCnt * TIM_CNT_MAX + tim_dGetValue(timId)) - lastEdge);
+}
 
 void interrupt tim0_Service(void)
 {

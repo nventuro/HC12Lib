@@ -33,7 +33,7 @@ void iic_Init (void);
 	Baud rate is hard-coded in IIC_SET_BAUD() macro (see iic.c).
 */
 
-bool iic_Send (u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toWrite, u8* sendBuffer);
+void iic_Send (u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toWrite, u8* sendBuffer);
 /*	Sends data to the device specified in slaveAddress, calling eotCB when finished or commFailedCB 
 	if it fails for	any reason.
 	@param 'toWrite' is the size of the package to send.
@@ -44,7 +44,7 @@ bool iic_Send (u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toWrite,
 */
 
 
-bool iic_Receive (u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead, u8* receiveBuffer);
+void iic_Receive (u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead, u8* receiveBuffer);
 /*	Receives data from the device specified in slaveAddress, calling eotCB when finished or commFailedCB 
 	if it fails for	any reason.
 	Slave device has to know where to start reading before calling iic_receive, so proper register address 
@@ -56,7 +56,7 @@ bool iic_Receive (u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRea
 	Note: slaveAddress is composed by 7 bits, aligned RIGHT (X as MSB).
 */
 
-bool iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead, u8* receiveBuffer);
+void iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead, u8* receiveBuffer);
 /*	Complete reception from slave device and specified register. Uses iic_Receive. 
 	Note: slaveAddress is composed by 7 bits, aligned RIGHT (X as MSB).
 */

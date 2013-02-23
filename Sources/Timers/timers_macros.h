@@ -43,10 +43,16 @@ extern int tim_macroVar;
 #define tim_SetRisingEdge(timId) do{if(timId<4){GLUE2(TCTL4_EDG,timId,x)=0x1;}else{GLUE2(TCTL3_EDG,timId,x)=0x1;}}while(0)
 #define tim_SetBothEdge(timId) do{if(timId<4){GLUE2(TCTL4_EDG,timId,x)=0x3;}else{GLUE2(TCTL3_EDG,timId,x)=0x3;}}while(0)
 
+enum {EDGE_RISING = 1, EDGE_FALLING, EDGE_BOTH};
+#define tim_GetEdgeBits(timId) ((timId<4)?(GLUE2(TCTL4_EDG,timId,x)) : (GLUE2(TCTL3_EDG,timId,x) ) )
+#define tim_GetEdge(timId) ((tim_GetEdgeBits(timId) == 0x3) ? EDGE_BOTH : ((tim_GetEdgeBits(timId) == 0x2) ? EDGE_FALLING : EDGE_RISING) )
+
 #define tim_SetValue(timId,value) (GLUE(TC,timId)=value)
 #define tim_SetOutputHigh(timId) do{if(timId<4){GLUE(TCTL2_OL,timId)=1;GLUE(TCTL2_OM,timId)=1;}else{GLUE(TCTL1_OL,timId)=1;GLUE(TCTL1_OM,timId)=1;}}while(0)
 #define tim_SetOutputLow(timId) do{if(timId<4){GLUE(TCTL2_OL,timId)=0;GLUE(TCTL2_OM,timId)=1;}else{GLUE(TCTL1_OL,timId)=0;GLUE(TCTL1_OM,timId)=1;}}while(0)
 #define tim_SetOutputToggle(timId) do{if(timId<4){GLUE(TCTL2_OL,timId)=1;GLUE(TCTL2_OM,timId)=0;}else{GLUE(TCTL1_OL,timId)=1;GLUE(TCTL1_OM,timId)=0;}}while(0)
 #define tim_DisconnectOutput(timId) do{if(timId<4){GLUE(TCTL2_OL,timId)=0;GLUE(TCTL2_OM,timId)=0;}else{GLUE(TCTL1_OL,timId)=0;GLUE(TCTL1_OM,timId)=0;}}while(0)
+
+#define tim_GetTimeElapsed(overflowCnt, timId, lastEdge) ((overflowCnt * TIM_CNT_MAX + tim_GetValue(timId)) - (u32)lastEdge)
 
 #endif
