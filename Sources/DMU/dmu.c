@@ -1,9 +1,11 @@
 #include "dmu.h"
 #include <stdio.h>
 
+
 #define PRINT_START 1
 #define PRINT_LENGTH (ADD_WHO_AM_I - PRINT_START)+1
 
+#define MAX_BURST_READS 256
 
 void dmu_printI2CData(void);
 
@@ -24,12 +26,12 @@ struct dmu_measurements_T
 
 } dmu_measurements;
 
-struct dmu_data_T dmu_data = {_FALSE, NULL, 0};
+struct dmu_data_T dmu_data = {_FALSE, NULL, 0, {_TRUE, 0, 0} };
 
 void dmu_Print(void);
 void dmu_fifoStageRead(void);
 void dmu_CommFailed(void);
-
+void dmu_printFifoCnt(void);
 
 
 // Reset macro - g, a, t are booleans (1/0), cb is callback after reset is done..
@@ -46,19 +48,11 @@ void dmu_CommFailed(void);
 } while(0)
 
 // Reg 114	-	Gets FIFO cnt and stores it in I2C buffer, calling 'cb' when done.
-#define dmu_GetFifoCount(cb) \
+#define dmu_GetFifoCount(cb) 										\
 	(dmu_ReceiveFromRegister (ADD_FIFO_CNT_H, cb, NULL, 2, NULL))
-
 // Reg 116
-#define dmu_ReadNFifoBytes(n, cb)	\
-	(dmu_ReceiveFromRegister (ADD_FIFO_RW, cb, NULL, n, NULL))
-
-#define dmu_ReadFifo(_cb)	do {								\
-	dmu_fifoData.stage = 0;		\
-	dmu_fifoData.cb = _cb;		\
-								\
-	dmu_fifoStageRead();		\
-} while(0)
+#define dmu_ReadNFifoBytes(_n, cb)	\
+	dmu_ReceiveFromRegister (ADD_FIFO_RW, cb, NULL, _n, NULL)
 
 /*
 void dmu_RunSelfTest(axes_selfTest test)
@@ -93,11 +87,11 @@ void dmu_Init()
 	
 	iic_Init();
 	
+	
 	switch (dmu_data.stage)
 	{
-	
+
 	case 0:
-		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 			
 		iic_commData.data[0] = ADD_PWR_MGMT_1;
 		iic_commData.data[1] = PWR_MGMT_1_RESET;
@@ -108,12 +102,10 @@ void dmu_Init()
 		iic_MakeBusReservation();
 		
 		break;
-		
+
 	case 1:
-		// Note: inserting delay here screws configuration up.
-	
-		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
-			
+		// Note: inserting delay / putchars here screws configuration up.	
+				
 		iic_commData.data[0] = ADD_SAMPLE_RATE_DIVIDER;
 		iic_commData.data[1] = SAMPLE_RATE_DIVIDER;	// 25
 		iic_commData.data[2] = CONFIG;				// 26
@@ -137,7 +129,6 @@ void dmu_Init()
 	
 	case 2:
 	
-		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
 		iic_commData.data[0] = ADD_INT_PIN_CFG;
 		iic_commData.data[1] = INT_PIN_CFG;		// 55
 		iic_commData.data[2] = INT_ENABLE;
@@ -153,12 +144,10 @@ void dmu_Init()
 		
 	case 3:
 
-		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
-	
 		iic_commData.data[0] = ADD_SIGNAL_PATH_RESET;
 		iic_commData.data[1] = RESET_SIGNAL(1,1,1);
 		iic_commData.data[2] = MOTION_DETECT_CTRL;
-		iic_commData.data[3] = USER_CTRL(FIFO_MASTER_DISABLE, FIFO_RUN, SIGNAL_PATH_RESET);	// Run means not reset.
+		iic_commData.data[3] = (1<<6);//USER_CTRL_INIT;	// Run means not reset.
 		iic_commData.data[4] = PWR_MGMT_1_RUN;
 		// PWR_MGMT_2 stays in 0 (reset value).
 		iic_FreeBusReservation();
@@ -170,10 +159,24 @@ void dmu_Init()
 
 		break;		
 
-	case 4:		// Done for now - No need of resets or pwr mgmt.
-				
-		putchar('s');putchar((u8)dmu_data.stage+'0');putchar('\n');
+
+	case 4:
+
+		iic_commData.data[0] = ADD_USER_CTRL;
+		iic_commData.data[1] = USER_CTRL_INIT;	// Run means not reset.
+
+		iic_FreeBusReservation();
 		
+		dmu_Send(dmu_Init, dmu_CommFailed, 2, NULL);
+
+		iic_MakeBusReservation();
+		dmu_data.stage++;
+
+		break;		
+
+
+	case 5:		// Done for now - No need of resets or pwr mgmt.
+				
 		dmu_data.init = _TRUE;
 		dmu_data.stage = 0;
 		iic_FreeBusReservation();
@@ -208,12 +211,43 @@ void dmu_fifoStageRead(void)
 {
 	switch (dmu_data.stage)
 	{
+	u16 fifoCount;
 	case 0:
 		dmu_GetFifoCount(dmu_fifoStageRead);
 		dmu_data.stage++;		
 		break;
 	case 1:
-		dmu_ReadNFifoBytes( ((u16)iic_commData.data[0]), dmu_data.cb);
+		// Fifo reads can be 256 bytes max, even though fifo full length is 1024. 
+		
+		fifoCount = *((u16*)iic_commData.data);
+		
+		printf("fCnt: %d", fifoCount);
+		
+		if ( fifoCount > MAX_BURST_READS)
+		{
+			dmu_data.fifo.fetchTimes = fifoCount / MAX_BURST_READS;
+			dmu_data.fifo.remainingBytes = fifoCount % MAX_BURST_READS;
+		}
+//		dmu_ReadNFifoBytes(dmu_data.fifoCount, dmu_data.cb);
+
+		dmu_data.stage++;
+		// No break here.
+
+	case 2:
+
+		dmu_data.fifo.fetchTimes--;
+		
+		printf("%d\n",dmu_data.fifo.fetchTimes);
+		if ((dmu_data.fifo.fetchTimes < 0) && (dmu_data.fifo.remainingBytes != 0))
+			dmu_ReadNFifoBytes(dmu_data.fifo.remainingBytes, dmu_data.cb);
+		else
+			dmu_ReadNFifoBytes(MAX_BURST_READS, dmu_data.cb);
+		
+		iic_MakeBusReservation();
+//		}
+
+//		dmu_data.stage = 0;
+
 		break;
 	default:
 		break;
@@ -245,3 +279,33 @@ void dmu_CommFailed()
 	iic_FreeBusReservation();
 
 }
+
+void dmu_PrintFifoMem(void)
+{
+	u16 i, limit;
+	
+	if (dmu_data.fifo.fetchTimes < 0)
+		limit = dmu_data.fifo.remainingBytes;
+	else
+		limit = MAX_BURST_READS;
+	
+	for (i = 0; i < limit / sizeof(u16); i++) //dmu_data.fifoCount / sizeof(u16); i++)
+		printf("%d\t", (*(((u16*)iic_commData.data) + i) ) );
+	
+	putchar('\n');
+	
+	iic_FreeBusReservation();
+	
+	if (dmu_data.fifo.fetchTimes >= 0)
+		dmu_fifoStageRead();
+	else
+		dmu_data.fifo.enable = _TRUE;
+	
+	return;
+}
+
+void dmu_printFifoCnt(void)
+{
+	printf("fCnt: %d\n", (*(u16*)iic_commData.data));
+}
+

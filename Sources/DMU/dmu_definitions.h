@@ -35,7 +35,7 @@ typedef enum
 #define CONFIG (LP_FILTER_CONFIG | (EXT_SYNC_SET << 3) )
 
 // Set this value; an approximation will be used as sample rate according to the divider.
-#define SAMPLE_RATE (10)
+#define SAMPLE_RATE (50)
 
 // Reg 25: ADD_SAMPLE_RATE_DIVIDER - DATA:
 #define SAMPLE_RATE_DIVIDER ((LP_FILTER_CONFIG == 0 ) ? (8000/SAMPLE_RATE-1) : (1000/SAMPLE_RATE-1))	// u8 - reg 25 ADD_SAMPLE_RATE_DIVIDER
@@ -81,7 +81,7 @@ typedef enum
 #define ZERO_MOTION_DURATION 0		// u8 - ADD_ZERO_MOTION_DURATION (reg 34)
 // Reg 35 - ADD_FIFO_ENABLE - HEADER
 // Note: see reg 106 (FIFO MASTER ENABLE)
-#define FIFO_XG_ENABLE 0
+#define FIFO_XG_ENABLE 1
 #define FIFO_YG_ENABLE 0
 #define FIFO_ZG_ENABLE 0
 #define FIFO_ACCEL_ENABLE 0
@@ -105,8 +105,8 @@ enum {HIGH = 0, LOW};
 // Reg 56: ADD_INT_ENABLE - HEADER
 
 #define MOTION_INT_ENABLE 0
-#define FIFO_OVF_INT_ENABLE 0
-#define DATA_READY_INT_ENABLE 1
+#define FIFO_OVF_INT_ENABLE 1
+#define DATA_READY_INT_ENABLE 0
 
 // Reg 56 - ADD_INT_ENABLE - DATA
 #define INT_ENABLE ((MOTION_INT_ENABLE << 6) | (FIFO_OVF_INT_ENABLE << 4) | (DATA_READY_INT_ENABLE << 0))
@@ -143,6 +143,8 @@ enum {SIGNAL_PATH_RUN = 0, SIGNAL_PATH_RESET};
 #define USER_CTRL(fifo_en, fifo_res, signal_res) ( (fifo_en << 6) | (I2C_MASTER_DISABLE << 5) | \
 	(MPU_SPI_DISABLE << 4) | (fifo_res << 2) | (I2C_MASTER_RESET << 1) | (signal_res <<0 ))
 
+#define USER_CTRL_INIT USER_CTRL(FIFO_MASTER_ENABLE, FIFO_RUN, SIGNAL_PATH_RESET)
+
 // Reg 107 - PWR_MGMT_1 - HEADER
 enum {PWR_SLEEP_OFF=0, PWR_SLEEP_ON};		// Send device to sleep mode.
 #define PWR_CYCLE 0		// Cycle between sleep and wake; see reg 108
@@ -152,8 +154,9 @@ enum {PWR_RUN=0, PWR_RESET};
 #define PWR_TEMP_DISABLE 0	// Temp disabled
 
 // Reg 107 - PWR_MGMT_1 - DATA
-#define PWR_MGMT_1_RESET ( (PWR_RESET << 7) | (PWR_SLEEP_OFF << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
+#define PWR_MGMT_1_RESET ( (PWR_RESET << 7) | (PWR_SLEEP_ON << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
 #define PWR_MGMT_1_RUN 	 ( (PWR_RUN << 7) | (PWR_SLEEP_OFF << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
+#define PWR_MGMT_1_STOP	 ( (PWR_RUN << 7) | (PWR_SLEEP_ON << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
 
 // Reg 108 - PWR_MGMT_2 - HEADER
 // To use wake mode, cycle = 1, sleep = 0, temp_dis = 1, stdby =1

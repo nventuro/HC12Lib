@@ -17,6 +17,7 @@ void printI2CData(void);
 void ReadWhoAmIMask(void *data, rti_time period, rti_id id);
 void dataReady_Srv(void);
 void dataReady_Ovf(void);
+void fifoOvf_Srv(void);
 
 
 struct tim_channelData dmu_timerData = {0,0};
@@ -26,11 +27,13 @@ void main (void)
 {
 	Init ();
 //	tim_GetTimer(TIM_IC, dataReady_Srv, dataReady_Ovf, DMU_TIMER);
-//	tim_EnableInterrupts(DMU_TIMER);
-//	tim_SetRisingEdge(DMU_TIMER); 
+	tim_GetTimer(TIM_IC, fifoOvf_Srv, NULL, DMU_TIMER);
+
+	tim_EnableInterrupts(DMU_TIMER);
+	tim_SetRisingEdge(DMU_TIMER); 
 
 	
-	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(200), RTI_MS_TO_TICKS(0));
+//	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(200), RTI_MS_TO_TICKS(500));
 	
 //	tim_GetTimer(TIM_IC, tim_ptr callback, tim_ptr overflow, tim_id timNumber);
 
@@ -62,7 +65,7 @@ void Init (void)
 	while (dmu_data.init == _FALSE)
 		;
 		
-	printf("Init done\n");
+	//printf("Init done\n");
 	
 	return;
 }
@@ -99,7 +102,6 @@ void printI2CData(void)
 
 void dataReady_Srv(void)
 {
-	putchar('r');
 	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING)
 	{
 		tim_SetFallingEdge(DMU_TIMER);	
@@ -111,7 +113,21 @@ void dataReady_Srv(void)
 
 void dataReady_Ovf(void)
 {
-	putchar('o');
 	dmu_timerData.overflowCnt++;
 	return;
 }
+
+void fifoOvf_Srv(void)
+{	
+	if (dmu_data.fifo.enable == _FALSE)
+		return;
+	
+	dmu_data.fifo.enable = _FALSE;
+	dmu_ReadFifo(dmu_PrintFifoMem);
+	
+	return;
+}
+
+
+
+

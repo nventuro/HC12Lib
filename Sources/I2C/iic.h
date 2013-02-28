@@ -3,14 +3,29 @@
 
 #include "common.h"
 
-#define IIC_MEM_SIZE 256
+#define IIC_MEM_SIZE (1024)
 
 typedef void (*iic_ptr)(void);
+
+typedef struct 
+{
+	u8 regAddress;
+	u8 slaveAddress;
+	iic_ptr eotCB; 
+	iic_ptr commFailedCB;
+	u8 toRead;
+	u8* receiveBuffer;
+	u8 stage;
+	
+}iic_receiveData_T;
 
 typedef struct {
     u8 data[IIC_MEM_SIZE];
     u8 dataSize;
     u8* dataPtr;
+    
+    iic_receiveData_T transferParameters;
+    
 } iic_commData_T;
 
 typedef struct {

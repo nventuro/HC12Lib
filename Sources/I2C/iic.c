@@ -1,6 +1,8 @@
 #include "iic.h"
 #include "mc9s12xdp512.h"
+#include "debug.h"
 
+#include <stdio.h>
 
 #define IIC_START()	(IIC0_IBCR_MS_SL = 1)
 #define IIC_STOP() do {IIC0_IBCR_MS_SL = 0; } while(0)
@@ -27,18 +29,6 @@ iic_commData_T iic_commData;
 iic_data_T iic_data = {NULL,NULL,NULL,0,_FALSE,_FALSE};
 
 bool* const busIsFreePtr = &iic_data.busIsFree;
-
-typedef struct 
-{
-	u8 regAddress;
-	u8 slaveAddress;
-	iic_ptr eotCB; 
-	iic_ptr commFailedCB;
-	u8 toRead;
-	u8* receiveBuffer;
-	u8 stage;
-	
-}iic_receiveData_T;
 
 void iic_read (void);
 void iic_read_start (void);
@@ -118,14 +108,10 @@ void iic_Receive (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead,
 
 
 void iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead, u8* receiveBuffer)
-{
-	iic_receiveData_T receiveData;
-	iic_receiveData_T* dataReference = (iic_receiveData_T*)((void*)iic_commData.data);
-	 
+{	 
 	while(iic_IsBusy() || (!iic_data.busIsFree) );	// Block transfer until ready.
     	
-	receive_dataCopy(receiveData, regAddress, slaveAddress, eotCB, commFailedCB, toRead, receiveBuffer, 0);
-	*dataReference = receiveData;	// automatic MemCpy to iic buffer.
+	receive_dataCopy(iic_commData.transferParameters, regAddress, slaveAddress, eotCB, commFailedCB, toRead, receiveBuffer, 0);
 	
 	iic_FullStagesReceive();
 }
@@ -133,7 +119,7 @@ void iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic
 
 void iic_FullStagesReceive (void)
 {
-	iic_receiveData_T* rData = (iic_receiveData_T*)iic_commData.data; 
+	iic_receiveData_T* rData = &iic_commData.transferParameters; 
 	switch (rData->stage)
 	{
 	case 0:		// Prepare to read: send read address to slave device.
@@ -166,6 +152,10 @@ void interrupt iic0_srv (void)
     // Deteccion de eot
     if (iic_data.currCB == iic_data.eotCB)
     {
+
+	#ifdef IIC_DEBUG_EOT
+		putchar('e');putchar('o');putchar('t');putchar('\n');
+	#endif
 
         IIC_STOP();		
        	 
