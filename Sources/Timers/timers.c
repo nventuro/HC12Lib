@@ -2,8 +2,6 @@
 
 #define TIM_AMOUNT 8
 
-#define	TIMER_PRESCALER 5 // 24MHz / 2^5 = 750 kHz. The TCNT resolution is 1.333us.
-
 #define SET_TIOS_OC(i) (TIOS |= (1 << i))
 #define SET_TIOS_IC(i) (TIOS &= ~(1 << i))
 

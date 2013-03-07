@@ -4,9 +4,13 @@
 #include "common.h"
 #include "timers_macros.h"
 
-#define TIM_TICK_NS 1333
+#define	TIMER_PRESCALER 5 // 24MHz / 2^5 = 750 kHz. The TCNT resolution is 1.333us.
+
+
+#define TIM_TICK_NS ((u16)( ((u32)1000*(1<<(TIMER_PRESCALER)) / BUS_CLOCK_MHZ)))
+
 // The resolution of the global timer (TCNT) is 1.333 microseconds. The TCNT overflows every 87.4 miliseconds.
-// In order to change this value, TIM_PRESCALER in timers.c must be changed and the file recompiled.
+// In order to change this value, TIMER_PRESCALER above must be changed and the file recompiled.
 
 #define TIM_OVERFLOW_TICKS 65536
 

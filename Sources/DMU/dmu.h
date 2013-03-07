@@ -27,6 +27,7 @@ extern struct dmu_data_T dmu_data;
 void dmu_Init(void);
 void dmu_GetMeasurements(void);
 void dmu_PrintFifoMem(void);
+void dmu_fifoStageRead(void);
 
 
 #define dmu_Send(eotCB, commFailedCB, toWrite, sendBuffer)	\

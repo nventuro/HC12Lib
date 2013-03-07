@@ -1,6 +1,8 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#define BUS_CLOCK_MHZ 24
+
 
 // Typedefs
 
