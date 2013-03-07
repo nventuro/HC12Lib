@@ -2,8 +2,6 @@
 
 #define TIM_AMOUNT 8
 
-#define	TIMER_PRESCALER 5 // 24MHz / 2^5 = 750 kHz. The TCNT resolution is 1.333us.
-
 #define SET_TIOS_OC(i) (TIOS |= (1 << i))
 #define SET_TIOS_IC(i) (TIOS &= ~(1 << i))
 
@@ -593,6 +591,10 @@ void tim_dSetValue(tim_id timId, u16 value)
 	return;
 }
 
+u32 tim_dGetTimeElapsed(u16 overflowCnt, tim_id timId, u16 lastEdge)
+{
+	return ( (overflowCnt * TIM_CNT_MAX + tim_dGetValue(timId)) - lastEdge);
+}
 
 void interrupt tim0_Service(void)
 {

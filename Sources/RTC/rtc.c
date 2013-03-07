@@ -64,11 +64,11 @@ void rtc_init (void)
 {
 	if (rtc_intData.init == _FALSE)
 	{
-		iic_init();
+		iic_Init();
 
-		tim_init();
+		tim_Init();
 		rtc_intData.timId = tim_getSpecificTimer(TIM_IC,rtc_intSrv,NULL,RTC_TIMER);
-		tim_setRisingEdge(rtc_intData.timId);
+		tim_dSetRisingEdge(rtc_intData.timId);
 		rtc_intData.extCB = NULL;
 		
 		rtc_intData.startUpStage = 0;
@@ -95,7 +95,7 @@ void rtc_startUp (void)
 	case 1:
 		// Leo los 7 registros que contienen informacion de hora
 		rtc_intData.startUpStage++;
-		iic_receive(RTC_ADDRESS,rtc_startUp,NULL, 7);
+		iic_Receive(RTC_ADDRESS, rtc_startUp, NULL, 7, NULL);
 
 		break;
 
@@ -129,13 +129,12 @@ void rtc_assignAutoUpdateCallback (rtc_ptr rtc_cb)
 
 void rtc_setRegAdd (u8 reg, rtc_ptr cb)
 {	
-	if (iic_isBusy()) // dispatcher
+	if (iic_IsBusy()) // dispatcher
 		return;
 	
 	iic_commData.data[0] = reg;
-	iic_commData.dataSize = 1;
 
-	iic_send(RTC_ADDRESS,cb,NULL);
+	iic_Send(RTC_ADDRESS,cb,NULL, 1, NULL);
 	
 	return;
 }
@@ -225,9 +224,7 @@ void rtc_sendLocalDataToDevice (rtc_ptr cb)
 	iic_commData.data[7] = (rtc_data.year.deca << BCD_DECA_SHIFT) + (rtc_data.year.uni << BCD_UNI_SHIFT);
 	iic_commData.data[8] = (RTC_SQWE_ENABLE << RTC_SQWE_SHIFT) + (RTC_RS0_1HZ << RTC_RS0_SHIFT) + (RTC_RS1_1HZ << RTC_RS1_SHIFT);
 	
-	iic_commData.dataSize = 9;
-	
-	iic_send(RTC_ADDRESS,cb,NULL);
+	iic_send(RTC_ADDRESS,cb,NULL, 9, NULL);
 	
 	return;
 }
@@ -264,7 +261,7 @@ void rtc_intSrv (void)
 
 void rtc_intAux (void)
 {
-	iic_receive(RTC_ADDRESS,rtc_storeReceivedData,NULL,7);
+	iic_receive(RTC_ADDRESS,rtc_storeReceivedData,NULL,7,NULL);
 	
 	return;
 }
