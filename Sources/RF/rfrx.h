@@ -1,18 +1,20 @@
-#ifndef _USONIC_H
-#define _USONIC_H
+#ifndef _RF_H
+#define _RF_H
 
 #include "common.h"
 
-#define USONIC_ECHO_TIMER 5 // The timer module used for measuring the echo, connected to the device's echo pin.
-#define USONIC_TRIGG_TIMER 6 // The timer moduled used for generating the trigger pulse, connected to the device's trigger pin.
-// If any of the timers is changed, usonic.c must be recompiled.
+#define USONIC_TX_TIMER 5 // The timer module used for transmitting data, connected to the transmitter's data pin.
+#define USONIC_RX_TIMER 6 // The timer moduled used for measuring the received data, connected to the receiver's data pin.
+// If any of the timers is changed, rf.c must be recompiled.
 
-#define USONIC_INVALID_MEAS (-1) // An invalid measurement, caused by a lack of echo.
+typedef void (*rf_ptr) (void); // A function callback for notifying the end of a transmission
 
-typedef void (*usonic_ptr) (s32 measurement); // A function callback used by usonic_Measure. measurement is expressed in centimeters.
 
-void usonic_Init (void);
-// Initializes the Ultrasonic module. This requires the RTI and Timers modules to work, and interrupts to be enabled.
+// init como TX y como RX, son dos cosas distintas, dos inits
+void rf_Init(void);
+// Initializes the RF module. This requires the Timers module to work, and interrupts to be enabled.
+
+//get error count, reset error count
 
 bool usonic_Measure (usonic_ptr callback);
 // Commences a measurement, and registers a callback function to be called after it is done.
