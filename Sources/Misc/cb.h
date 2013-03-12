@@ -3,31 +3,28 @@
 
 #include "common.h"
 
-typedef enum 
-{
-	CB_OK, 
-	CB_EMPTY, 
-	CB_FULL
-} cb_status;
+#define CB_OK -1
+#define CB_EMPTY -2
+#define CB_FULL -3
 
 typedef struct {
 	u8 *mem;
 	u8 *r;
 	u8 *w;
 	u8 len;
-	int status;
+	s16 status;
 } cbuf;
 
-cbuf cb_create(u8 *mem, char len);
+cbuf cb_create(u8 *mem, u16 len);
 
 #define ARRAY2CB(a) cb_create(a, ARSIZE(a))
 
 #define cb_status(cb)	((cb)->status)
 
-int cb_push(cbuf* buffer, u8 data);
+s16 cb_push(cbuf* buffer, u8 data);
 
-int cb_pop(cbuf* buffer);
+s16 cb_pop(cbuf* buffer);
 
-int cb_flush(cbuf* buffer);
+s16 cb_flush(cbuf* buffer);
 
-#endif /* __CB_H__ */
+#endif

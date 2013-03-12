@@ -14,6 +14,14 @@ typedef enum
 
 struct
 {
+	u8 id;
+	void *data;
+	u8 length;
+	rftx_ptr eot;
+} rftx_commData;
+
+struct
+{
 	bool ecc;
 	RFTX_STATUS status;
 } rftx_data;
@@ -31,6 +39,9 @@ void rftx_Init (bool ecc)
 	tim_Init();	
 	
 	tim_GetTimer (TIM_OC, rftx_TimerCallback, NULL, RFTX_DATA_TIMER);
+	
+	//create queue
+	//
 
 	tim_DisconnectOutput(RFTX_DATA_TIMER);
 	RFTX_DATA_DDR = DDR_OUT;
@@ -41,5 +52,7 @@ void rftx_Init (bool ecc)
 
 bool rftx_Send(u8 id, void *data, u8 length, rftx_ptr eot)
 {
-
+	//if idle, send
+	//if busy or waiting, store in queue
+		// if queue full, return false
 }

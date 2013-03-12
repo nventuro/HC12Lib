@@ -1,16 +1,6 @@
-/* Circular buffer
- * 
- * Grupo 2 - 2012
-*/
-
 #include "common.h"
 #include "cb.h"
-/*
-typedef int sint;
-typedef char schar;
 
-#define CB_LENGTH 32
-*/
 
 cbuf cb_create(u8 *mem, char len)
 {
