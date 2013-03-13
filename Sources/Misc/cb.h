@@ -2,7 +2,6 @@
 #define _CB_H
 
 #include "common.h"
-
 #define CB_OK -1
 #define CB_EMPTY -2
 #define CB_FULL -3
@@ -16,8 +15,6 @@ typedef struct {
 } cbuf;
 
 cbuf cb_create(u8 *mem, u16 len);
-
-#define ARRAY2CB(a) cb_create(a, ARSIZE(a))
 
 #define cb_status(cb)	((cb)->status)
 
