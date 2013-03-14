@@ -1,5 +1,6 @@
 #include "rftx.h"
 #include "hamming1511.h"
+#include "cb.h"
 #include "timers.h"
 
 #define RFTX_DATA GLUE(PTT_PTT,RFTX_DATA_TIMER)
@@ -14,12 +15,6 @@
 #define RFTX_DEAD_TIME_US 400
 #define RFTX_START_TIME_US 100
 
-typedef enum
-{
-	IDLE,
-	SENDING,
-	WAITING_FOR_DEAD_TIME_TO_END,
-} RFTX_STATUS;
 
 struct rftx_commData
 {
@@ -31,11 +26,29 @@ struct rftx_commData
 
 typedef struct rftx_commData rftx_commData;
 
+typedef cbuf rfqueue;
+
+#define RFQUEUE_EMPTY CB_EMPTY
+#define RFQUEUE_FULL CB_FULL
+
+rfqueue rfqueue_Create(u8 *mem, u16 len);
+#define rfqueue_Status(queue) cb_status(queue)
+bool rfqueue_Push(rfqueue *queue, rftx_commData data);
+rftx_commData rfqueue_Pop(rfqueue *queue);
+
+
+typedef enum
+{
+	IDLE,
+	SENDING,
+	WAITING_FOR_DEAD_TIME_TO_END,
+} RFTX_STATUS;
+
 struct
 {
 	bool ecc;
 	RFTX_STATUS status;
-	//queue
+	rfqueue queue;
 	rftx_commData currComm;
 	u16 currData;
 	u8 currDataIndex;
@@ -75,18 +88,22 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 {
 	if (rftx_data.status == IDLE)
 	{
-		rftx_data.status == SENDING;
+		rftx_data.status = SENDING;
 		rftx_data.currComm.id = id & 0x07;
 		rftx_data.currComm.data = data;
 		rftx_data.currComm.length = length & 0x7F;
 		rftx_data.currComm.eot = eot;
+	
+		rftx_data.dataIndex = 0; //No data is being sent yet
 		
-		rftx_data.currDataIndex = 16;
-		rftx_data.dataIndex = 0;
+		rftx_data.currData = BIT(15) & (rftx_data.currComm.id << 12) & (rftx_data.currComm.length << 5); 
+		hamm_GetParityBits(& rftx_data.currData);
+		rftx_data.currDataIndex = 15; //Start of command
 		
-		// poner en rftx_data.currData los primeros 11 bits, y hacer hamming si corresponde
+		RFTX_DATA = 0;
+		tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_START_TIME_US));
 		
-		//init indexes, commence tranmission
+		return _TRUE;
 	}
 	else
 	{
@@ -111,13 +128,45 @@ void rftx_TimerCallback(void)
 	}
 }
 
-#define CB_EMPTY -2
-#define CB_FULL -3
 
-cbuf cb_create(u8 *mem, u16 len);
+rfqueue rfqueue_Create(u8 *mem, u16 len)
+{
+	return cb_create(mem, sizeof(rftx_commData)*len);
+}
 
-#define cb_status(cb)	((cb)->status)
+bool rfqueue_Push(rfqueue* queue, rftx_commData data)
+{
+	if (rfqueue_Status(queue) == RFQUEUE_FULL)
+		return _FALSE;
+	else
+	{
+		cb_push(queue, data.length);
+		cb_push(queue, data.eot);
+		cb_push(queue, data.data);
+		cb_push(queue, data.id);
+		
+		return _TRUE;
+	}
+}
 
-s16 cb_push(cbuf* buffer, u8 data);
-
-s16 cb_pop(cbuf* buffer);
+rftx_commData rfqueue_Pop(rfqueue* queue)
+{
+	rftx_commData read;
+	
+	if (rfqueue_Status(queue) == RFQUEUE_EMPTY)
+	{
+		read.id = 0;
+		read.data = NULL;
+		read.eot = NULL;
+		read.length = 0;
+	}
+	else
+	{
+		read.id = cb_pop(queue);
+		read.data = cb_pop(queue)
+		read.eot = cb_pop(queue)
+		read.length = cb_pop(queue)
+	}
+	
+	return read;
+}
