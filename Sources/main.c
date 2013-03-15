@@ -18,7 +18,6 @@ void main (void)
 void Init (void)
 {
 	// Modules that don't require interrupts to be enabled
-	
 	asm cli;
 	
 	// Modules that do require interrupts to be enabled

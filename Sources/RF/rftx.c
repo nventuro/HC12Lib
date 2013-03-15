@@ -15,6 +15,8 @@
 #define RFTX_DEAD_TIME_US 400
 #define RFTX_START_TIME_US 100
 
+#define RFTX_QUEUE_SIZE 8
+
 
 struct rftx_commData
 {
@@ -35,6 +37,8 @@ rfqueue rfqueue_Create(u8 *mem, u16 len);
 #define rfqueue_Status(queue) cb_status(queue)
 bool rfqueue_Push(rfqueue *queue, rftx_commData data);
 rftx_commData rfqueue_Pop(rfqueue *queue);
+
+u8 rftx_queueMemory[sizeof(rftx_commData)*RFTX_QUEUE_SIZE];
 
 
 typedef enum
@@ -69,8 +73,7 @@ void rftx_Init (bool ecc)
 	RFTX_DATA_DDR = DDR_OUT;
 	RFTX_DATA = 1;
 	
-	//create queue
-	//init queue
+	rftx_data.queue = rfqueue_Create(rftx_queueMemory,RFTX_QUEUE_SIZE);
 	
 	tim_Init();	
 	tim_GetTimer (TIM_OC, rftx_TimerCallback, NULL, RFTX_DATA_TIMER);
@@ -107,8 +110,19 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 	}
 	else
 	{
-		// store in queue
-		// if queue full, return false
+		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_FULL)
+			return _FALSE;
+		else
+		{
+			rftx_commData aux;
+			aux.id = id;
+			aux.data = data;
+			aux.length = length;
+			aux.eot = eot;
+			rfqueue_Push(&rftx_data.queue,aux);
+			
+			return _TRUE;
+		}
 	}
 }
 
@@ -116,9 +130,17 @@ void rftx_TimerCallback(void)
 {
 	if (rftx_data.status == WAITING_FOR_DEAD_TIME_TO_END)
 	{
-		// check queue
-		// if queue empty, do nothing, go to idle
-		// if queue not empty, send, go to busy
+		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_EMPTY)
+		{
+			rftx_data.status = IDLE;
+			//inhibit interrupts?
+			return;
+		}
+		else
+		{
+			rftx_data.status = SENDING;
+			// if queue not empty, send
+		}
 	}
 	else // SENDING
 	{
@@ -141,8 +163,10 @@ bool rfqueue_Push(rfqueue* queue, rftx_commData data)
 	else
 	{
 		cb_push(queue, data.length);
-		cb_push(queue, data.eot);
-		cb_push(queue, data.data);
+		cb_push(queue, (u8) data.eot);
+		cb_push(queue, (u8) (((u16)data.eot) >> 8));		
+		cb_push(queue, (u8) data.data);
+		cb_push(queue, (u8) (((u16)data.data) >> 8));		
 		cb_push(queue, data.id);
 		
 		return _TRUE;
@@ -163,9 +187,11 @@ rftx_commData rfqueue_Pop(rfqueue* queue)
 	else
 	{
 		read.id = cb_pop(queue);
-		read.data = cb_pop(queue)
-		read.eot = cb_pop(queue)
-		read.length = cb_pop(queue)
+		read.data = (u8 *) cb_pop(queue);
+		read.data = (u8 *) (((u16) read.data + (((u16)cb_pop(queue)) << 8))); 
+		read.eot = (u8 *) cb_pop(queue);
+		read.eot = (u8 *) (((u16) read.eot + (((u16)cb_pop(queue)) << 8))); 
+		read.length = cb_pop(queue);
 	}
 	
 	return read;
