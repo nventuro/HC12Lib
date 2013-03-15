@@ -99,7 +99,7 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 	
 		rftx_data.dataIndex = 0; //No data is being sent yet
 		
-		rftx_data.currData = BIT(15) & (rftx_data.currComm.id << 12) & (rftx_data.currComm.length << 5); 
+		rftx_data.currData = BIT(10) & (rftx_data.currComm.id << 7) & (rftx_data.currComm.length); 
 		hamm_GetParityBits(& rftx_data.currData);
 		rftx_data.currDataIndex = 15; //Start of command
 		

@@ -5,28 +5,31 @@ u8 hamm_lookupTable[1024];
 void hamm_GetParityBits(u16 *data)
 {
 	u16 index;
-	(*data) = (*data) & 0xFFE0;
-	index = ((*data) & 0x7FFF) >> 5;
+	(*data) = (*data) & 0x07FF;
+	index = (*data) & 0x03FF;
 	
 	if ((*data) < 32768) 
-		(*data) = (*data) + ((u16)(hamm_lookupTable[index] & 0xF0) >> 3) ;
+		(*data) = (*data) + (((u16)(hamm_lookupTable[index] & 0xF0)) << 7) ;
 	else
-		(*data) = (*data) + ((u16)(hamm_lookupTable[index] & 0x0F) << 1);
+		(*data) = (*data) + (((u16)(hamm_lookupTable[index] & 0x0F)) << 11);
 }
 
 bool hamm_DecodeWord(u16 *data)
 {
 	u16 index;
-	index = ((*data) & 0x7FF0) >> 5;
+	u8 parity;
+	
+	index = (*data) & 0x03FF;
+	parity = ((*data) & 0x7800) >> 11;
 	
 	if ((*data) < 32768) 
-		if (((*data) & 0x1E) != ((u16)(hamm_lookupTable[index] & 0xF0) >> 3))
+		if (parity != (u8) (((u16)(hamm_lookupTable[index] & 0xF0) >> 3)))
 		{
 			//correct error
 			return _FALSE;
 		}
 	else
-		if (((*data) & 0x1E) != ((u16)(hamm_lookupTable[index] & 0xF0) << 1))
+		if (parity != (u8) (((u16)(hamm_lookupTable[index] & 0xF0) << 1)))
 		{
 			//correct error
 			return _FALSE;
