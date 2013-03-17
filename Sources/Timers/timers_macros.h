@@ -53,6 +53,6 @@ enum {EDGE_RISING = 1, EDGE_FALLING, EDGE_BOTH};
 #define tim_SetOutputToggle(timId) do{if(timId<4){GLUE(TCTL2_OL,timId)=1;GLUE(TCTL2_OM,timId)=0;}else{GLUE(TCTL1_OL,timId)=1;GLUE(TCTL1_OM,timId)=0;}}while(0)
 #define tim_DisconnectOutput(timId) do{if(timId<4){GLUE(TCTL2_OL,timId)=0;GLUE(TCTL2_OM,timId)=0;}else{GLUE(TCTL1_OL,timId)=0;GLUE(TCTL1_OM,timId)=0;}}while(0)
 
-#define tim_GetTimeElapsed(overflowCnt, timId, lastEdge) ((overflowCnt * TIM_CNT_MAX + tim_GetValue(timId)) - (u32)lastEdge)
+#define tim_GetTimeElapsed(_overflowCnt, _timId, _lastEdge) (((u32)_overflowCnt * (u32)TIM_CNT_MAX + (u32)tim_GetValue(_timId)) - (u32)_lastEdge)
 
 #endif

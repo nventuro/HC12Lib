@@ -1,7 +1,17 @@
 #include <mc9s12xdp512.h>
 #include "rti.h"
 
-u32 rti_divTable[8] = {1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000};
+enum {_XTAL=0, _PLL};
+#define RTI_CLOCK_SOURCE _PLL	// Do NOT change if other peripherals are using a modified PLL clock.
+
+#define RTI_CLOCK_MHZ ((RTI_CLOCK_SOURCE == _XTAL) ? 16 : BUS_CLOCK_MHZ)
+
+enum {BASE_2=0, BASE_10};
+#define RTI_DIVIDER_BASE BASE_10
+
+#define RTI_PRESCALER 0b10010111//0x27////(0b10101001 | (RTI_DIVIDER_BASE << 7))	// 0x27 @16 MHz: 976 Hz 
+																// 0b00011011 @24MHz / (24*10^3) = 1000 Hz.
+															 	// 0b00101001 @50MHz / (50*10^3) = 1000 Hz.
 
 #define RTI_SETPRESCALER(presc) (RTICTL = presc)
 #define RTI_ENABLE_INTERRUPTS() (CRGINT_RTIE = 1)
@@ -35,11 +45,11 @@ void rti_Init()
 	for (i = 0; i < RTI_MAX_FCNS; i++)
 		rti_tbl[i].callback = NULL;
 	
+	RTI_SET_CLOCK_SOURCE(RTI_CLOCK_SOURCE);
+	
 	RTI_SETPRESCALER (RTI_PRESCALER);
 	RTI_ENABLE_INTERRUPTS();
 	RTI_CLEAR_FLAG();
-	
-	RTI_SET_CLOCK_SOURCE(RTI_CLOCK_SOURCE);
 	
 	return;
 }

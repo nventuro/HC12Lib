@@ -1,5 +1,6 @@
 #include "timers.h"
 
+#define	TIMER_PRESCALER 6 	// 50MHz / 2^6 = 781.25 kHz. The TCNT resolution is 1.28us 
 #define TIM_AMOUNT 8
 
 #define SET_TIOS_OC(i) (TIOS |= (1 << i))
@@ -47,7 +48,7 @@ void tim_Init(void)
 
 tim_id tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 {
-	if ((tim_data.isTimerUsed[timNumber] == _TRUE) || (cb == NULL))
+	if (tim_data.isTimerUsed[timNumber] == _TRUE || (cb == NULL))
 		return TIM_INVALID_ID;
 	
 	tim_AssignTimer(reqType, cb, ovf, timNumber);
@@ -659,7 +660,7 @@ void interrupt tim5_Service(void)
 void interrupt tim6_Service(void)
 {
 	tim_ClearFlag(6);
-
+	
 	tim_data.cbArray[6]();
 	
 	return;
@@ -680,7 +681,7 @@ void interrupt timOvf_Service(void)
 {
 	tim_id i;
 	CLEAR_OVF_FLAG();
-	
+		
 	for (i = 0; i < TIM_AMOUNT; i++)
 		if ((tim_data.ovfArray[i] != NULL) && (tim_data.ovfIntEnable[i] == _TRUE))
 			(*tim_data.ovfArray[i])();

@@ -13,7 +13,7 @@
 
 #define IIC_MODULE_ENABLE() (IIC0_IBCR_IBEN = 1)
 // modify only IBC 6 - 7; refer to HC12 interfacing manual, page 545.
-#define IIC_SET_BAUD() (IIC0_IBFD = 0x5F) //80 kHz en SCL
+#define IIC_SET_BAUD() (IIC0_IBFD = 0x5F)//(BUS_CLOCK_MHZ <= 24? (IIC0_IBFD = 0x45) : (IIC0_IBFD = 0x85)) //5f 100 kHz en SCL para 50 MHz, 1F 96k para 24 MHz
 #define IIC_FLG_CLEAR() (IIC0_IBSR_IBIF = 1)
 #define IIC_INTERRUPT_ENABLE() (IIC0_IBCR_IBIE = 1)
 
@@ -25,6 +25,17 @@
 #define IIC_ARBITRATION_LOST 1
 
 iic_commData_T iic_commData;
+
+
+typedef struct {
+    iic_ptr currCB;
+    iic_ptr eotCB;
+    iic_ptr commFailedCB;
+    u8 dataIdx;
+    bool init;
+    bool busIsFree;
+}iic_data_T;
+
 
 iic_data_T iic_data = {NULL,NULL,NULL,0,_FALSE,_FALSE};
 

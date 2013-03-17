@@ -28,15 +28,6 @@ typedef struct {
     
 } iic_commData_T;
 
-typedef struct {
-    iic_ptr currCB;
-    iic_ptr eotCB;
-    iic_ptr commFailedCB;
-    u8 dataIdx;
-    bool init;
-    bool busIsFree;
-}iic_data_T;
-
 
 extern bool * const busIsFreePtr;
 

@@ -67,7 +67,7 @@ void rtc_init (void)
 		iic_Init();
 
 		tim_Init();
-		rtc_intData.timId = tim_getSpecificTimer(TIM_IC,rtc_intSrv,NULL,RTC_TIMER);
+		rtc_intData.timId = tim_GetTimer(TIM_IC,rtc_intSrv,NULL,RTC_TIMER);
 		tim_dSetRisingEdge(rtc_intData.timId);
 		rtc_intData.extCB = NULL;
 		
@@ -224,20 +224,20 @@ void rtc_sendLocalDataToDevice (rtc_ptr cb)
 	iic_commData.data[7] = (rtc_data.year.deca << BCD_DECA_SHIFT) + (rtc_data.year.uni << BCD_UNI_SHIFT);
 	iic_commData.data[8] = (RTC_SQWE_ENABLE << RTC_SQWE_SHIFT) + (RTC_RS0_1HZ << RTC_RS0_SHIFT) + (RTC_RS1_1HZ << RTC_RS1_SHIFT);
 	
-	iic_send(RTC_ADDRESS,cb,NULL, 9, NULL);
+	iic_Send(RTC_ADDRESS,cb,NULL, 9, NULL);
 	
 	return;
 }
 
 bool rtc_isAutoUpdateEnabled (void)
 {
-	return tim_areInterruptsEnabled(rtc_intData.timId);
+	return  tim_dAreInterruptsEnabled(rtc_intData.timId);
 }
 
 
 void rtc_enableAutoUpdate (void)
 {
-	tim_enableInterrupts(rtc_intData.timId);
+	tim_dEnableInterrupts(rtc_intData.timId);
 
 	return;
 }
@@ -245,7 +245,7 @@ void rtc_enableAutoUpdate (void)
 
 void rtc_disableAutoUpdate (void)
 {
-	tim_disableInterrupts(rtc_intData.timId);
+	tim_dDisableInterrupts(rtc_intData.timId);
 
 	return;
 }
@@ -261,7 +261,7 @@ void rtc_intSrv (void)
 
 void rtc_intAux (void)
 {
-	iic_receive(RTC_ADDRESS,rtc_storeReceivedData,NULL,7,NULL);
+	iic_Receive(RTC_ADDRESS,rtc_storeReceivedData,NULL,7,NULL);
 	
 	return;
 }

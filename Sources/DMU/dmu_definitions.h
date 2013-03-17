@@ -35,7 +35,7 @@ typedef enum
 #define CONFIG (LP_FILTER_CONFIG | (EXT_SYNC_SET << 3) )
 
 // Set this value; an approximation will be used as sample rate according to the divider.
-#define SAMPLE_RATE (50)
+#define SAMPLE_RATE (100)
 
 // Reg 25: ADD_SAMPLE_RATE_DIVIDER - DATA:
 #define SAMPLE_RATE_DIVIDER ((LP_FILTER_CONFIG == 0 ) ? (8000/SAMPLE_RATE-1) : (1000/SAMPLE_RATE-1))	// u8 - reg 25 ADD_SAMPLE_RATE_DIVIDER
@@ -81,9 +81,9 @@ typedef enum
 #define ZERO_MOTION_DURATION 0		// u8 - ADD_ZERO_MOTION_DURATION (reg 34)
 // Reg 35 - ADD_FIFO_ENABLE - HEADER
 // Note: see reg 106 (FIFO MASTER ENABLE)
-#define FIFO_XG_ENABLE 0
-#define FIFO_YG_ENABLE 0
-#define FIFO_ZG_ENABLE 0
+#define FIFO_XG_ENABLE 1
+#define FIFO_YG_ENABLE 1
+#define FIFO_ZG_ENABLE 1
 #define FIFO_ACCEL_ENABLE 1
 
 // Reg 35 (ADD_FIFO_ENABLE) - DATA:
@@ -143,7 +143,7 @@ enum {SIGNAL_PATH_RUN = 0, SIGNAL_PATH_RESET};
 #define USER_CTRL(fifo_en, fifo_res, signal_res) ( (fifo_en << 6) | (I2C_MASTER_DISABLE << 5) | \
 	(MPU_SPI_DISABLE << 4) | (fifo_res << 2) | (I2C_MASTER_RESET << 1) | (signal_res <<0 ))
 
-#define USER_CTRL_INIT USER_CTRL(FIFO_MASTER_ENABLE, FIFO_RUN, SIGNAL_PATH_RESET)
+#define USER_CTRL_INIT USER_CTRL(FIFO_MASTER_ENABLE, FIFO_RESET, SIGNAL_PATH_RESET)
 
 // Reg 107 - PWR_MGMT_1 - HEADER
 enum {PWR_SLEEP_OFF=0, PWR_SLEEP_ON};		// Send device to sleep mode.

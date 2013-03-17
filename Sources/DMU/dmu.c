@@ -12,6 +12,8 @@ void dmu_printI2CData(void);
 extern void printI2CData(void);
 extern u8 buf[];
 
+
+// Measurements taken individually must respect MPU internal registers' order
 struct dmu_measurements_T
 {
 	s16 accel_x;
@@ -26,12 +28,39 @@ struct dmu_measurements_T
 
 } dmu_measurements;
 
+// For samples taken from fifo buffer
+struct dmu_samples_T
+{
+	s16 accel_x;
+	s16 accel_y;
+	s16 accel_z;
+	
+	s16 gyro_x;
+	s16 gyro_y;
+	s16 gyro_z;
+};
+
+
+struct dmu_sampleAccumulator_T
+{
+	s32 accel_x;
+	s32 accel_y;
+	s32 accel_z;
+	
+	s32 gyro_x;
+	s32 gyro_y;
+	s32 gyro_z;
+};
+
 struct dmu_data_T dmu_data = {_FALSE, NULL, 0, {_TRUE, 0, 0} };
 
 void dmu_PrintFormattedMeasurements(void);
-void dmu_fifoStageRead(void);
+void dmu_FifoStageRead(void);
 void dmu_CommFailed(void);
 void dmu_printFifoCnt(void);
+void dmu_AccumulateSamples(struct dmu_sampleAccumulator_T* acc, struct dmu_samples_T* samples);
+void dmu_DivideAccumulator(struct dmu_sampleAccumulator_T* acc, u16 n);
+void dmu_AverageSamples(void);
 
 
 // Reset macro - g, a, t are booleans (1/0), cb is callback after reset is done..
@@ -39,12 +68,6 @@ void dmu_printFifoCnt(void);
 	iic_commData.data[0] = ADD_SIGNAL_PATH_RESET;	\
 	iic_commData.data[1] = RESET_SIGNAL(g,a,t);		\
 	dmu_Send(cb, NULL, 2, NULL);					\
-} while(0)
-
-#define dmu_FifoReset(cb) do {												\
-	iic_commData.data[0] = ADD_USER_CTRL;									\
-	iic_commData.data[1] = USER_CTRL(FIFO_MASTER_ENABLE, FIFO_RESET, 1);	\
-	dmu_Send(cb, NULL, 2, NULL);								\
 } while(0)
 
 // Reg 114	-	Gets FIFO cnt and stores it in I2C buffer, calling 'cb' when done.
@@ -181,13 +204,13 @@ void dmu_PrintFormattedMeasurements(void)
 }
 	
 	
-void dmu_fifoStageRead(void)	
+void dmu_FifoStageRead(void)	
 {
 	switch (dmu_data.stage)
 	{
 	u16 fifoCount;
 	case 0:
-		dmu_GetFifoCount(dmu_fifoStageRead);
+		dmu_GetFifoCount(dmu_FifoStageRead);
 		dmu_data.stage++;		
 		break;
 
@@ -195,12 +218,9 @@ void dmu_fifoStageRead(void)
 		// Fifo reads can be 256 bytes max, even though fifo full length is 1024. 
 		
 		fifoCount = *((u16*)iic_commData.data);
-		
-		if ( fifoCount > MAX_BURST_READS)
-		{
-			dmu_data.fifo.fetchTimes = fifoCount / MAX_BURST_READS;
-			dmu_data.fifo.remainingBytes = fifoCount % MAX_BURST_READS;
-		}
+
+		dmu_data.fifo.fetchTimes = fifoCount / MAX_BURST_READS;
+		dmu_data.fifo.remainingBytes = fifoCount % MAX_BURST_READS;		
 
 		dmu_data.stage++;
 		// No break here.
@@ -208,6 +228,8 @@ void dmu_fifoStageRead(void)
 	case 2:
 
 		dmu_data.fifo.fetchTimes--;
+
+		printf("fc: %d, ft: %d, rb: %d\n", fifoCount, dmu_data.fifo.fetchTimes, dmu_data.fifo.remainingBytes);
 		
 		if ((dmu_data.fifo.fetchTimes < 0) && (dmu_data.fifo.remainingBytes != 0))
 			dmu_ReadNFifoBytes(dmu_data.fifo.remainingBytes, dmu_data.cb);
@@ -240,7 +262,6 @@ void dmu_printI2CData(void)
 void dmu_CommFailed()
 {
 	printf("comm failed, stage %d\n", dmu_data.stage);
-	dmu_data.init = _TRUE;
 	dmu_data.stage = 0;
 	iic_FreeBusReservation();
 
@@ -265,7 +286,7 @@ void dmu_PrintFifoMem(void)
 	iic_FreeBusReservation();
 	
 	if (dmu_data.fifo.fetchTimes >= 0)
-		dmu_fifoStageRead();
+		dmu_FifoStageRead();
 	else
 		dmu_data.fifo.enable = _TRUE;
 	
@@ -278,3 +299,54 @@ void dmu_printFifoCnt(void)
 	printf("fCnt: %d\n", (*(u16*)iic_commData.data));
 }
 
+
+void dmu_GetSamples(void)
+{
+	dmu_ReadFifo(dmu_AverageSamples);
+	return;
+}
+
+void dmu_AverageSamples(void)
+{
+	struct dmu_samples_T* dmuSamples = (struct dmu_samples_T*)iic_commData.data;
+	struct dmu_sampleAccumulator_T acc = {0, 0, 0, 0, 0, 0};
+	u16 i;
+	u16 limit = dmu_data.fifo.remainingBytes / sizeof(struct dmu_samples_T);
+
+
+	for (i = 0; i < limit; i++)
+		dmu_AccumulateSamples(&acc, dmuSamples++);
+
+	dmu_DivideAccumulator(&acc, limit);
+
+	printf("ax: %ld, ay: %ld, az: %ld\ngx: %ld, gy: %ld, gz: %ld\n", acc.accel_x, acc.accel_y, acc.accel_z, acc.gyro_x, acc.gyro_y, acc.gyro_z);	
+	printf("s: %d\n", limit);	
+
+	return;
+}
+
+void dmu_AccumulateSamples(struct dmu_sampleAccumulator_T* acc, struct dmu_samples_T* samples)
+{
+	acc->accel_x += samples->accel_x;
+	acc->accel_y += samples->accel_y;
+	acc->accel_z += samples->accel_z;
+
+	acc->gyro_x += samples->gyro_x;
+	acc->gyro_y += samples->gyro_y;
+	acc->gyro_z += samples->gyro_z;
+	
+	return;
+}
+
+void dmu_DivideAccumulator(struct dmu_sampleAccumulator_T* acc, u16 n)
+{
+	acc->accel_x /= n;
+	acc->accel_y /= n;
+	acc->accel_z /= n;
+
+	acc->gyro_x /= n;
+	acc->gyro_y /= n;
+	acc->gyro_z /= n;
+	
+	return;
+}
