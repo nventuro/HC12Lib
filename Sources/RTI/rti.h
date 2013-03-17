@@ -11,7 +11,7 @@
 
 typedef u16 rti_time; // A type for expressing time, each rti_time equals one RTI_PER
 
-#define RTI_MS_TO_TICKS(ms) (DIV_CEIL(((u32)ms)*RTI_FREQ,1000)) // Converts miliseconds to rti_time
+#define RTI_MS_TO_TICKS(ms) (ms) // Converts miliseconds to rti_time - only for compatibility.
 
 typedef s8 rti_id; // An id for a registered callback
 
@@ -23,7 +23,8 @@ void rti_Init(void);
 
 rti_id rti_Register(rti_ptr callback, void *data, rti_time period, rti_time delay);
 // Registers a callback function to be called periodically every period*RTI_PER seconds, after an initial delay of delay*RTI_PER seconds.
-// period and delay can be set using RTI_MS2DIV(timeInMiliseconds).
+// period and delay can be set using RTI_MS2DIV(timeInMiliseconds). 
+// In current version, the parameter passed is already in ms, so there is no need of using the macro.
 // When callback is called, it receives data, period and its rti_id. 
 // callback is called with interrupts inhibited and MUST NOT disinhibit them.
 // Returns the rti_id of the registed callback. 
