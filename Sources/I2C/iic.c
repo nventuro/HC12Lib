@@ -1,11 +1,14 @@
 #include "iic.h"
 #include "mc9s12xdp512.h"
 #include "debug.h"
+#include "error.h"
 
+#ifdef IIC_DEBUG
 #include <stdio.h>
+#endif
 
 #define IIC_START()	(IIC0_IBCR_MS_SL = 1)
-#define IIC_STOP() do {IIC0_IBCR_MS_SL = 0; } while(0)
+#define IIC_STOP() do {IIC0_IBCR_MS_SL = 0; iic_data.stoppingBus = _TRUE;} while(0)
 #define IIC_SEND(a) (IIC0_IBDR = a)
 #define IIC_RECEIVE() (IIC0_IBDR)
 #define READ 1
@@ -33,13 +36,12 @@ typedef struct {
     iic_ptr commFailedCB;
     u8 dataIdx;
     bool init;
-    bool busIsFree;
+    bool stoppingBus;
 }iic_data_T;
 
 
 iic_data_T iic_data = {NULL,NULL,NULL,0,_FALSE,_FALSE};
 
-bool* const busIsFreePtr = &iic_data.busIsFree;
 
 void iic_read (void);
 void iic_read_start (void);
@@ -53,7 +55,7 @@ void iic_Init (void)
 		return;
 	
 	iic_data.init = _TRUE;
-	iic_data.busIsFree = _TRUE;		// Used in multi-stage transmissions.
+	iic_data.stoppingBus = _FALSE;		// Used in multi-stage transmissions.
 	IIC_MODULE_ENABLE();
 	IIC_SET_BAUD();
 	IIC_FLG_CLEAR();
@@ -65,8 +67,15 @@ void iic_Init (void)
 
 void iic_Send (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toSend, u8* sendBuffer)
 {
-    while ((iic_IsBusy()) || !(iic_data.busIsFree));	// Block transfer until ready
-    
+	if (iic_IsBusy())
+	{
+		if (iic_data.stoppingBus)	// If the bus is busy but not because it is being stopped, it's a logical error.
+	    	while (iic_IsBusy()); 						// Wait until bus stop is complete
+	    else
+	    	err_Throw("iic: attempt to receive message (from register) while bus is busy.\n");
+	}
+	
+	iic_data.stoppingBus = _FALSE;     
     iic_data.eotCB = eotCB;
     iic_data.commFailedCB = commFailedCB;
     iic_data.currCB = iic_write;
@@ -88,8 +97,15 @@ void iic_Send (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toSend, u8
 
 void iic_Receive (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead, u8* receiveBuffer)
 {
-	while ( (iic_IsBusy()) || !(iic_data.busIsFree));	// Block transfer until ready
+	if (iic_IsBusy())
+	{
+		if (iic_data.stoppingBus)	// If the bus is busy but not because it is being stopped, it's a logical error.
+	    	while (iic_IsBusy()); 						// Wait until bus stop is complete
+	    else
+	    	err_Throw("iic: attempt to receive message (from register) while bus is busy.\n");
+	}
 	
+	iic_data.stoppingBus = _FALSE;     
     iic_data.eotCB = eotCB;
     iic_data.commFailedCB = commFailedCB;
     iic_data.currCB = iic_read_start;
@@ -120,7 +136,13 @@ void iic_Receive (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead,
 
 void iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead, u8* receiveBuffer)
 {	 
-	while(iic_IsBusy() || (!iic_data.busIsFree) );	// Block transfer until ready.
+	if (iic_IsBusy())
+	{
+		if (iic_data.stoppingBus)	// If the bus is busy but not because it is being stopped, it's a logical error.
+	    	while (iic_IsBusy()); 	// Wait until bus stop is complete; stoppingBus is cleared in iic_Send.
+	    else
+	    	err_Throw("iic: attempt to receive message (from register) while bus is busy.\n");
+	}							
     	
 	receive_dataCopy(iic_commData.transferParameters, regAddress, slaveAddress, eotCB, commFailedCB, toRead, receiveBuffer, 0);
 	
@@ -137,12 +159,10 @@ void iic_FullStagesReceive (void)
 	
 		iic_Send(rData->slaveAddress, iic_FullStagesReceive, rData->commFailedCB, 1, &(rData->regAddress));	// Write start read address to slave device
 		rData->stage++;
-		iic_data.busIsFree = _FALSE;	// Disable bus for other transfers.
 
 		break;
 
 	case 1:		// Start reception itself. Data needed to call iic_Receive can be overwritten in global array if receiveBuffer is NULL, but its OK.
-		iic_data.busIsFree = _TRUE;		// Re-Enable for reception.
 		iic_Receive(rData->slaveAddress, rData->eotCB, rData->commFailedCB, 
 											rData->toRead, rData->receiveBuffer);
 		break;

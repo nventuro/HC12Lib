@@ -45,30 +45,10 @@ void main (void)
 	tim_EnableInterrupts(DMU_TIMER);
 	tim_SetRisingEdge(DMU_TIMER); 
 */
-/*
-	asm cli;
-	tim_Init();
-	tim_GetTimer(TIM_OC, NULL, dataReady_Ovf, 0);
-	tim_dSetOutputToggle(0);
-	tim_dEnableInterrupts(0);
-*/
 //	rti_Register(GetSamplesMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
 
 
-	rti_Init();
-	tim_Init();
-	asm cli;
-
-	tim_GetTimer(TIM_IC, icFcn, dataReady_Ovf, 0);
-	tim_EnableOvfInterrupts(0);
-	tim_EnableInterrupts(0);
-	tim_SetRisingEdge(0);
-	
-	rti_Register(GetMeasurementsMask, NULL, 500, RTI_MS_TO_TICKS(500));
-
-
-	printf("tomy la concha de tu madre\n");
-
+	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
 	
 	while (1)
 		;
@@ -88,8 +68,6 @@ void Init (void)
 	iic_Init();
 	dmu_Init();
 
-	while (dmu_data.init == _FALSE)
-		;
 	printf("Init done\n");		
 	
 	
@@ -98,19 +76,7 @@ void Init (void)
 
 void GetMeasurementsMask(void *data, rti_time period, rti_id id)
 {
-	if (PORTA_PA0 == 1)
-	{
-		PORTA_PA0 = 0;
-		tim_SetRisingEdge(0);
-	}
-	else
-	{
-		PORTA_PA0 = 1;
-		tim_SetFallingEdge(0);
-	}
-		
-//	dmu_GetMeasurements();
-	
+	dmu_GetMeasurements();	
 	return;
 }
 

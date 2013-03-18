@@ -29,8 +29,6 @@ typedef struct {
 } iic_commData_T;
 
 
-extern bool * const busIsFreePtr;
-
 extern iic_commData_T iic_commData;
 
 
@@ -69,9 +67,6 @@ void iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic
 
 #define iic_IsBusy() ((IIC0_IBSR_IBB == 1) ? (_TRUE) : (_FALSE) )
 /*	Checks the bus' status. */
-
-#define iic_MakeBusReservation() (*busIsFreePtr = _FALSE)
-#define iic_FreeBusReservation() (*busIsFreePtr = _TRUE)
 
 
 void iic_FlushBuffer(void);

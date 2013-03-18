@@ -10,7 +10,6 @@
 void dmu_printI2CData(void);
 
 extern void printI2CData(void);
-extern u8 buf[];
 
 
 // Measurements taken individually must respect MPU internal registers' order
@@ -50,7 +49,7 @@ struct dmu_sampleAccumulator_T
 	s32 gyro_x;
 	s32 gyro_y;
 	s32 gyro_z;
-};
+}dmu_sampleAccumulator;
 
 struct dmu_data_T dmu_data = {_FALSE, NULL, 0, {_TRUE, 0, 0} };
 
@@ -61,6 +60,7 @@ void dmu_printFifoCnt(void);
 void dmu_AccumulateSamples(struct dmu_sampleAccumulator_T* acc, struct dmu_samples_T* samples);
 void dmu_DivideAccumulator(struct dmu_sampleAccumulator_T* acc, u16 n);
 void dmu_AverageSamples(void);
+void dmu_StagesInit(void);	
 
 
 // Reset macro - g, a, t are booleans (1/0), cb is callback after reset is done..
@@ -86,7 +86,17 @@ void dmu_Init()
 	
 	iic_Init();
 	
+	dmu_StagesInit();	
 	
+	while (dmu_data.init == _FALSE)
+		;
+
+	
+	return;
+}
+
+void dmu_StagesInit()
+{
 	switch (dmu_data.stage)
 	{
 
@@ -95,10 +105,9 @@ void dmu_Init()
 		iic_commData.data[0] = ADD_PWR_MGMT_1;
 		iic_commData.data[1] = PWR_MGMT_1_RESET;
 
-		dmu_Send (dmu_Init, dmu_CommFailed, 2, NULL);
+		dmu_Send (dmu_StagesInit, dmu_CommFailed, 2, NULL);
 		
 		dmu_data.stage++;
-		iic_MakeBusReservation();
 		
 		break;
 
@@ -118,11 +127,9 @@ void dmu_Init()
 		iic_commData.data[10] = ZERO_MOTION_DURATION;
 		iic_commData.data[11] = FIFO_ENABLE;
 		
-		iic_FreeBusReservation();
-		dmu_Send (dmu_Init, dmu_CommFailed, 12, NULL);
+		dmu_Send (dmu_StagesInit, dmu_CommFailed, 12, NULL);
 		
 		dmu_data.stage++;
-		iic_MakeBusReservation();
 		
 		break;
 	
@@ -132,11 +139,8 @@ void dmu_Init()
 		iic_commData.data[1] = INT_PIN_CFG;		// 55
 		iic_commData.data[2] = INT_ENABLE;
 
-		iic_FreeBusReservation();		
+		dmu_Send(dmu_StagesInit, dmu_CommFailed, 3, NULL);
 		
-		dmu_Send(dmu_Init, dmu_CommFailed, 3, NULL);
-		
-		iic_MakeBusReservation();
 		dmu_data.stage++;
 		
 		break;
@@ -149,11 +153,9 @@ void dmu_Init()
 		iic_commData.data[3] = USER_CTRL(0,1,1);	// Run means not reset.
 		iic_commData.data[4] = PWR_MGMT_1_RUN;
 		// PWR_MGMT_2 stays in 0 (reset value).
-		iic_FreeBusReservation();
 		
-		dmu_Send(dmu_Init, dmu_CommFailed, 5, NULL);
+		dmu_Send(dmu_StagesInit, dmu_CommFailed, 5, NULL);
 
-		iic_MakeBusReservation();
 		dmu_data.stage++;
 
 		break;		
@@ -164,27 +166,29 @@ void dmu_Init()
 		iic_commData.data[0] = ADD_USER_CTRL;
 		iic_commData.data[1] = USER_CTRL_INIT;	// Run means not reset.
 
-		iic_FreeBusReservation();
-		
-		dmu_Send(dmu_Init, dmu_CommFailed, 2, NULL);
+		dmu_Send(dmu_StagesInit, dmu_CommFailed, 2, NULL);
 
-		iic_MakeBusReservation();
 		dmu_data.stage++;
 
 		break;		
 
 
-	case 5:		// Done for now - No need of resets or pwr mgmt.
-				
+	case 5:
+	
+
+	case 6:		// Done for now - No need of resets or pwr mgmt.
+		
+		dmu_FifoReset();
+		
 		dmu_data.init = _TRUE;
 		dmu_data.stage = 0;
-		iic_FreeBusReservation();
 
 		break;
 		
 	default: 
 		break;
 	}
+	
 	return;
 }
 
@@ -236,7 +240,6 @@ void dmu_FifoStageRead(void)
 		else
 			dmu_ReadNFifoBytes(MAX_BURST_READS, dmu_data.cb);
 		
-		iic_MakeBusReservation();
 		break;
 
 	default:
@@ -263,8 +266,6 @@ void dmu_CommFailed()
 {
 	printf("comm failed, stage %d\n", dmu_data.stage);
 	dmu_data.stage = 0;
-	iic_FreeBusReservation();
-
 }
 
 
@@ -277,14 +278,12 @@ void dmu_PrintFifoMem(void)
 	else
 		limit = MAX_BURST_READS;
 	
-	
 	for (i = 0; i < limit / sizeof(s16); i++) 
 	{
 		printf("%d\t", (*(((u16*)iic_commData.data) + i) ) );
 	}
 		
-	iic_FreeBusReservation();
-	
+			
 	if (dmu_data.fifo.fetchTimes >= 0)
 		dmu_FifoStageRead();
 	else
@@ -311,8 +310,13 @@ void dmu_AverageSamples(void)
 	struct dmu_samples_T* dmuSamples = (struct dmu_samples_T*)iic_commData.data;
 	struct dmu_sampleAccumulator_T acc = {0, 0, 0, 0, 0, 0};
 	u16 i;
-	u16 limit = dmu_data.fifo.remainingBytes / sizeof(struct dmu_samples_T);
-
+	u16 limit;
+	
+	if ((dmu_data.fifo.remainingBytes == 0) && (dmu_data.fifo.fetchTimes > 0))
+		limit = MAX_BURST_READS / sizeof(struct dmu_samples_T);
+	else
+		limit = dmu_data.fifo.remainingBytes / sizeof(struct dmu_samples_T);
+	
 
 	for (i = 0; i < limit; i++)
 		dmu_AccumulateSamples(&acc, dmuSamples++);
