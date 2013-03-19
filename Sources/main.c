@@ -33,7 +33,7 @@ void main (void)
 	PLL_SPEED(BUS_CLOCK_MHZ);
 	Init ();
 
-	DDRA = 0x01;
+//	DDRA = 0x01;
 	
 		
 
@@ -45,8 +45,7 @@ void main (void)
 	tim_EnableInterrupts(DMU_TIMER);
 	tim_SetRisingEdge(DMU_TIMER); 
 */
-//	rti_Register(GetSamplesMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
-
+//	rti_Register(GetSamplesMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(
 
 	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
 	
@@ -76,7 +75,7 @@ void Init (void)
 
 void GetMeasurementsMask(void *data, rti_time period, rti_id id)
 {
-	dmu_GetMeasurements();	
+	dmu_GetMeasurements(dmu_PrintFormattedMeasurements);	
 	return;
 }
 
@@ -98,7 +97,7 @@ void dataReady_Srv(void)
 	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING)
 	{
 		tim_SetFallingEdge(DMU_TIMER);	
-		dmu_GetMeasurements();
+		dmu_GetMeasurements(NULL);
 	}
 	else 
 		tim_SetRisingEdge(DMU_TIMER);
