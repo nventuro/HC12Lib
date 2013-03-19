@@ -2,7 +2,7 @@
 #include "cb.h"
 
 
-cbuf cb_create(u8 *mem, char len)
+cbuf cb_create(u8 *mem, u16 len)
 {
 	cbuf r;
 	

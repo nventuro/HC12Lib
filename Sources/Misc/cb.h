@@ -10,7 +10,7 @@ typedef struct {
 	u8 *mem;
 	u8 *r;
 	u8 *w;
-	u8 len;
+	u16 len;
 	s16 status;
 } cbuf;
 

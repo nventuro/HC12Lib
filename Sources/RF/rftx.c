@@ -2,6 +2,7 @@
 #include "hamming1511.h"
 #include "cb.h"
 #include "timers.h"
+#include <stdio.h>
 
 #define RFTX_DATA GLUE(PTT_PTT,RFTX_DATA_TIMER)
 #define RFTX_DATA_DDR GLUE(DDRT_DDRT,RFTX_DATA_TIMER)
@@ -78,27 +79,34 @@ void rftx_Init (bool ecc)
 	
 	rftx_isInit = _TRUE;
 	
-	RFTX_DATA_DDR = DDR_OUT;
-	RFTX_DATA = 1;
+	rftx_data.ecc = ecc;
+	DDRA = 0xFF;
+	PORTA_PA1 = 0;
 	
+	RFTX_DATA_DDR = DDR_OUT;
+		
 	rftx_data.queue = rfqueue_Create(rftx_queueMemory,RFTX_QUEUE_SIZE);
 	
 	tim_Init();	
 	tim_GetTimer (TIM_OC, rftx_TimerCallback, NULL, RFTX_DATA_TIMER);
 	
 	rftx_data.status = WAITING_FOR_DEAD_TIME_TO_END;
-	tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_DEAD_TIME_US));
+	tim_SetValue(RFTX_DATA_TIMER, tim_GetGlobalValue() + TIM_US_TO_TICKS(RFTX_DEAD_TIME_US));
 	tim_ClearFlag(RFTX_DATA_TIMER);
 	tim_DisconnectOutput(RFTX_DATA_TIMER);
 	tim_EnableInterrupts(RFTX_DATA_TIMER);
+	
+	RFTX_DATA = 1;
 	
 	return;
 }
 
 bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 {
+		
 	if (rftx_data.status == IDLE)
-	{
+	{		
+		putchar('s');
 		rftx_data.status = SENDING;
 		rftx_data.currComm.id = id & 0x07;
 		rftx_data.currComm.data = data;
@@ -116,6 +124,7 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 		else
 		{
 			rftx_commData requestedComm;
+			putchar('q');
 			requestedComm.id = id;
 			requestedComm.data = data;
 			requestedComm.length = length;
@@ -131,22 +140,23 @@ void rftx_CommenceTX (void)
 {
 	rftx_data.dataIndex = 0; //No data is being sent yet
 	
-	rftx_data.currData = (rftx_data.ecc << 10) & (rftx_data.currComm.id << 7) & (rftx_data.currComm.length); 
+	rftx_data.currData = (rftx_data.ecc << 10) | (rftx_data.currComm.id << 7) | (rftx_data.currComm.length); 
 	hamm_GetParityBits(& rftx_data.currData);
-	rftx_data.currDataIndex = 15; //Start of command
+	rftx_data.currDataIndex = 14; //Start of command
 	rftx_data.bitHalfSent = _FALSE;
-	
 	RFTX_DATA = 0;
 	
-	tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_START_TX_TIME_US));
+	tim_SetValue(RFTX_DATA_TIMER, tim_GetGlobalValue() + TIM_US_TO_TICKS(RFTX_START_TX_TIME_US));
 	tim_ClearFlag(RFTX_DATA_TIMER);
 	tim_EnableInterrupts(RFTX_DATA_TIMER);
+	
 	
 	return;
 }
 
 void rftx_TimerCallback(void)
 {
+	PORTA_PA1 = 1;
 	if (rftx_data.status == WAITING_FOR_DEAD_TIME_TO_END)
 	{
 		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_EMPTY)
@@ -154,7 +164,6 @@ void rftx_TimerCallback(void)
 			rftx_data.status = IDLE;
 			tim_DisableInterrupts(RFTX_DATA_TIMER);
 			
-			return;
 		}
 		else
 		{
@@ -167,12 +176,11 @@ void rftx_TimerCallback(void)
 		
 			rftx_CommenceTX();
 			
-			return;
 		}
 	}
 	else // SENDING
 	{
-		if (rftx_data.bitHalfSent)
+		if (rftx_data.bitHalfSent == _TRUE)
 		{
 			RFTX_DATA = 0;
 		
@@ -184,7 +192,6 @@ void rftx_TimerCallback(void)
 			rftx_data.bitHalfSent = _FALSE;
 			rftx_data.currDataIndex--;
 			
-			return;
 		}
 		else
 		{
@@ -196,9 +203,10 @@ void rftx_TimerCallback(void)
 					
 					rftx_data.status = WAITING_FOR_DEAD_TIME_TO_END;
 					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_DEAD_TIME_US));
+					rftx_data.currComm.eot();
 				}
 				
-				//fecth new data
+				//if not fecth new data
 				
 			}
 			else
@@ -212,10 +220,10 @@ void rftx_TimerCallback(void)
 				
 				rftx_data.bitHalfSent = _TRUE;
 				
-				return;
 			}
 		}
 	}
+	PORTA_PA1 = 0;
 }
 
 
@@ -230,12 +238,12 @@ bool rfqueue_Push(rfqueue* queue, rftx_commData data)
 		return _FALSE;
 	else
 	{
-		cb_push(queue, data.length);
-		cb_push(queue, (u8) data.eot);
-		cb_push(queue, (u8) (((u16)data.eot) >> 8));		
+		cb_push(queue, data.id);
 		cb_push(queue, (u8) data.data);
 		cb_push(queue, (u8) (((u16)data.data) >> 8));		
-		cb_push(queue, data.id);
+		cb_push(queue, (u8) data.eot);
+		cb_push(queue, (u8) (((u16)data.eot) >> 8));		
+		cb_push(queue, data.length);
 		
 		return _TRUE;
 	}

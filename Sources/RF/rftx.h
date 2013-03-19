@@ -3,13 +3,13 @@
 
 #include "common.h"
 
-#define RFTX_DATA_TIMER 5 // The timer module used for transmitting data, connected to the transmitter's data pin.
+#define RFTX_DATA_TIMER 4 // The timer module used for transmitting data, connected to the transmitter's data pin.
 // If the timer is changed, rftx.c must be recompiled.
 
 typedef void (*rftx_ptr) (void); // A function callback used for notifying the end of a transmission
 
 void rftx_Init(bool ecc);
-// Initializes the RF TX module. This requires the Timers module to work, and interrupts to be enabled.
+// Initializes the RF TX module. This requires the Timers module to work, and doesn't require interrupts to be enabled.
 // If ecc equals _TRUE, a 15-bit Hamming Error Correcting Code (11 data bits, 4 parity bits) will be used by the module for all communications.
 
 bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot);
