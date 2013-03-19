@@ -62,7 +62,8 @@ void tim_dDisableInterrupts(tim_id timId);
 // Disables interrupts for a timer.
 
 void tim_dClearFlag(tim_id id);
-// Clears the interrupt flag of a timer. This is done automatically everytime callback is called.
+// Clears the interrupt flag of a timer. This is done automatically everytime callback is called, so this function is
+// therefore rarely called.
 
 void tim_EnableOvfInterrupts(tim_id id);
 // Enables TCNT overflow interrupts for a timer.

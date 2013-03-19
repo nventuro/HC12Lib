@@ -42,6 +42,9 @@ typedef union {
 
 #define BIT(n) (1<<(n))
 
+extern u8 firstBytes[]; // firstBytes[0] = 00000001, firstBytes[3] = 00001111
+extern u8 lastBytes[]; // lastBytes[0] = 10000000, lastBytes[3] = 11110000
+
 #define GLUE(a,b) GLUE_AGAIN(a,b)
 #define GLUE_AGAIN(a,b) a ## b
 

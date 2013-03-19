@@ -13,7 +13,7 @@
 #define RFTX_0_LOW_TIME_US 130
 
 #define RFTX_DEAD_TIME_US 400
-#define RFTX_START_TIME_US 100
+#define RFTX_START_TX_TIME_US 100
 
 #define RFTX_QUEUE_SIZE 8
 
@@ -28,14 +28,18 @@ struct rftx_commData
 
 typedef struct rftx_commData rftx_commData;
 
+
 typedef cbuf rfqueue;
 
 #define RFQUEUE_EMPTY CB_EMPTY
 #define RFQUEUE_FULL CB_FULL
 
 rfqueue rfqueue_Create(u8 *mem, u16 len);
+
 #define rfqueue_Status(queue) cb_status(queue)
+
 bool rfqueue_Push(rfqueue *queue, rftx_commData data);
+
 rftx_commData rfqueue_Pop(rfqueue *queue);
 
 u8 rftx_queueMemory[sizeof(rftx_commData)*RFTX_QUEUE_SIZE];
@@ -53,15 +57,19 @@ struct
 	bool ecc;
 	RFTX_STATUS status;
 	rfqueue queue;
+	
 	rftx_commData currComm;
 	u16 currData;
-	u8 currDataIndex;
+	s8 currDataIndex;
+	bool bitHalfSent;
 	u8 dataIndex;
 } rftx_data;
 
 bool rftx_isInit = _FALSE;
 
 void rftx_TimerCallback(void);
+
+void rftx_CommenceTX (void);
 
 void rftx_Init (bool ecc)
 {
@@ -97,14 +105,7 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 		rftx_data.currComm.length = length & 0x7F;
 		rftx_data.currComm.eot = eot;
 	
-		rftx_data.dataIndex = 0; //No data is being sent yet
-		
-		rftx_data.currData = BIT(10) & (rftx_data.currComm.id << 7) & (rftx_data.currComm.length); 
-		hamm_GetParityBits(& rftx_data.currData);
-		rftx_data.currDataIndex = 15; //Start of command
-		
-		RFTX_DATA = 0;
-		tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_START_TIME_US));
+		rftx_CommenceTX();
 		
 		return _TRUE;
 	}
@@ -114,16 +115,34 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 			return _FALSE;
 		else
 		{
-			rftx_commData aux;
-			aux.id = id;
-			aux.data = data;
-			aux.length = length;
-			aux.eot = eot;
-			rfqueue_Push(&rftx_data.queue,aux);
+			rftx_commData requestedComm;
+			requestedComm.id = id;
+			requestedComm.data = data;
+			requestedComm.length = length;
+			requestedComm.eot = eot;
+			rfqueue_Push(&rftx_data.queue,requestedComm);
 			
 			return _TRUE;
 		}
 	}
+}
+
+void rftx_CommenceTX (void)
+{
+	rftx_data.dataIndex = 0; //No data is being sent yet
+	
+	rftx_data.currData = (rftx_data.ecc << 10) & (rftx_data.currComm.id << 7) & (rftx_data.currComm.length); 
+	hamm_GetParityBits(& rftx_data.currData);
+	rftx_data.currDataIndex = 15; //Start of command
+	rftx_data.bitHalfSent = _FALSE;
+	
+	RFTX_DATA = 0;
+	
+	tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_START_TX_TIME_US));
+	tim_ClearFlag(RFTX_DATA_TIMER);
+	tim_EnableInterrupts(RFTX_DATA_TIMER);
+	
+	return;
 }
 
 void rftx_TimerCallback(void)
@@ -133,20 +152,69 @@ void rftx_TimerCallback(void)
 		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_EMPTY)
 		{
 			rftx_data.status = IDLE;
-			//inhibit interrupts?
+			tim_DisableInterrupts(RFTX_DATA_TIMER);
+			
 			return;
 		}
 		else
 		{
+			rftx_commData newComm = rfqueue_Pop(&rftx_data.queue);
 			rftx_data.status = SENDING;
-			// if queue not empty, send
+			rftx_data.currComm.id = newComm.id & 0x07;
+			rftx_data.currComm.data = newComm.data;
+			rftx_data.currComm.length = newComm.length & 0x7F;
+			rftx_data.currComm.eot = newComm.eot;
+		
+			rftx_CommenceTX();
+			
+			return;
 		}
 	}
 	else // SENDING
 	{
-		// if bit sent, send next
-		// if bit half sent, send complementary halfbit
-		// if tranmission done, go to waiting, call eot
+		if (rftx_data.bitHalfSent)
+		{
+			RFTX_DATA = 0;
+		
+			if ((rftx_data.currData & BIT(rftx_data.currDataIndex)) == 0)
+				tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_0_LOW_TIME_US));
+			else
+				tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_0_HIGH_TIME_US));
+			
+			rftx_data.bitHalfSent = _FALSE;
+			rftx_data.currDataIndex--;
+			
+			return;
+		}
+		else
+		{
+			if (rftx_data.currDataIndex < 0)
+			{
+				if (rftx_data.dataIndex == rftx_data.currComm.length)
+				{
+					RFTX_DATA = 1;
+					
+					rftx_data.status = WAITING_FOR_DEAD_TIME_TO_END;
+					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_DEAD_TIME_US));
+				}
+				
+				//fecth new data
+				
+			}
+			else
+			{
+				RFTX_DATA = 1;
+			
+				if ((rftx_data.currData & BIT(rftx_data.currDataIndex)) == 0)
+					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_1_LOW_TIME_US));
+				else
+					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_1_HIGH_TIME_US));
+				
+				rftx_data.bitHalfSent = _TRUE;
+				
+				return;
+			}
+		}
 	}
 }
 

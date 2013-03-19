@@ -1,18 +1,19 @@
 #include "mc9s12xdp512.h"
 #include "common.h"
-#include "usonic.h"
-#include "lcd.h"
+#include "rftx.h"
 #include <stdio.h>
 
 void Init (void);
-void PrintMeas (s32 measurement);
 
+void done (void);
 void main (void)
 {
 	Init ();
 	
+	rftx_Send(2,NULL,0,done);
+
 	while (1)
-		usonic_Measure (PrintMeas);
+		;
 }
 
 void Init (void)
@@ -21,13 +22,12 @@ void Init (void)
 	asm cli;
 	
 	// Modules that do require interrupts to be enabled
-	lcd_Init (LCD_2004);
-	usonic_Init ();
-	
+	rftx_Init(_TRUE);
+
 	return;
 }
 
-void PrintMeas (s32 measurement)
+void done (void)
 {
-	printf("%ld\n", measurement);
+	printf("Termine!\n");
 }
