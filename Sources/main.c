@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "pll.h"
 #include "quick_serial.h"
+#include <limits.h>
 
 #define DMU_TIMER 0
 
@@ -26,7 +27,15 @@ struct tim_channelData dmu_timerData = {0,0};
 
 u16 overflowCnt = 0;
 u16 lastEdge = 0;
- 
+
+/*
+#define B64DIGITS ((WORD_BIT-1)/5)
+void printb64(int n)
+{
+	qs_putchar(n & (1<<(WORD_BIT - 1))
+}
+*/
+
 void main (void)
 {
 	int a;
@@ -39,15 +48,15 @@ void main (void)
 
 //	tim_GetTimer(TIM_IC, dataReady_Srv, dataReady_Ovf, DMU_TIMER);
 
-/*
+
 	tim_GetTimer(TIM_IC, fifoOvf_Srv, NULL, DMU_TIMER);
 
 	tim_EnableInterrupts(DMU_TIMER);
 	tim_SetRisingEdge(DMU_TIMER); 
-*/
+
 //	rti_Register(GetSamplesMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(
 
-	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
+//	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
 	
 	while (1)
 		;

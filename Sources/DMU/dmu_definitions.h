@@ -35,7 +35,7 @@ typedef enum
 #define CONFIG (LP_FILTER_CONFIG | (EXT_SYNC_SET << 3) )
 
 // Set this value; an approximation will be used as sample rate according to the divider.
-#define SAMPLE_RATE (100)
+#define SAMPLE_RATE (50)
 
 // Reg 25: ADD_SAMPLE_RATE_DIVIDER - DATA:
 #define SAMPLE_RATE_DIVIDER ((LP_FILTER_CONFIG == 0 ) ? (8000/SAMPLE_RATE-1) : (1000/SAMPLE_RATE-1))	// u8 - reg 25 ADD_SAMPLE_RATE_DIVIDER

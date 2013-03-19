@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#define IIC_MEM_SIZE (1024)
+#define IIC_MEM_SIZE (256)
 
 typedef void (*iic_ptr)(void);
 
