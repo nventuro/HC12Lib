@@ -96,8 +96,6 @@ void dmu_AccumulateMeasurementWrapper(void);
 #define dmu_ReadNFifoBytes(_n, cb)	\
 	dmu_ReceiveFromRegister (ADD_FIFO_RW, cb, NULL, _n, NULL)
 
-
-
 void dmu_Init()
 {
 	if (dmu_data.init == _TRUE)
@@ -105,17 +103,28 @@ void dmu_Init()
 	
 	iic_Init();
 	
+	dmu_StagesInit();
+	
+	while (dmu_data.init == _FALSE)
+		;
+
+}
+
+
+
+void dmu_StagesInit()
+{	
 	
 	switch (dmu_data.stage)
-	{u16 i;
+	{
 
 	case 0:
 			
 		iic_commData.data[0] = ADD_PWR_MGMT_1;
 		iic_commData.data[1] = PWR_MGMT_1_RESET;
 
-		dmu_Send (dmu_Init, dmu_CommFailed, 2, NULL);
-	
+		dmu_Send (dmu_StagesInit, dmu_CommFailed, 2, NULL);
+		
 		dmu_data.stage++;
 		
 		break;
@@ -136,20 +145,20 @@ void dmu_Init()
 		iic_commData.data[10] = ZERO_MOTION_DURATION;
 		iic_commData.data[11] = FIFO_ENABLE;
 		
-		dmu_Send (dmu_Init, dmu_CommFailed, 12, NULL);
-		putchar('a');
+		dmu_Send (dmu_StagesInit, dmu_CommFailed, 12, NULL);
+		
 		dmu_data.stage++;
 		
 		break;
 	
 	case 2:
-		putchar('b');
 	
 		iic_commData.data[0] = ADD_INT_PIN_CFG;
 		iic_commData.data[1] = INT_PIN_CFG;		// 55
 		iic_commData.data[2] = INT_ENABLE;
 
-		dmu_Send(dmu_Init, dmu_CommFailed, 3, NULL);
+		
+		dmu_Send(dmu_StagesInit, dmu_CommFailed, 3, NULL);
 		
 		dmu_data.stage++;
 		
@@ -164,43 +173,26 @@ void dmu_Init()
 		iic_commData.data[4] = PWR_MGMT_1_RUN;
 		// PWR_MGMT_2 stays in 0 (reset value).
 		
-		dmu_Send(dmu_Init, dmu_CommFailed, 5, NULL);
+		dmu_Send(dmu_StagesInit, dmu_CommFailed, 5, NULL);
 
 		dmu_data.stage++;
 
 		break;		
 
+
 	case 4:
-/*		for (i = 0; i < INITIAL_AVERAGE; i++)
-		{
-			putchar(i + '0');
-			dmu_GetMeasurements();
-			while (i == dmu_sampleAccumulator.numberOfSamples);		// Wait for sample to get accumulated before asking for next sample
-		}
-		dmu_DivideAccumulator(&dmu_sampleAccumulator);
-
-		dmu_gyroOffset.x = (s16)dmu_sampleAccumulator.gyro_x;
-		dmu_gyroOffset.y = (s16)dmu_sampleAccumulator.gyro_y;
-		dmu_gyroOffset.z = (s16)dmu_sampleAccumulator.gyro_z;
-
-		printf("ox: %d, oy: %d, oz: %d\n", dmu_gyroOffset.x, dmu_gyroOffset.y, dmu_gyroOffset.z);
-*/
-		dmu_data.stage++;
-
-		// No break here.	
-	case 5:
 
 		iic_commData.data[0] = ADD_USER_CTRL;
 		iic_commData.data[1] = USER_CTRL_INIT;	// Run means not reset.
-
-		dmu_Send(dmu_Init, dmu_CommFailed, 2, NULL);
+		
+		dmu_Send(dmu_StagesInit, dmu_CommFailed, 2, NULL);
 
 		dmu_data.stage++;
 
 		break;		
 
 
-	case 6:		// Done for now - No need of resets or pwr mgmt.
+	case 5:		// Done for now - No need of resets or pwr mgmt.
 				
 		dmu_data.init = _TRUE;
 		dmu_data.stage = 0;
@@ -210,11 +202,7 @@ void dmu_Init()
 	default: 
 		break;
 	}
-	
-	while (dmu_data.init == _FALSE)
-		;
-
-	
+		
 	return;
 }
 
