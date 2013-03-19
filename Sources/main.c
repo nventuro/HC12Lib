@@ -1,6 +1,7 @@
 #include "mc9s12xdp512.h"
 #include "common.h"
 #include "dmu.h"
+#include "dmu_macros.h"
 #include "rti.h"
 #include "timers.h"
 #include <stdio.h>
@@ -30,12 +31,11 @@ void main (void)
 {
 	int a;
 	PLL_SPEED(BUS_CLOCK_MHZ);
-	qs_init(0, MON12X_BR);
+	Init ();
 
 	DDRA = 0x01;
 	
 		
-//	Init ();
 
 //	tim_GetTimer(TIM_IC, dataReady_Srv, dataReady_Ovf, DMU_TIMER);
 
@@ -82,7 +82,7 @@ void GetMeasurementsMask(void *data, rti_time period, rti_id id)
 
 void GetSamplesMask(void *data, rti_time period, rti_id id)
 {
-	dmu_GetSamples();
+	dmu_FifoAverage(NULL);
 	return;
 }
 
@@ -121,7 +121,7 @@ void fifoOvf_Srv(void)
 		return;
 	
 	dmu_data.fifo.enable = _FALSE;
-	dmu_ReadFifo(dmu_PrintFifoMem);
+	dmu_ReadFifo(NULL);
 	
 //	dmu_FifoReset(NULL);
 	
