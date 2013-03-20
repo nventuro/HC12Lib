@@ -35,7 +35,7 @@ void pwm_init (void)
 	
 }
 
-
+/*
 void pwm_set_chan(char chan, char pol, char clk, char cae, char ctl)
 {
 	
@@ -73,3 +73,5 @@ void pwm_ctrl (char chan,char state)
 {
 	BSET(PWME,chan,state);
 }
+
+*/

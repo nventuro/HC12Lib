@@ -15,6 +15,9 @@
 ############
 
 *buffer.txt
+*log.txt
+*mtee.exe
+*.txt
 
 ############
 ## Windows

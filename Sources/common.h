@@ -1,6 +1,8 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#define BUS_CLOCK_MHZ 50
+
 
 // Typedefs
 
@@ -36,7 +38,7 @@ typedef union {
 #define NULL ((void*)0)
 #endif
 
-#define DIV_CEIL(a,b) (((a)/(b))+1) // ceil(a/b)
+#define DIV_CEIL(a,b) (((a) % (b) == 0) ? ((a)/(b)) : (((a)/(b))+1))
 
 #define BOOL(a) ((a) ? _TRUE:_FALSE)
 

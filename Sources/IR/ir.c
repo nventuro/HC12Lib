@@ -3,7 +3,6 @@
 #include "timers.h"
 
 #define BUFF_LENGTH 50
-#define CNT_MAX ((u32)65536)
 #define HBT_TIME ((u32)8890)
 
 #define HBT1_MAX ((u32)9336)
@@ -152,7 +151,7 @@ void ir_icSrv(void)
 		startTransmission();
 	else
 	{
-		u32 timeElapsed = (icData.overflowCnt * CNT_MAX + tim_GetValue(IR_IC_TIMER)) - icData.lastEdge;
+		u32 timeElapsed = (icData.overflowCnt * TIM_CNT_MAX + tim_GetValue(IR_IC_TIMER)) - icData.lastEdge;
 
 		icData.lastEdge = tim_GetValue(IR_IC_TIMER);
 		icData.overflowCnt = 0;

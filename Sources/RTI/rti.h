@@ -3,14 +3,16 @@
 
 #include "common.h"
 
-#define RTI_FREQ 976 // Hz. 
-// In order to change this value, RTI_PRESCALER in rti.c must be changed and recompiled.
+ 
+#define RTI_FREQ (1000) // Hz. 
+// In order to change this value, RTI_PRESCALER in rti.c must be changed and the file recompiled.
+// Note that divider base also affects rti divider (check tables 2-7 and 2-8 of MC9S12(...).pdf)
 #define RTI_PER (1.0/RTI_FREQ) // seconds
 
 typedef u16 rti_time; // A type for expressing time, each rti_time equals one RTI_PER
 
-#define RTI_MS_TO_TICKS(ms) (DIV_CEIL(((u32)ms)*RTI_FREQ,1000)) // Converts miliseconds to rti_time
-
+#define RTI_MS_TO_TICKS(ms) (DIV_CEIL(((u32)ms)*RTI_FREQ,1000)) // Converts miliseconds to rti_time - With RTI_FREQ = 1000, the macro does nothing.
+																 // If (ms) is set in compile time, this macro consumes no extra processor time.
 typedef s8 rti_id; // An id for a registered callback
 
 typedef void (*rti_ptr) (void *data, rti_time period, rti_id id); // A function callback for registering in the RTI
@@ -21,7 +23,8 @@ void rti_Init(void);
 
 rti_id rti_Register(rti_ptr callback, void *data, rti_time period, rti_time delay);
 // Registers a callback function to be called periodically every period*RTI_PER seconds, after an initial delay of delay*RTI_PER seconds.
-// period and delay can be set using RTI_MS2DIV(timeInMiliseconds).
+// period and delay can be set using RTI_MS2DIV(timeInMiliseconds). 
+// If RTI_FREQ is 1000, there is no need of using the macro, as the parameter is already in ms.
 // When callback is called, it receives data, period and its rti_id. 
 // callback is called with interrupts inhibited and MUST NOT disinhibit them.
 // Returns the rti_id of the registed callback. 

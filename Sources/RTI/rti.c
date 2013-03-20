@@ -1,10 +1,15 @@
 #include <mc9s12xdp512.h>
 #include "rti.h"
 
-#define RTI_PRESCALER (0x27) // 16MHz / (8*2^11) = 976 Hz.
+enum {BASE_2=0, BASE_10};
+#define RTI_DIVIDER_BASE BASE_10
+
+#define RTI_PRESCALER (0b00010111 | (RTI_DIVIDER_BASE << 7))	// 16 MHz; 16.000 divider --> RTI_FREQ = 1000
+
 #define RTI_SETPRESCALER(presc) (RTICTL = presc)
 #define RTI_ENABLE_INTERRUPTS() (CRGINT_RTIE = 1)
 #define RTI_CLEAR_FLAG() (CRGFLG_RTIF = 1)
+#define RTI_SET_CLOCK_SOURCE(src) (CLKSEL_PLLSEL = src)
 
 #define RTI_MAX_FCNS 20
 
@@ -32,7 +37,7 @@ void rti_Init()
 	
 	for (i = 0; i < RTI_MAX_FCNS; i++)
 		rti_tbl[i].callback = NULL;
-	
+		
 	RTI_SETPRESCALER (RTI_PRESCALER);
 	RTI_ENABLE_INTERRUPTS();
 	RTI_CLEAR_FLAG();
