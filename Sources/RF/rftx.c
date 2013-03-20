@@ -23,7 +23,7 @@ struct rftx_commData
 {
 	u8 id;
 	u8 *data;
-	u8 length;
+	s8 length;
 	rftx_ptr eot;
 };
 
@@ -63,7 +63,7 @@ struct
 	u16 currData;
 	s8 currDataIndex;
 	bool bitHalfSent;
-	u8 dataIndex;
+	s8 dataIndex;
 } rftx_data;
 
 bool rftx_isInit = _FALSE;
@@ -110,7 +110,7 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 		rftx_data.status = SENDING;
 		rftx_data.currComm.id = id & 0x07;
 		rftx_data.currComm.data = data;
-		rftx_data.currComm.length = length & 0x7F;
+		rftx_data.currComm.length = (s8) (length & 0x7F);
 		rftx_data.currComm.eot = eot;
 	
 		rftx_CommenceTX();
@@ -157,6 +157,7 @@ void rftx_CommenceTX (void)
 void rftx_TimerCallback(void)
 {
 	PORTA_PA1 = 1;
+	
 	if (rftx_data.status == WAITING_FOR_DEAD_TIME_TO_END)
 	{
 		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_EMPTY)
@@ -171,7 +172,7 @@ void rftx_TimerCallback(void)
 			rftx_data.status = SENDING;
 			rftx_data.currComm.id = newComm.id & 0x07;
 			rftx_data.currComm.data = newComm.data;
-			rftx_data.currComm.length = newComm.length & 0x7F;
+			rftx_data.currComm.length = (s8) (newComm.length & 0x7F);
 			rftx_data.currComm.eot = newComm.eot;
 		
 			rftx_CommenceTX();
@@ -195,9 +196,9 @@ void rftx_TimerCallback(void)
 		}
 		else
 		{
-			if (rftx_data.currDataIndex < 0)
+			if (rftx_data.currDataIndex < 0) // If currData has been transmitted
 			{
-				if (rftx_data.dataIndex == rftx_data.currComm.length)
+				if (rftx_data.dataIndex == rftx_data.currComm.length) // If all data has been transmitted
 				{
 					RFTX_DATA = 1;
 					
@@ -205,8 +206,11 @@ void rftx_TimerCallback(void)
 					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_DEAD_TIME_US));
 					rftx_data.currComm.eot();
 				}
+				else // Fetch new data
+				{
+					
+				}
 				
-				//if not fecth new data
 				
 			}
 			else
@@ -267,7 +271,7 @@ rftx_commData rfqueue_Pop(rfqueue* queue)
 		read.data = (u8 *) (((u16) read.data + (((u16)cb_pop(queue)) << 8))); 
 		read.eot = (u8 *) cb_pop(queue);
 		read.eot = (u8 *) (((u16) read.eot + (((u16)cb_pop(queue)) << 8))); 
-		read.length = cb_pop(queue);
+		read.length = (s8) cb_pop(queue);
 	}
 	
 	return read;

@@ -48,7 +48,7 @@ void tim_Init(void)
 
 tim_id tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 {
-	if (tim_data.isTimerUsed[timNumber] == _TRUE || (cb == NULL))
+	if ((tim_data.isTimerUsed[timNumber] == _TRUE) || (cb == NULL))
 		return TIM_INVALID_ID;
 	
 	tim_AssignTimer(reqType, cb, ovf, timNumber);
