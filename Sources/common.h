@@ -47,8 +47,8 @@ typedef union {
 extern u8 firstBitsMem[]; // firtBitsMem[0] = 00000001, firstBitsMem[3] = 00001111
 extern u8 lastBitsMem[]; // lastBitsMem[0] = 10000000, lastBitsMem[3] = 11110000
 
-#define firstBits(n) ((n > 7) ? 0xFF : firstBitsMem[n])
-#define lastBits(n) ((n > 7) ? 0xFF : lastBitsMem[n])
+#define firstBits(n) ((n > 7) ? 0xFF : ((n < 0) ? 0 : firstBitsMem[n]))
+#define lastBits(n) ((n > 7) ? 0xFF : ((n < 0) ? 0 : lastBitsMem[n]))
 
 #define GLUE(a,b) GLUE_AGAIN(a,b)
 #define GLUE_AGAIN(a,b) a ## b

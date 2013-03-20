@@ -63,7 +63,7 @@ struct
 	u16 currData;
 	s8 currDataIndex;
 	bool bitHalfSent;
-	s8 dataIndex;
+	u8 dataIndex;
 } rftx_data;
 
 bool rftx_isInit = _FALSE;
@@ -110,7 +110,7 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 		rftx_data.status = SENDING;
 		rftx_data.currComm.id = id & 0x07;
 		rftx_data.currComm.data = data;
-		rftx_data.currComm.length = (s8) (length & 0x7F);
+		rftx_data.currComm.length = (s8) (length & 0x7F) - 1;
 		rftx_data.currComm.eot = eot;
 	
 		rftx_CommenceTX();
@@ -125,9 +125,9 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 		{
 			rftx_commData requestedComm;
 			putchar('q');
-			requestedComm.id = id;
+			requestedComm.id = id & 0x07;
 			requestedComm.data = data;
-			requestedComm.length = length;
+			requestedComm.length = (s8) (length & 0x7F) - 1;
 			requestedComm.eot = eot;
 			rfqueue_Push(&rftx_data.queue,requestedComm);
 			
@@ -210,7 +210,7 @@ void rftx_TimerCallback(void)
 			}
 			else
 			{
-				if (rftx_data.dataIndex == rftx_data.currComm.length) // If all data has been transmitted
+				if (rftx_data.dataIndex > rftx_data.currComm.length) // If all data has been transmitted
 				{
 					RFTX_DATA = 1;
 					
@@ -222,8 +222,13 @@ void rftx_TimerCallback(void)
 				{
 					s8 bitIndex; 
 					u8 firstByte; 
-					
+					u8 bitsToSend;
 					RFTX_DATA = 1;
+					
+					if ((rftx_data.currComm.length - rftx_data.dataIndex) < 10)
+						bitsToSend = rftx_data.currComm.length - rftx_data.dataIndex + 1;
+					else
+						bitsToSend = 11;
 					
 					bitIndex = rftx_data.dataIndex % 8;
 					firstByte = rftx_data.dataIndex / 8;
