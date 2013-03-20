@@ -5,7 +5,6 @@ u8 hamm_lookupTable[1024];
 void hamm_GetParityBits(u16 *data)
 {
 	u16 index;
-	(*data) = (*data) & 0x07FF;
 	index = (*data) & 0x03FF;
 	
 	if ((*data) < 32768) 

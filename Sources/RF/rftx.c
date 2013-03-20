@@ -188,7 +188,7 @@ void rftx_TimerCallback(void)
 			if ((rftx_data.currData & BIT(rftx_data.currDataIndex)) == 0)
 				tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_0_LOW_TIME_US));
 			else
-				tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_0_HIGH_TIME_US));
+				tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_1_LOW_TIME_US));
 			
 			rftx_data.bitHalfSent = _FALSE;
 			rftx_data.currDataIndex--;
@@ -196,7 +196,19 @@ void rftx_TimerCallback(void)
 		}
 		else
 		{
-			if (rftx_data.currDataIndex < 0) // If currData has been transmitted
+			if (rftx_data.currDataIndex >= 0) // If currData has not been fully transmitted
+			{
+				RFTX_DATA = 1;
+			
+				if ((rftx_data.currData & BIT(rftx_data.currDataIndex)) == 0)
+					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_0_HIGH_TIME_US));
+				else
+					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_1_HIGH_TIME_US));
+				
+				rftx_data.bitHalfSent = _TRUE;
+				
+			}
+			else
 			{
 				if (rftx_data.dataIndex == rftx_data.currComm.length) // If all data has been transmitted
 				{
@@ -208,21 +220,47 @@ void rftx_TimerCallback(void)
 				}
 				else // Fetch new data
 				{
+					s8 bitIndex; 
+					u8 firstByte; 
 					
+					RFTX_DATA = 1;
+					
+					bitIndex = rftx_data.dataIndex % 8;
+					firstByte = rftx_data.dataIndex / 8;
+					
+					// First byte
+					rftx_data.currData = ((u16) (rftx_data.currComm.data[firstByte] & firstBits(7 - bitIndex))) << (3 + bitIndex);
+					
+					// Second byte
+					if (bitIndex < 5) // If bitIndex == 5, 3 bits were read from the first byte, and shift is 0
+						rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 1] & lastBits(2 + bitIndex))) << (bitIndex - 5);
+					else
+						rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 1] & lastBits(2 + bitIndex))) >> (5 - bitIndex);
+					
+					// Third byte					
+					if (bitIndex == 6)
+						rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 2] & lastBits(0))) >> 7;
+					if (bitIndex == 7)
+						rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 2] & lastBits(1))) >> 6;
+											
+					
+					rftx_data.dataIndex = rftx_data.dataIndex + 11;
+					if (rftx_data.ecc)
+					{
+						hamm_GetParityBits(& rftx_data.currData);
+						rftx_data.currDataIndex = 14; //Start of data + parity bits
+					}
+					else
+						rftx_data.currDataIndex = 10; //Start of data
+						
+					rftx_data.bitHalfSent = _TRUE;
+					
+					if ((rftx_data.currData & BIT(rftx_data.currDataIndex)) == 0)
+						tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_0_HIGH_TIME_US));
+					else
+						tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_1_HIGH_TIME_US));
 				}
 				
-				
-			}
-			else
-			{
-				RFTX_DATA = 1;
-			
-				if ((rftx_data.currData & BIT(rftx_data.currDataIndex)) == 0)
-					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_1_LOW_TIME_US));
-				else
-					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_1_HIGH_TIME_US));
-				
-				rftx_data.bitHalfSent = _TRUE;
 				
 			}
 		}

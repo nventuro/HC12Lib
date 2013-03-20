@@ -32,5 +32,5 @@ bool SafeSei(void)
 		return _FALSE;	// Interrupts were not enabled
 }
 
-u8 firstBytes[] = {1,3,7,15,31,63,127,255}; // firstBytes[0] = 00000001, firstBytes[3] = 00001111
-u8 lastBytes[] = {128, 192, 224, 240, 248, 252, 254, 255}; // lastBytes[0] = 10000000, lastBytes[3] = 11110000
+u8 firstBitsMem[] = {1,3,7,15,31,63,127,255}; // firstBitsMem[0] = 00000001, firstBitsMem[3] = 00001111
+u8 lastBitsMem[] = {128, 192, 224, 240, 248, 252, 254, 255}; // lastBitsMem[0] = 10000000, lastBitsMem[3] = 11110000
