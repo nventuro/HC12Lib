@@ -82,8 +82,6 @@ void rftx_Init (bool ecc)
 	rftx_isInit = _TRUE;
 	
 	rftx_data.ecc = ecc;
-	DDRA = 0xFF;
-	PORTA_PA1 = 0;
 	
 	RFTX_DATA_DDR = DDR_OUT;
 		
@@ -142,7 +140,7 @@ void rftx_CommenceTX (void)
 {
 	rftx_data.dataIndex = 0; //No data is being sent yet
 	
-	rftx_data.currData = (rftx_data.ecc << 10) | (rftx_data.currComm.id << 7) | (rftx_data.currComm.length); 
+	rftx_data.currData = (rftx_data.ecc << 10) | (rftx_data.currComm.id << 7) | (rftx_data.currComm.length + 1); 
 	hamm_GetParityBits(& rftx_data.currData);
 	rftx_data.currDataIndex = 14; //Start of command
 	rftx_data.bitHalfSent = _FALSE;
@@ -157,9 +155,7 @@ void rftx_CommenceTX (void)
 }
 
 void rftx_TimerCallback(void)
-{
-	PORTA_PA1 = 1;
-	
+{	
 	if (rftx_data.status == WAITING_FOR_DEAD_TIME_TO_END)
 	{
 		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_EMPTY)
@@ -238,7 +234,7 @@ void rftx_TimerCallback(void)
 			}
 		}
 	}
-	PORTA_PA1 = 0;
+	
 }
 
 void rftx_FetchNewData (void)
@@ -270,8 +266,9 @@ void rftx_FetchNewData (void)
 	else if (bitIndex == 7)
 		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 2] & lastBits(2))) >> 6;
 						
-	// Fix: si bitsToSend < 11, tengo que sacar un par de las que lei. Problema: lei uno o dos bytes de más
-
+	// If bitsToSend < 11, it is possible that extra bytes were read. However, this 
+	// data will be ignored in the receptor, who knows the data length.
+						
 	rftx_data.dataIndex = rftx_data.dataIndex + 11;
 	if (rftx_data.ecc)
 	{
