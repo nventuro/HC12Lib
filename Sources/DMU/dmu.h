@@ -41,6 +41,17 @@ void dmu_GetMeasurements(iic_ptr cb);
 	@param _cb: iic_ptr.
 */
 
+// Useful callbacks for functions. Suffix _WO means without offset.
+// All functions print measurements; Raw is used for exporting data as strings with a terminator (currently ','),
+// Formatted adds line feeds and specifies which is the measurement being printed.
+
+void dmu_PrintRawMeasurements_WO(void);
+void dmu_PrintFormattedMeasurements_WO(void);
+
+void dmu_PrintRawMeasurements(void);
+void dmu_PrintFormattedMeasurements(void);
+
+
 
 #define dmu_ReadFifo(_cb)	do {				\
 	dmu_data.stage = 0;							\
@@ -70,7 +81,7 @@ void dmu_GetMeasurements(iic_ptr cb);
 #define dmu_FifoReset(cb) do {												\
 	iic_commData.data[0] = ADD_USER_CTRL;									\
 	iic_commData.data[1] = USER_CTRL(FIFO_MASTER_ENABLE, FIFO_RESET, 1);	\
-	dmu_Send(cb, dmu_CommFailed, 2, NULL);											\
+	dmu_Send(cb, dmu_CommFailed, 2, NULL);									\
 } while(0)
 /*	Resets fifo and calls _cb.
 	@param: iic_ptr.
