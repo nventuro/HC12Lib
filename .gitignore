@@ -9,6 +9,8 @@
 *.abs
 *.s19
 *.map
+*.mcp
+*.stg
 
 ############
 ## Monitor
@@ -16,7 +18,7 @@
 
 *buffer.txt
 *log.txt
-*mtee.exe
+bin/mtee.exe
 *.txt
 
 ############
