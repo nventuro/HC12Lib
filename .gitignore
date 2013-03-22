@@ -22,6 +22,11 @@ bin/mtee.exe
 *.txt
 
 ############
+## Main
+############
+Sources/main.c
+
+############
 ## Windows
 ############
 
