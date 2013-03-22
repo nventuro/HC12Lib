@@ -9,7 +9,6 @@
 *.abs
 *.s19
 *.map
-*Sources/main.c
 *.mcp
 *.stg
 
