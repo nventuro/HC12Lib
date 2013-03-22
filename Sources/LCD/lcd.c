@@ -38,13 +38,13 @@
 
 #define LCD_WRITE_DDRAM BIT(7)
 
-#define LCD_ENABLE_NOPS 75
+#define LCD_ENABLE_NOPS 180
 #define LCD_ENABLE_STROBE() do{u8 i;LCD_ENABLE = 1;	for (i = 0; i < LCD_ENABLE_NOPS; i++) asm nop; LCD_ENABLE = 0;} while (0)
 
 #define LCD_MEMORY 80
 
-#define LCD_SHORT_DELAY (((u32)200e3)/TIM_TICK_NS) // About 200us
-#define LCD_LONG_DELAY (((u32)3200e3)/TIM_TICK_NS) // About 3.2ms
+#define LCD_SHORT_DELAY_US 200
+#define LCD_LONG_DELAY_US 3200
 
 struct
 {
@@ -86,7 +86,7 @@ void lcd_Init(lcd_type type)
 	tim_Init();
 	tim_GetTimer(TIM_OC, lcd_InitCallback, NULL, LCD_TIMER);
 
-	tim_SetValue (LCD_TIMER, tim_GetGlobalValue() - ((u32)100e6)/TIM_TICK_NS); // Wait for about 100ms
+	tim_SetValue (LCD_TIMER, tim_GetGlobalValue() + TIM_US_TO_TICKS(80000)); // Wait for about 80ms
 	
 	tim_ClearFlag(LCD_TIMER);
 	tim_EnableInterrupts (LCD_TIMER);
@@ -162,7 +162,7 @@ void lcd_PrintCallback (void)
 		lcd_data.index = 0;
 	}
 	
-	tim_SetValue(LCD_TIMER, tim_GetValue(LCD_TIMER) + LCD_SHORT_DELAY);
+	tim_SetValue(LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(LCD_SHORT_DELAY_US));
 }
 
 
@@ -177,7 +177,7 @@ void lcd_InitCallback (void)
 			
 			lcd_data.initStage = 1;
 			
-			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + 4000); // Wait for about 6.4ms
+			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(6400)); // Wait for about 6.4ms
 			
 			break;
 			
@@ -188,7 +188,7 @@ void lcd_InitCallback (void)
 			
 			lcd_data.initStage = 2;
 			
-			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + 200); // Wait for about 320us
+			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(320)); // Wait for about 320us
 			
 			break;
 		case 2:
@@ -198,7 +198,7 @@ void lcd_InitCallback (void)
 			
 			lcd_data.initStage = 3;
 			
-			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + LCD_SHORT_DELAY);
+			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(LCD_SHORT_DELAY_US));
 			
 			break;
 		case 3:
@@ -209,7 +209,7 @@ void lcd_InitCallback (void)
 			
 			lcd_data.initStage = 4;
 
-			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + LCD_SHORT_DELAY);
+			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(LCD_SHORT_DELAY_US));
 			
 			break;
 		case 4:
@@ -219,7 +219,7 @@ void lcd_InitCallback (void)
 			
 			lcd_data.initStage = 5;
 			
-			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + LCD_SHORT_DELAY);
+			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(LCD_SHORT_DELAY_US));
 			
 			break;
 			
@@ -230,7 +230,7 @@ void lcd_InitCallback (void)
 			
 			lcd_data.initStage = 6;
 
-			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + LCD_LONG_DELAY);
+			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(LCD_LONG_DELAY_US));
 
 			break;
 			
@@ -241,7 +241,7 @@ void lcd_InitCallback (void)
 			
 			lcd_data.initStage = 7;
 			
-			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + LCD_SHORT_DELAY);
+			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(LCD_SHORT_DELAY_US));
 			
 			break;
 			
@@ -252,14 +252,14 @@ void lcd_InitCallback (void)
 			
 			lcd_data.initStage = 8;
 			
-			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + LCD_SHORT_DELAY);
+			tim_SetValue (LCD_TIMER, tim_GetValue(LCD_TIMER) + TIM_US_TO_TICKS(LCD_SHORT_DELAY_US));
 			
 			break;
 			
 		case 8:
 			tim_FreeTimer(LCD_TIMER);
 			tim_GetTimer (TIM_OC, lcd_PrintCallback, NULL, LCD_TIMER);
-			tim_SetValue (LCD_TIMER, tim_GetGlobalValue() - LCD_SHORT_DELAY); 
+			tim_SetValue (LCD_TIMER, tim_GetGlobalValue() - TIM_US_TO_TICKS(LCD_SHORT_DELAY_US)); 
 			tim_ClearFlag(LCD_TIMER);
 			tim_EnableInterrupts (LCD_TIMER);
 			

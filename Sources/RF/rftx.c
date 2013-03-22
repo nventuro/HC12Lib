@@ -72,7 +72,7 @@ void rftx_TimerCallback(void);
 
 void rftx_CommenceTX (void);
 
-void rftx_FetchNewdata (void);
+void rftx_FetchNewData (void);
 
 void rftx_Init (bool ecc)
 {

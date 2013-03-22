@@ -2,7 +2,6 @@
 #define _LCD_H
 
 #include "common.h"
-#include "mc9s12xdp512.h"
 
 typedef enum
 {
