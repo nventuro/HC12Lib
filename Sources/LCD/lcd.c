@@ -38,8 +38,11 @@
 
 #define LCD_WRITE_DDRAM BIT(7)
 
-#define LCD_ENABLE_NOPS 180
+/*
+#define LCD_ENABLE_NOPS 10
 #define LCD_ENABLE_STROBE() do{u8 i;LCD_ENABLE = 1;	for (i = 0; i < LCD_ENABLE_NOPS; i++) asm nop; LCD_ENABLE = 0;} while (0)
+*/
+#define LCD_ENABLE_STROBE() do{LCD_ENABLE = 1;LCD_ENABLE = 0;} while (0)
 
 #define LCD_MEMORY 80
 
