@@ -4,13 +4,13 @@
 #include "debug.h"
 #include "rti.h"
 
-#define PRINT_START 1
-#define PRINT_LENGTH (ADD_WHO_AM_I - PRINT_START)+1
 
 #define MAX_BURST_READS 252
 #define INITIAL_AVERAGE 256
 
-#define AVERAGE_INIT_DISCARD 6
+
+#define PRINT_START 1
+#define PRINT_LENGTH (ADD_WHO_AM_I - PRINT_START)+1
 
 void dmu_printI2CData(void);
 
@@ -86,7 +86,7 @@ void dmu_AverageSamples(void);
 
 // Accumulator operations
 void dmu_DivideAccumulator(struct dmu_sampleAccumulator_T* acc);
-void dmu_cleanAccumulator(struct dmu_sampleAccumulator_T* acc);
+void dmu_CleanAccumulator(struct dmu_sampleAccumulator_T* acc);
 
 // Accumulates a set of samples in target accumulator. Function "polymorphism".
 void dmu_AccumulateSamples(struct dmu_sampleAccumulator_T* acc, struct dmu_samples_T* samples);
@@ -138,12 +138,14 @@ void dmu_Init()
 		;
 
 	rti_Cancel(offsetTask);
+	
+	dmu_DivideAccumulator(&dmu_sampleAccumulator);
 
 	dmu_gyroOffset.x = (s16)dmu_sampleAccumulator.gyro_x;
 	dmu_gyroOffset.y = (s16)dmu_sampleAccumulator.gyro_y;
 	dmu_gyroOffset.z = (s16)dmu_sampleAccumulator.gyro_z;
 
-	dmu_cleanAccumulator(&dmu_sampleAccumulator);
+	dmu_CleanAccumulator(&dmu_sampleAccumulator);
 	
 	#ifdef DMU_DEBUG_OFFSET
 	printf("ox: %d, oy: %d, oz: %d\n", dmu_gyroOffset.x, dmu_gyroOffset.y, dmu_gyroOffset.z);
@@ -157,9 +159,7 @@ void dmu_Init()
 void dmu_StagesInit()
 {	
 	switch (dmu_data.stage)
-	{	u16 i;
-	u32 j, k;
-		
+	{	
 	case 0:
 			
 		iic_commData.data[0] = ADD_PWR_MGMT_1;
@@ -264,8 +264,33 @@ void dmu_GetMeasurements(iic_ptr cb)
 void dmu_PrintFormattedMeasurements(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
+	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel_x, dm->accel_y, dm->accel_z, dm->gyro_x, dm->gyro_y, dm->gyro_z);
+	return;
+}
+
+
+void dmu_PrintFormattedMeasurements_WO(void)
+{
+	struct dmu_measurements_T* dm = &dmu_measurements;
 	struct dmu_gyroOffset_T* gOff = &dmu_gyroOffset;
 	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel_x, dm->accel_y, dm->accel_z, dm->gyro_x - gOff->x, dm->gyro_y - gOff->y, dm->gyro_z - gOff->z);
+	return;
+}
+
+
+void dmu_PrintRawMeasurements(void)
+{
+	struct dmu_measurements_T* dm = &dmu_measurements;
+	printf("%d %d %d %d %d %d, ", dm->accel_x, dm->accel_y, dm->accel_z, dm->gyro_x, dm->gyro_y, dm->gyro_z);
+	return;
+}
+
+
+void dmu_PrintRawMeasurements_WO(void)
+{
+	struct dmu_measurements_T* dm = &dmu_measurements;
+	struct dmu_gyroOffset_T* gOff = &dmu_gyroOffset;
+	printf("%d %d %d %d %d %d, ", dm->accel_x, dm->accel_y, dm->accel_z, dm->gyro_x - gOff->x, dm->gyro_y - gOff->y, dm->gyro_z - gOff->z);
 	return;
 }
 
@@ -363,7 +388,7 @@ void dmu_printFifoCnt(void)
 
 void dmu_FifoAverageInit(void)
 {
-	dmu_cleanAccumulator(&dmu_sampleAccumulator);
+	dmu_CleanAccumulator(&dmu_sampleAccumulator);
 	
 	dmu_data.fifo.stageCb = dmu_AverageSamples;
 	dmu_AverageSamples();
@@ -449,7 +474,7 @@ void dmu_DivideAccumulator(struct dmu_sampleAccumulator_T* acc)
 }
 
 
-void dmu_cleanAccumulator(struct dmu_sampleAccumulator_T* acc)
+void dmu_CleanAccumulator(struct dmu_sampleAccumulator_T* acc)
 {
 	acc->accel_x = 0;
 	acc->accel_y = 0;
@@ -474,6 +499,7 @@ void dmu_GetAndAccMeasurements(void *data, rti_time period, rti_id id)
 void dmu_AccumulateGlobalMeasurements(void)
 {
 	dmu_AccumulateMeasurements(&dmu_sampleAccumulator, &dmu_measurements);
+	dmu_PrintFormattedMeasurements();
 	
 	return;
 }
