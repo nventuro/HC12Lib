@@ -8,6 +8,8 @@ It offers support for:
   - Input Capture / Output Compare
   - PWM
   - A Hitachi HD44780 based LCD
+  - An MPU-6050 motion sensor (gyroscope + accelerometer)
   - An HC-SR04 ultrasonic distance sensor
   - A DS1307 RTC (Real Time Clock)
+  - Generic RF transmitters and receivers (315 / 433 MHz)
   - An infrared remote control using the RC-5 protocol
