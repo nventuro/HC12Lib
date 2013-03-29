@@ -499,7 +499,10 @@ void dmu_GetAndAccMeasurements(void *data, rti_time period, rti_id id)
 void dmu_AccumulateGlobalMeasurements(void)
 {
 	dmu_AccumulateMeasurements(&dmu_sampleAccumulator, &dmu_measurements);
+	
+	#ifdef DMU_DEBUG_OFFSET
 	dmu_PrintFormattedMeasurements();
+	#endif
 	
 	return;
 }
