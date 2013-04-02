@@ -13,18 +13,17 @@ u8 data[4];
 void main (void)
 {	
 	u32 a;
-	int i = 0;
+
 	Init ();
-	/*
-	for (i = 0; i < 4; i++)
-		data[i] = 'A' + i;*/
-		data[0] = 0xF0;
-		data[1] = 0x0F;
-		data[2] = 0x00;
-		data[3] = 0xFF;
+
+	data[0] = 0xFF;
+	data[1] = 0x00;
+	data[2] = 0xF0;
+	data[3] = 0x0F;
 	
 	for (a = 0; a < 20000; a++)
 		;
+		
 	rftx_Send(5, data, 4*8, tx);
 
 	while (1)
@@ -48,5 +47,7 @@ void Init (void)
 void tx (void)
 {
 	putchar('d');
-//	rftx_Send(5, data, 4*sizeof(u8), tx);
+	putchar('\n');
+	
+	rftx_Send(5, data, 4*8, tx);
 }

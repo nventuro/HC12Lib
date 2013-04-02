@@ -18,7 +18,6 @@
 
 #define RFTX_QUEUE_SIZE 8
 
-
 struct rftx_commData
 {
 	u8 id;
@@ -107,10 +106,11 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 	if (rftx_data.status == IDLE)
 	{		
 		putchar('s');
+		putchar('\n');
 		rftx_data.status = SENDING;
 		rftx_data.currComm.id = id & 0x07;
 		rftx_data.currComm.data = data;
-		rftx_data.currComm.length = (s8) (length & 0x7F) - 1;
+		rftx_data.currComm.length = ((s8) (length & 0x7F)) - 1;
 		rftx_data.currComm.eot = eot;
 	
 		rftx_CommenceTX();
@@ -125,9 +125,10 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 		{
 			rftx_commData requestedComm;
 			putchar('q');
+			putchar('\n');
 			requestedComm.id = id & 0x07;
 			requestedComm.data = data;
-			requestedComm.length = (s8) (length & 0x7F) - 1;
+			requestedComm.length = ((s8) (length & 0x7F)) - 1;
 			requestedComm.eot = eot;
 			rfqueue_Push(&rftx_data.queue,requestedComm);
 			
@@ -237,38 +238,18 @@ void rftx_TimerCallback(void)
 	
 }
 
+u32 readMask[] = {0xFFE00000,0x7FF00000,0x3FF80000,0x1FFC0000,0xFFE0000,0x7FF0000,0x3FF8000,0x1FFC000};
+
 void rftx_FetchNewData (void)
 {
 	s8 bitIndex; 
-	u8 firstByte; 
-	u8 bitsToSend;					
-
-	if ((rftx_data.currComm.length - rftx_data.dataIndex) < 10)
-		bitsToSend = rftx_data.currComm.length - rftx_data.dataIndex + 1;
-	else
-		bitsToSend = 11;
+	u8 firstByte;
 
 	bitIndex = rftx_data.dataIndex % 8;
 	firstByte = rftx_data.dataIndex / 8;
 
-	// First byte
-	rftx_data.currData = ((u16) (rftx_data.currComm.data[firstByte] & firstBits(8 - bitIndex))) << (3 + bitIndex);
+	rftx_data.currData = (u16) (((*((u32*)(rftx_data.currComm.data + firstByte))) & readMask[bitIndex]) >> (21 - bitIndex));
 
-	// Second byte
-	if (bitIndex < 5) // If bitIndex == 5, 3 bits were read from the first byte, and shift is 0
-		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 1] & lastBits(3 + bitIndex))) << (bitIndex - 5);
-	else
-		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 1] & lastBits(3 + bitIndex))) >> (5 - bitIndex);
-
-	// Third byte					
-	if (bitIndex == 6)
-		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 2] & lastBits(1))) >> 7;
-	else if (bitIndex == 7)
-		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 2] & lastBits(2))) >> 6;
-						
-	// If bitsToSend < 11, it is possible that extra bytes were read. However, this 
-	// data will be ignored in the receptor, who knows the data length.
-						
 	rftx_data.dataIndex = rftx_data.dataIndex + 11;
 	if (rftx_data.ecc)
 	{
