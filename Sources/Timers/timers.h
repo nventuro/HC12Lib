@@ -14,7 +14,7 @@
 
 #define TIM_US_TO_TICKS(us) (DIV_CEIL(((u32)us)*1000,TIM_TICK_NS)) // Converts microseconds to timer ticks
 
-#define TIM_TICKS_TO_US(ticks) (DIV_CEIL(ticks*TIM_TICK_NS, 1000)) // Converts timer ticks to microseconds
+#define TIM_TICKS_TO_US(ticks) (DIV_CEIL((u32)ticks*TIM_TICK_NS, 1000)) // Converts timer ticks to microseconds
 
 #define TIM_CNT_MAX ((u32)65536)
 

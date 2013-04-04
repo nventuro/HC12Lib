@@ -1,11 +1,13 @@
 #include "rfrx.h"
+#include "rftx.h"
 #include "hamming1511.h"
 #include "timers.h"
 #include "error.h"
 
-#define RFRX_DATA GLUE(PTT_PTT,RFRX_DATA_TIMER)
-
 #define RFRX_ID_AMOUNT 8
+
+#define TIME_LARGE_MARGIN_US 80
+#define TIME_SMALL_MARGIN_US 40
 
 typedef enum
 {
@@ -27,7 +29,7 @@ struct
 {
 	RFRX_STATUS status;
 	rfrx_idData idData[RFRX_ID_AMOUNT];
-	
+	u32 syncLastEdge;
 } rfrx_data;
 
 bool rfrx_isInit = _FALSE;
@@ -48,11 +50,12 @@ void rfrx_Init (void)
 		rfrx_data.idData[i].data = NULL;
 		rfrx_data.idData[i].eot = NULL;
 	}
+		
+	rfrx_data.status = DESYNCHED;
 	
 	tim_Init();	
 	tim_GetTimer (TIM_IC, rfrx_TimerCallback, NULL, RFRX_DATA_TIMER);
-	
-	rfrx_data.status = DESYNCHED;
+		
 	tim_SetRisingEdge(RFRX_DATA_TIMER);
 	tim_ClearFlag(RFRX_DATA_TIMER);
 	tim_EnableInterrupts(RFRX_DATA_TIMER);
@@ -93,27 +96,48 @@ void rfrx_Delete(u8 id)
 
 void rfrx_TimerCallback(void)
 {
-	/*
-	if desynched (received rising)
-		store time
-		go to synching
-		set falling
-	if synching (received falling)
-		check pulse width
-		if less than dead time
-			go to desynched
+	if (rfrx_data.status == DESYNCHED) // Received rising edge
+	{
+		rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
+		tim_SetFallingEdge(RFRX_DATA_TIMER);
+		rfrx_data.status = SYNCHING;
+		
+		return;
+	}
+	else if (rfrx_data.status == SYNCHING) // Received falling edge
+	{
+		u16 timeElapsed = TIM_TICKS_TO_US(tim_GetValue(RFRX_DATA_TIMER) - rfrx_data.syncLastEdge);
+		
+		if (timeElapsed > (RFTX_DEAD_TIME_US - TIME_LARGE_MARGIN_US))
+		{
+			rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
+			rfrx_data.status = SYNCHED;
+		}
 		else
-			store time
-			go to synched
-		set rising
-	if synched (received rising)
-		check width
-		if more than start time
-			go to desynched
-			set rising
+			rfrx_data.status = DESYNCHED;
+		
+		tim_SetRisingEdge(RFRX_DATA_TIMER);
+		
+		return;
+	}
+	else if (rfrx_data.status == SYNCHING) // Received rising edge
+	{
+		u16 timeElapsed = TIM_TICKS_TO_US(tim_GetValue(RFRX_DATA_TIMER) - rfrx_data.syncLastEdge);
+		
+		if ((timeElapsed > (RFTX_START_TX_TIME_US - TIME_SMALL_MARGIN_US)) && (timeElapsed < (RFTX_START_TX_TIME_US + TIME_SMALL_MARGIN_US)))
+		{
+			rfrx_data.status = RECEIVING;
+			/*commence rx*/
+		}
 		else
-			go to receiving (set rising)
-	if receiving
-		rx logic
-	*/
+		{
+			rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
+			tim_SetFallingEdge(RFRX_DATA_TIMER);
+			rfrx_data.status = SYNCHING;
+		}
+		
+		
+		return;
+	}
+	/*if receiving*/
 }
