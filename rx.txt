@@ -1,4 +1,0 @@
-rfrx:
-- desynched: mira flancos, esperando 400us o mas (dead time) entre ascendente y descendente. cuando llega el descendente, se prepara para una transmision.
-- synched: el proximo flanco ascendente comienza una transmision. se miden los tiempos entre flancos, y se decodean 1 o 0 segun si el alto es mayor al bajo o al reves. si el tiempo del low inicial es demasiado largo, corresponde a un tick, y no a una transmision, se hace desynch y se va a enganchar en el deadtime deespues del tick
-- despues de llegados los primeros 15, se decodea y se ve si se tiene ese id. si no se tiene, desynch. si se tiene, se sigue leyendo, hasta leer la cantidad de palabras de 11/15 (dependiendo de ecc) que haga falta. al final, se decodea todo y se llama al callback. si siguen llegando cosas despuies de las n palabras de 15, error.

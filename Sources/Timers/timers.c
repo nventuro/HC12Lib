@@ -50,7 +50,10 @@ void tim_Init(void)
 void tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 {
 	if ((tim_data.isTimerUsed[timNumber] == _TRUE) || (cb == NULL))
-		err_Throw("timer: attempted to reserve a timer that's alread in use.\n");
+		err_Throw("timer: attempted to reserve a timer that's already in use.\n");
+	
+	if ((timNumber < 0) || (timNumber > 7))
+		err_Throw("timer: attempted to reserve an invalid timer number.\n");
 	
 	tim_AssignTimer(reqType, cb, ovf, timNumber);
 	

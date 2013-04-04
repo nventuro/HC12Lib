@@ -12,10 +12,11 @@ void rfrx_Init(void);
 // Initializes the RF RX module. This requires the Timers module to work, and doesn't require interrupts to be enabled.
 
 void rfrx_Register(u8 id, rfrx_ptr eot, u8 *data);
-// Assigns a callback and memory for communications directed to id id. Whenever a successful communication ends, 
+// Assigns a callback and memory for communications directed to id id (from 0 to 7). Whenever a successful communication ends, 
 // eot is called, and the received data is stored in data, of length length (eot's argument). data is filled from its
 // MSB (bit 7) to its LSB (bit 0).
 
-//rfrx_Delete(u8 id)
+void rfrx_Delete(u8 id);
+// Deletes an id registered using rfrx_Register.
 
 #endif
