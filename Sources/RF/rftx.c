@@ -2,20 +2,10 @@
 #include "hamming1511.h"
 #include "cb.h"
 #include "timers.h"
+#include "error.h"
 
 #define RFTX_DATA GLUE(PTT_PTT,RFTX_DATA_TIMER)
 #define RFTX_DATA_DDR GLUE(DDRT_DDRT,RFTX_DATA_TIMER)
-
-//f = 3khz
-#define RFTX_1_HIGH_TIME_US 130
-#define RFTX_1_LOW_TIME_US 200
-#define RFTX_0_HIGH_TIME_US 200
-#define RFTX_0_LOW_TIME_US 130
-
-#define RFTX_DEAD_TIME_US 400
-#define RFTX_START_TX_TIME_US 100
-#define RFTX_TICK_TIME_US 5000
-#define RFTX_TICK_DURATION_US 400
 
 #define RFTX_QUEUE_SIZE 8
 
@@ -101,7 +91,7 @@ void rftx_Init (bool ecc)
 	return;
 }
 
-bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
+void rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 {
 		
 	if (rftx_data.status == IDLE)
@@ -114,12 +104,12 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 	
 		rftx_CommenceTX();
 		
-		return _TRUE;
+		return;
 	}
 	else
 	{
 		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_FULL)
-			return _FALSE;
+	    	err_Throw("rftx: attempted to send data, but queue is full.\n");
 		else
 		{
 			rftx_commData requestedComm;
@@ -129,7 +119,7 @@ bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 			requestedComm.eot = eot;
 			rfqueue_Push(&rftx_data.queue,requestedComm);
 			
-			return _TRUE;
+			return;
 		}
 	}
 }
@@ -156,7 +146,7 @@ void rftx_TimerCallback(void)
 		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_EMPTY)
 		{
 			rftx_data.status = IDLE;
-			tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_TICK_TIME_US));
+			tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_TICK_TIMEOUT_US));
 		}
 		else
 		{
