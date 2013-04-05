@@ -58,7 +58,8 @@ struct
 bool rfrx_isInit = _FALSE;
 
 void rfrx_TimerCallback(void);
-void rfrx_CommenceReception (void);
+void rfrx_CommenceReception(void);
+void rfrx_StoreReceivedData(void);
 
 void rfrx_Init (void)
 {
@@ -153,7 +154,7 @@ void rfrx_TimerCallback(void)
 
 		return;
 	}
-	else if (rfrx_data.status == COMMENCING_RX) // Received either rising or falling
+	else if ((rfrx_data.status == COMMENCING_RX) || (rfrx_data.status == RECEIVING)) // Received either rising or falling
 	{putchar('4');
 		if (rfrx_data.currComm.waitingForSecondEdge == _TRUE)
 		{
@@ -173,7 +174,12 @@ void rfrx_TimerCallback(void)
 					rfrx_data.currComm.currData = rfrx_data.currComm.currData | (1 << rfrx_data.currComm.currDataIndex);
 				
 				if (rfrx_data.currComm.currDataIndex == 0)
-					rfrx_CommenceReception(); // Decodes the received command and prepares the module for data reception
+				{
+					if (rfrx_data.status == COMMENCING_RX)
+						rfrx_CommenceReception(); // Decodes the received command and prepares the module for data reception
+					else
+						rfrx_StoreReceivedData(); // Decodes (or doesn't, depending on the ecc bit) the received data and stores it the receiver's memory
+				}
 				else
 				{
 					rfrx_data.currComm.currDataIndex --;
@@ -192,10 +198,6 @@ void rfrx_TimerCallback(void)
 		
 		return;
 	}
-	else if (rfrx_data.status == RECEIVING)
-	{putchar('5');
-		
-	}
 }
 
 void rfrx_CommenceReception (void)
@@ -213,7 +215,7 @@ void rfrx_CommenceReception (void)
 	}
 	else
 	{
-		rfrx_data.currComm.length = (rfrx_data.currComm.currData & 0x7F);
+		rfrx_data.currComm.length = rfrx_data.currComm.currData & 0x7F;
 		
 		if (rfrx_data.currComm.length == 0)
 		{
@@ -247,4 +249,26 @@ void rfrx_CommenceReception (void)
 		
 	}
 	
+}
+
+u32 writeMask[] = {0xFFE00000,0x7FF00000,0x3FF80000,0x1FFC0000,0xFFE0000,0x7FF0000,0x3FF8000,0x1FFC000}; // has to be inverted
+
+void rfrx_StoreReceivedData(void)
+{
+	if (rfrx_data.currComm.ecc == _TRUE)
+	{
+		hamm_DecodeWord(&rfrx_data.currComm.currData);
+		rfrx_data.currComm.currData = rfrx_data.currComm.currData & 0x7FF;
+	}
+	
+	// read from memory
+	// add currData to memory
+	// if less than 11 bits to be done
+	   // add more ones at the end of writeMask
+	   // and currData with zeros at the end
+	   // proceed as usual
+	// restore modified memory
+	
+	// if done, call eot, resync
+	// else, reset variables, continue receiving data	
 }
