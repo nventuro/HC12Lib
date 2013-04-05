@@ -4,6 +4,7 @@
 #include "timers.h"
 #include "error.h"
 #include <stdio.h>
+#include "derivative.h"
 #define RFRX_ID_AMOUNT 8
 
 #define RFRX_TIME_SMALL_MARGIN_US 40
@@ -64,7 +65,9 @@ void rfrx_StoreReceivedData(void);
 void rfrx_Init (void)
 {
 	u8 i;
-	
+	DDRA = DDR_OUT;
+	PORTA_PA0 = 0;
+	PORTA_PA1 = 0;
 	if (rfrx_isInit == _TRUE)
 		return;	
 	
@@ -107,18 +110,19 @@ void rfrx_Register(u8 id, rfrx_ptr eot, u8 *data)
 
 void rfrx_TimerCallback(void)
 {
+	PORTA_PA0 = 1;
 	if (rfrx_data.status == DESYNCHED) // Received rising edge
-	{putchar('1');
+	{//putchar('1');
 		rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
 		tim_SetFallingEdge(RFRX_DATA_TIMER);
 		rfrx_data.status = SYNCHING;
 		
-		return;
+//		return;
 	}
 	else if (rfrx_data.status == SYNCHING) // Received falling edge
 	{
 		u16 ticksElapsed = tim_GetValue(RFRX_DATA_TIMER) - rfrx_data.syncLastEdge;
-	putchar('2');	
+	//putchar('2');	
 		if (ticksElapsed > (RFTX_DEAD_TIME_TICKS - RFRX_TIME_LARGE_MARGIN_TICKS))
 		{
 			rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
@@ -129,12 +133,12 @@ void rfrx_TimerCallback(void)
 		
 		tim_SetRisingEdge(RFRX_DATA_TIMER);
 		
-		return;
+//		return;
 	}
 	else if (rfrx_data.status == SYNCHED) // Received rising edge
 	{
 		u16 ticksElapsed = tim_GetValue(RFRX_DATA_TIMER) - rfrx_data.syncLastEdge;
-	putchar('3');	
+	//putchar('3');	
 		if ((ticksElapsed > (RFTX_START_TX_TIME_TICKS - RFRX_TIME_SMALL_MARGIN_TICKS)) && (ticksElapsed < (RFTX_START_TX_TIME_TICKS + RFRX_TIME_SMALL_MARGIN_TICKS)))
 		{
 			rfrx_data.status = COMMENCING_RX;
@@ -152,10 +156,10 @@ void rfrx_TimerCallback(void)
 			rfrx_data.status = SYNCHING;
 		}
 
-		return;
+//		return;
 	}
 	else if ((rfrx_data.status == COMMENCING_RX) || (rfrx_data.status == RECEIVING)) // Received either rising or falling
-	{putchar('4');
+	{//putchar('4');
 		if (rfrx_data.currComm.waitingForSecondEdge == _TRUE)
 		{
 			rfrx_data.currComm.secondEdge = tim_GetValue(RFRX_DATA_TIMER);
@@ -196,13 +200,15 @@ void rfrx_TimerCallback(void)
 			}
 		}
 		
-		return;
+	//	return;
 	}
+	PORTA_PA0 = 0;
 }
 
 void rfrx_CommenceReception (void)
 {	
-	printf("\n%d\n",rfrx_data.currComm.currData);
+PORTA_PA1 = 1;
+	//printf("\n%d\n",rfrx_data.currComm.currData);
 	hamm_DecodeWord(&rfrx_data.currComm.currData);
 	
 	rfrx_data.currComm.id = (rfrx_data.currComm.currData & 0x380) >> 7;
@@ -248,6 +254,7 @@ void rfrx_CommenceReception (void)
 		}
 		
 	}
+	PORTA_PA1 = 0;
 	
 }
 

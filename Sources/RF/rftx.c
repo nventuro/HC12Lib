@@ -3,6 +3,7 @@
 #include "cb.h"
 #include "timers.h"
 #include "error.h"
+#include <stdio.h>
 
 #define RFTX_DATA GLUE(PTT_PTT,RFTX_DATA_TIMER)
 #define RFTX_DATA_DDR GLUE(DDRT_DDRT,RFTX_DATA_TIMER)
@@ -13,7 +14,7 @@ struct rftx_commData
 {
 	u8 id;
 	u8 *data;
-	s8 length;
+	s16 length;
 	rftx_ptr eot;
 };
 
@@ -53,7 +54,7 @@ struct
 	u16 currData;
 	s8 currDataIndex;
 	bool bitHalfSent;
-	u8 dataIndex;
+	s16 dataIndex;
 } rftx_data;
 
 bool rftx_isInit = _FALSE;
@@ -101,7 +102,7 @@ void rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 		rftx_data.status = SENDING;
 		rftx_data.currComm.id = id & 0x07;
 		rftx_data.currComm.data = data;
-		rftx_data.currComm.length = ((s8) (length & 0x7F)) - 1;
+		rftx_data.currComm.length = ((s16) (length & 0x7F)) - 1;
 		rftx_data.currComm.eot = eot;
 	
 		rftx_CommenceTX();
@@ -117,7 +118,7 @@ void rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 			rftx_commData requestedComm;
 			requestedComm.id = id & 0x07;
 			requestedComm.data = data;
-			requestedComm.length = ((s8) (length & 0x7F)) - 1;
+			requestedComm.length = ((s16) (length & 0x7F)) - 1;
 			requestedComm.eot = eot;
 			rfqueue_Push(&rftx_data.queue,requestedComm);
 			
@@ -156,7 +157,7 @@ void rftx_TimerCallback(void)
 			rftx_data.status = SENDING;
 			rftx_data.currComm.id = newComm.id & 0x07;
 			rftx_data.currComm.data = newComm.data;
-			rftx_data.currComm.length = (s8) (newComm.length & 0x7F);
+			rftx_data.currComm.length = (s16) (newComm.length & 0x7F);
 			rftx_data.currComm.eot = newComm.eot;
 		
 			rftx_CommenceTX();
@@ -207,7 +208,7 @@ void rftx_TimerCallback(void)
 			else
 			{
 				if (rftx_data.dataIndex > rftx_data.currComm.length) // If all data has been transmitted
-				{
+				{putchar('d');
 					RFTX_DATA = 1;
 					
 					rftx_data.status = WAITING_FOR_DEAD_TIME_TO_END;
@@ -215,7 +216,7 @@ void rftx_TimerCallback(void)
 					rftx_data.currComm.eot();
 				}
 				else // Fetch new data
-				{
+				{putchar('f');
 					RFTX_DATA = 1;
 
 					rftx_FetchNewData();
