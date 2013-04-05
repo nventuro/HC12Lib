@@ -93,7 +93,9 @@ void rftx_Init (bool ecc)
 
 void rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 {
-		
+	if ((length != 0) && (data == NULL))
+		err_Throw("rftx: attempted to send a non-empty message, but data is NULL.\n");
+	
 	if (rftx_data.status == IDLE)
 	{		
 		rftx_data.status = SENDING;

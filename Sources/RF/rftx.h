@@ -6,7 +6,7 @@
 #define RFTX_DATA_TIMER 4 // The timer module used for transmitting data, connected to the transmitter's data pin.
 // If the timer is changed, rftx.c must be recompiled.
 
-// Timing
+// Timing in us
 // f = 3khz
 #define RFTX_1_HIGH_TIME_US 130
 #define RFTX_1_LOW_TIME_US 200
@@ -17,6 +17,22 @@
 #define RFTX_START_TX_TIME_US 100
 #define RFTX_TICK_TIMEOUT_US 5000
 #define RFTX_TICK_DURATION_US 400
+
+#define RFTX_BIT_TIME_US (RFTX_1_HIGH_TIME_US+RFTX_1_LOW_TIME_US)
+
+// Timing in TCNT ticks
+#define RFTX_1_HIGH_TIME_TICKS TIM_US_TO_TICKS(RFTX_1_HIGH_TIME_US)
+#define RFTX_1_LOW_TIME_TICKS TIM_US_TO_TICKS(RFTX_1_LOW_TIME_US)
+#define RFTX_0_HIGH_TIME_TICKS TIM_US_TO_TICKS(RFTX_0_HIGH_TIME_US)
+#define RFTX_0_LOW_TIME_TICKS TIM_US_TO_TICKS(RFTX_0_LOW_TIME_US)
+
+#define RFTX_DEAD_TIME_TICKS TIM_US_TO_TICKS(RFTX_DEAD_TIME_US)
+#define RFTX_START_TX_TIME_TICKS TIM_US_TO_TICKS(RFTX_START_TX_TIME_US)
+#define RFTX_TICK_TIMEOUT_TICKS TIM_US_TO_TICKS(RFTX_TICK_TIMEOUT_US)
+#define RFTX_TICK_DURATION_TICKS TIM_US_TO_TICKS(RFTX_TICK_DURATION_US)
+
+#define RFTX_BIT_TIME_TICKS TIM_US_TO_TICKS(RFTX_BIT_TIME_US)
+
 
 typedef void (*rftx_ptr) (void); // A function callback used for notifying the end of a transmission
 
