@@ -53,8 +53,8 @@ struct
 	rftx_commData currComm;
 	u16 currData;
 	s8 currDataIndex;
+	u8 dataIndex;
 	bool bitHalfSent;
-	u16 dataIndex;
 } rftx_data;
 
 bool rftx_isInit = _FALSE;
@@ -136,7 +136,6 @@ void rftx_CommenceTX (void)
 	rftx_data.currDataIndex = 14; //Start of command
 	rftx_data.bitHalfSent = _FALSE;
 	RFTX_DATA = 0;
-	//printf("sent %d\n",rftx_data.currData);
 	
 	tim_SetValue(RFTX_DATA_TIMER, tim_GetGlobalValue() + TIM_US_TO_TICKS(RFTX_START_TX_TIME_US));
 	
@@ -208,8 +207,8 @@ void rftx_TimerCallback(void)
 			}
 			else
 			{
-				if (rftx_data.dataIndex > ((u16)rftx_data.currComm.length)) // If all data has been transmitted
-				{putchar('d');
+				if (rftx_data.dataIndex > rftx_data.currComm.length) // If all data has been transmitted
+				{
 					RFTX_DATA = 1;
 					
 					rftx_data.status = WAITING_FOR_DEAD_TIME_TO_END;
@@ -217,7 +216,7 @@ void rftx_TimerCallback(void)
 					rftx_data.currComm.eot();
 				}
 				else // Fetch new data
-				{putchar('f');
+				{
 					RFTX_DATA = 1;
 
 					rftx_FetchNewData();

@@ -8,7 +8,8 @@
 
 void Init (void);
 
-void tx (void);
+void tx3 (void);
+void tx5 (void);
 void rx (void);
 
 u8 mem[5];
@@ -19,9 +20,7 @@ void main (void)
 
 	rfrx_Register(5, rx, mem);
 	
-	rftx_Send(5, mem, 0, tx);
-	rftx_Send(5, mem, 0, tx);
-	rftx_Send(5, mem, 0, tx);
+	rftx_Send(5, mem, 0, tx3);
 
 	while (1)
 		;
@@ -36,19 +35,25 @@ void Init (void)
 	asm cli;
 
 	// Modules that do require interrupts to be enabled
-	rftx_Init(_TRUE);
 	rfrx_Init();
-
+	rftx_Init(_TRUE);
+	
 	return;
 }
 
-void tx (void)
+void tx3 (void)
 {
-	putchar('t');	
-//	rftx_Send(5, mem, 0, tx);
+	putchar('q');	
+	rftx_Send(5, mem, 0, tx5);
+}
+
+void tx5 (void)
+{
+	putchar('w');	
+	rftx_Send(3, mem, 0, tx3);
 }
 
 void rx(void)
 {
-	putchar('r');
+	putchar('5');
 }
