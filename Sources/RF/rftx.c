@@ -14,7 +14,7 @@ struct rftx_commData
 {
 	u8 id;
 	u8 *data;
-	s16 length;
+	u8 length;
 	rftx_ptr eot;
 };
 
@@ -54,7 +54,7 @@ struct
 	u16 currData;
 	s8 currDataIndex;
 	bool bitHalfSent;
-	s16 dataIndex;
+	u16 dataIndex;
 } rftx_data;
 
 bool rftx_isInit = _FALSE;
@@ -94,15 +94,15 @@ void rftx_Init (bool ecc)
 
 void rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 {
-	if ((length != 0) && (data == NULL))
-		err_Throw("rftx: attempted to send a non-empty message, but data is NULL.\n");
+	if (data == NULL)
+		err_Throw("rftx: data is NULL.\n");
 	
 	if (rftx_data.status == IDLE)
 	{		
 		rftx_data.status = SENDING;
 		rftx_data.currComm.id = id & 0x07;
 		rftx_data.currComm.data = data;
-		rftx_data.currComm.length = ((s16) (length & 0x7F)) - 1;
+		rftx_data.currComm.length = length & 0x7F;
 		rftx_data.currComm.eot = eot;
 	
 		rftx_CommenceTX();
@@ -118,7 +118,7 @@ void rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 			rftx_commData requestedComm;
 			requestedComm.id = id & 0x07;
 			requestedComm.data = data;
-			requestedComm.length = ((s16) (length & 0x7F)) - 1;
+			requestedComm.length = length & 0x7F;
 			requestedComm.eot = eot;
 			rfqueue_Push(&rftx_data.queue,requestedComm);
 			
@@ -131,11 +131,12 @@ void rftx_CommenceTX (void)
 {
 	rftx_data.dataIndex = 0; //No data is being sent yet
 	
-	rftx_data.currData = (rftx_data.ecc << 10) | (rftx_data.currComm.id << 7) | (rftx_data.currComm.length + 1); 
+	rftx_data.currData = (rftx_data.ecc << 10) | (rftx_data.currComm.id << 7) | (rftx_data.currComm.length); 
 	hamm_GetParityBits(& rftx_data.currData);
 	rftx_data.currDataIndex = 14; //Start of command
 	rftx_data.bitHalfSent = _FALSE;
 	RFTX_DATA = 0;
+	//printf("sent %d\n",rftx_data.currData);
 	
 	tim_SetValue(RFTX_DATA_TIMER, tim_GetGlobalValue() + TIM_US_TO_TICKS(RFTX_START_TX_TIME_US));
 	
@@ -157,7 +158,7 @@ void rftx_TimerCallback(void)
 			rftx_data.status = SENDING;
 			rftx_data.currComm.id = newComm.id & 0x07;
 			rftx_data.currComm.data = newComm.data;
-			rftx_data.currComm.length = (s16) (newComm.length & 0x7F);
+			rftx_data.currComm.length = newComm.length & 0x7F;
 			rftx_data.currComm.eot = newComm.eot;
 		
 			rftx_CommenceTX();
@@ -207,7 +208,7 @@ void rftx_TimerCallback(void)
 			}
 			else
 			{
-				if (rftx_data.dataIndex > rftx_data.currComm.length) // If all data has been transmitted
+				if (rftx_data.dataIndex > ((u16)rftx_data.currComm.length)) // If all data has been transmitted
 				{putchar('d');
 					RFTX_DATA = 1;
 					
@@ -298,7 +299,7 @@ rftx_commData rfqueue_Pop(rfqueue* queue)
 		read.data = (u8 *) (((u16) read.data + (((u16)cb_pop(queue)) << 8))); 
 		read.eot = (u8 *) cb_pop(queue);
 		read.eot = (u8 *) (((u16) read.eot + (((u16)cb_pop(queue)) << 8))); 
-		read.length = (s8) cb_pop(queue);
+		read.length = cb_pop(queue);
 	}
 	
 	return read;

@@ -112,7 +112,7 @@ void rfrx_TimerCallback(void)
 {
 	PORTA_PA0 = 1;
 	if (rfrx_data.status == DESYNCHED) // Received rising edge
-	{//putchar('1');
+	{putchar('1');
 		rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
 		tim_SetFallingEdge(RFRX_DATA_TIMER);
 		rfrx_data.status = SYNCHING;
@@ -122,7 +122,7 @@ void rfrx_TimerCallback(void)
 	else if (rfrx_data.status == SYNCHING) // Received falling edge
 	{
 		u16 ticksElapsed = tim_GetValue(RFRX_DATA_TIMER) - rfrx_data.syncLastEdge;
-	//putchar('2');	
+	putchar('2');	
 		if (ticksElapsed > (RFTX_DEAD_TIME_TICKS - RFRX_TIME_LARGE_MARGIN_TICKS))
 		{
 			rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
@@ -138,7 +138,7 @@ void rfrx_TimerCallback(void)
 	else if (rfrx_data.status == SYNCHED) // Received rising edge
 	{
 		u16 ticksElapsed = tim_GetValue(RFRX_DATA_TIMER) - rfrx_data.syncLastEdge;
-	//putchar('3');	
+	putchar('3');	
 		if ((ticksElapsed > (RFTX_START_TX_TIME_TICKS - RFRX_TIME_SMALL_MARGIN_TICKS)) && (ticksElapsed < (RFTX_START_TX_TIME_TICKS + RFRX_TIME_SMALL_MARGIN_TICKS)))
 		{
 			rfrx_data.status = COMMENCING_RX;
@@ -159,7 +159,7 @@ void rfrx_TimerCallback(void)
 //		return;
 	}
 	else if ((rfrx_data.status == COMMENCING_RX) || (rfrx_data.status == RECEIVING)) // Received either rising or falling
-	{//putchar('4');
+	{putchar('4');
 		if (rfrx_data.currComm.waitingForSecondEdge == _TRUE)
 		{
 			rfrx_data.currComm.secondEdge = tim_GetValue(RFRX_DATA_TIMER);
@@ -175,8 +175,12 @@ void rfrx_TimerCallback(void)
 			if (((highWidth + lowWidth) > (RFTX_BIT_TIME_TICKS - RFRX_TIME_SMALL_MARGIN_TICKS)) && (((highWidth + lowWidth) < (RFTX_BIT_TIME_TICKS + RFRX_TIME_SMALL_MARGIN_TICKS))))
 			{
 				if (highWidth < lowWidth)
-					rfrx_data.currComm.currData = rfrx_data.currComm.currData | (1 << rfrx_data.currComm.currDataIndex);
-				
+				{
+					putchar('7');
+					putchar(rfrx_data.currComm.currDataIndex+'0');
+					rfrx_data.currComm.currData = rfrx_data.currComm.currData + (1 << rfrx_data.currComm.currDataIndex);
+					printf("data %d\n",rfrx_data.currComm.currData);
+				}
 				if (rfrx_data.currComm.currDataIndex == 0)
 				{
 					if (rfrx_data.status == COMMENCING_RX)
@@ -208,7 +212,7 @@ void rfrx_TimerCallback(void)
 void rfrx_CommenceReception (void)
 {	
 PORTA_PA1 = 1;
-	//printf("\n%d\n",rfrx_data.currComm.currData);
+	printf("\n%d\n",rfrx_data.currComm.currData);
 	hamm_DecodeWord(&rfrx_data.currComm.currData);
 	
 	rfrx_data.currComm.id = (rfrx_data.currComm.currData & 0x380) >> 7;
@@ -218,41 +222,29 @@ PORTA_PA1 = 1;
 		rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
 		tim_SetFallingEdge(RFRX_DATA_TIMER);
 		rfrx_data.status = SYNCHING;
+		putchar('n');
 	}
 	else
 	{
 		rfrx_data.currComm.length = rfrx_data.currComm.currData & 0x7F;
+		rfrx_data.currComm.ecc = BOOL(rfrx_data.currComm.currData & 0x400);
+		rfrx_data.currComm.eot = rfrx_data.idData[rfrx_data.currComm.id].eot;
+		rfrx_data.currComm.data = rfrx_data.idData[rfrx_data.currComm.id].data;
 		
-		if (rfrx_data.currComm.length == 0)
-		{
-			rfrx_data.idData[rfrx_data.currComm.id].eot(rfrx_data.currComm.length);
-			
-			rfrx_data.syncLastEdge = tim_GetValue(RFRX_DATA_TIMER);
-			tim_SetFallingEdge(RFRX_DATA_TIMER);
-			rfrx_data.status = SYNCHING;
-		}
+		rfrx_data.currComm.dataIndex = 0;
+		
+		rfrx_data.currComm.currData = 0;
+		if (rfrx_data.currComm.ecc == _TRUE)
+			rfrx_data.currComm.currDataIndex = 14;
 		else
-		{
-			rfrx_data.currComm.ecc = BOOL(rfrx_data.currComm.currData & 0x400);
-			rfrx_data.currComm.eot = rfrx_data.idData[rfrx_data.currComm.id].eot;
-			rfrx_data.currComm.data = rfrx_data.idData[rfrx_data.currComm.id].data;
-			
-			rfrx_data.currComm.dataIndex = 0;
-			
-			rfrx_data.currComm.currData = 0;
-			if (rfrx_data.currComm.ecc == _TRUE)
-				rfrx_data.currComm.currDataIndex = 14;
-			else
-				rfrx_data.currComm.currDataIndex = 10;
-			
-			rfrx_data.currComm.firstEdge = tim_GetValue(RFRX_DATA_TIMER);
-			rfrx_data.currComm.waitingForSecondEdge = _TRUE;
-			
-			tim_SetFallingEdge(RFRX_DATA_TIMER);
-			
-			rfrx_data.status = RECEIVING;
-		}
+			rfrx_data.currComm.currDataIndex = 10;
 		
+		rfrx_data.currComm.firstEdge = tim_GetValue(RFRX_DATA_TIMER);
+		rfrx_data.currComm.waitingForSecondEdge = _TRUE;
+		
+		tim_SetFallingEdge(RFRX_DATA_TIMER);
+		
+		rfrx_data.status = RECEIVING;		
 	}
 	PORTA_PA1 = 0;
 	
@@ -267,7 +259,7 @@ void rfrx_StoreReceivedData(void)
 		hamm_DecodeWord(&rfrx_data.currComm.currData);
 		rfrx_data.currComm.currData = rfrx_data.currComm.currData & 0x7FF;
 	}
-	
+	putchar('x');
 	// read from memory
 	// add currData to memory
 	// if less than 11 bits to be done

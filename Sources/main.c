@@ -19,7 +19,10 @@ void main (void)
 
 	rfrx_Register(5, rx, mem);
 	
-	rftx_Send(5, NULL, 0, tx);
+	rftx_Send(5, mem, 0, tx);
+	rftx_Send(5, mem, 0, tx);
+	rftx_Send(5, mem, 0, tx);
+
 	while (1)
 		;
 }
@@ -41,8 +44,8 @@ void Init (void)
 
 void tx (void)
 {
-	putchar('s');	
-	//rftx_Send(5, NULL, 0, tx);
+	putchar('t');	
+//	rftx_Send(5, mem, 0, tx);
 }
 
 void rx(void)
