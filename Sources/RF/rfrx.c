@@ -3,8 +3,7 @@
 #include "hamming1511.h"
 #include "timers.h"
 #include "error.h"
-#include <stdio.h>
-#include "derivative.h"
+
 #define RFRX_ID_AMOUNT 8
 
 #define RFRX_TIME_SMALL_MARGIN_US 40
@@ -238,24 +237,43 @@ void rfrx_CommenceReception (void)
 }
 
 u32 writeMask[] = {0x1FFFFF,0x800FFFFF,0xC007FFFF,0xE003FFFF,0xF001FFFF,0xF800FFFF,0xFC007FFF,0xFE003FFF};
+u32 writeMaskFix[] = {0x7FE00000, 0x3FE00000, 0x1FE00000, 0xFE00000, 0x7E00000, 0x3E00000, 0x1E00000, 0xE00000, 0x600000, 0x200000};
+u16 shortDataMask[] = {0x400, 0x600, 0x700, 0x780, 0x7C0, 0x7E0, 0x7F0, 0x7F8, 0x7FC, 0x7FE};
 
 void rfrx_StoreReceivedData(void)
 {
+	u8 bitIndex;
+	u8 firstByte;
+	u8 bitsToWrite;
+	u32 read;
+	
 	if (rfrx_data.currComm.ecc == _TRUE)
 	{
 		hamm_DecodeWord(&rfrx_data.currComm.currData);
 		rfrx_data.currComm.currData = rfrx_data.currComm.currData & 0x7FF;
 	}
-		
-	// read from memory
-	// add currData to memory
-	// if less than 11 bits to be done
-	   // add more ones at the end of writeMask
-	   // and currData with zeros at the end
-	   // proceed as usual
-	// restore modified memory
+	
+	bitIndex = rfrx_data.currComm.dataIndex % 8;
+	firstByte = rfrx_data.currComm.dataIndex / 8;
+	bitsToWrite = rfrx_data.currComm.length - rfrx_data.currComm.dataIndex + 1;
+	
+	
+	read = *((u32*)(rfrx_data.currComm.data + firstByte));
+	if (bitsToWrite >= 11)
+	{
+		read = read & writeMask[bitIndex];
+		read = read | (((u32)(rfrx_data.currComm.currData)) << (21 - bitIndex) );
+	}
+	else
+	{
+		read = read & (writeMask[bitIndex] | (writeMaskFix[bitsToWrite - 1] >> bitIndex));
+		read = read | (((u32)(rfrx_data.currComm.currData & shortDataMask[bitsToWrite - 1])) << (21 - bitIndex) );
+	}
+	(*((u32*)(rfrx_data.currComm.data + firstByte))) = read;
+	
 	
 	rfrx_data.currComm.dataIndex = rfrx_data.currComm.dataIndex + 11;	
+	
 	
 	if (rfrx_data.currComm.dataIndex > rfrx_data.currComm.length)
 	{

@@ -12,18 +12,37 @@ void tx3 (void);
 void tx5 (void);
 void rx (void);
 
-u8 mem[5];
-
+u8 mem3tx[4];
+u8 mem5tx[4];
+u8 mem3rx[4];
+u8 mem5rx[4];
+int i = 0;
 void main (void)
 {	
 	Init ();
-
-	rfrx_Register(5, rx, mem);
+	mem3tx[0] = 'a';
+	mem3tx[1] = 'b';
+	mem3tx[2] = 'c';
+	mem3tx[3] = '\0';
 	
-	rftx_Send(5, mem, 0, tx3);
+	mem5tx[0] = 'x';
+	mem5tx[1] = 'y';
+	mem5tx[2] = 'z';
+	mem5tx[3] = '\0';
+	
+	rfrx_Register(3, rx, mem3rx);
+	rfrx_Register(5, rx, mem5rx);
+	
+	rftx_Send(3, mem3tx, 31, NULL);
+	rftx_Send(5, mem5tx, 31, NULL);
 
 	while (1)
-		;
+	{
+		if (i == 2)
+		{
+			printf("llego %s y %s.\n",mem3rx,mem5rx);
+		}
+	}
 }
 
 void Init (void)
@@ -41,19 +60,7 @@ void Init (void)
 	return;
 }
 
-void tx3 (void)
-{
-	putchar('q');	
-	rftx_Send(5, mem, 0, tx5);
-}
-
-void tx5 (void)
-{
-	putchar('w');	
-	rftx_Send(3, mem, 0, tx3);
-}
-
 void rx(void)
 {
-	putchar('5');
+	i++;
 }

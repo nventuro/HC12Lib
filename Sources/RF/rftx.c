@@ -3,7 +3,6 @@
 #include "cb.h"
 #include "timers.h"
 #include "error.h"
-#include <stdio.h>
 
 #define RFTX_DATA GLUE(PTT_PTT,RFTX_DATA_TIMER)
 #define RFTX_DATA_DDR GLUE(DDRT_DDRT,RFTX_DATA_TIMER)
@@ -213,7 +212,9 @@ void rftx_TimerCallback(void)
 					
 					rftx_data.status = WAITING_FOR_DEAD_TIME_TO_END;
 					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_DEAD_TIME_US));
-					rftx_data.currComm.eot();
+					
+					if (rftx_data.currComm.eot != NULL)
+						rftx_data.currComm.eot();
 				}
 				else // Fetch new data
 				{
@@ -237,7 +238,7 @@ u32 readMask[] = {0xFFE00000,0x7FF00000,0x3FF80000,0x1FFC0000,0xFFE0000,0x7FF000
 
 void rftx_FetchNewData (void)
 {
-	s8 bitIndex; 
+	u8 bitIndex; 
 	u8 firstByte;
 
 	bitIndex = rftx_data.dataIndex % 8;
