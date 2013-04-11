@@ -9,6 +9,9 @@
 #include "quick_serial.h"
 #include <limits.h>
 
+#include "arith.h"
+
+
 #define DMU_TIMER 0
 
 extern struct dmu_data_T dmu_data;
@@ -32,17 +35,33 @@ u16 lastEdge = 0;
 void main (void)
 {
 	int a;
+//	s16Vec3 b, c;
+
 	PLL_SPEED(BUS_CLOCK_MHZ);
+/*	
+	b.x = 10;
+	b.y = 10;
+	b.z = 10;
+
+	c.x = 10;
+	c.y = 10;
+	c.z = 10;
+
+	vec_AddInPlace(&b, &c);
+	
+	printf("%d, %d, %d", b.x, b.y, b.z);
+*/	
+
 	Init ();
 
 //	DDRA = 0x01;
 
 
-
+/*
 	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
 	tim_EnableInterrupts(DMU_TIMER);
 	tim_SetRisingEdge(DMU_TIMER); 
-
+*/
 
 
 //	tim_GetTimer(TIM_IC, fifoOvf_Srv, NULL, DMU_TIMER);
@@ -52,7 +71,7 @@ void main (void)
 
 //	rti_Register(GetSamplesMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(
 
-//	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
+	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
 
 	while (1)
 		;

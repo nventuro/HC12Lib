@@ -16,55 +16,19 @@ void dmu_printI2CData(void);
 
 
 // Measurements taken individually must respect MPU internal registers' order
-struct dmu_measurements_T
-{
-	s16 accel_x;
-	s16 accel_y;
-	s16 accel_z;
-	
-	s16 temp;
-	
-	s16 gyro_x;
-	s16 gyro_y;
-	s16 gyro_z;
-
-} dmu_measurements;
+struct dmu_measurements_T dmu_measurements;
 
 // For samples taken from fifo buffer
 struct dmu_samples_T
 {
-	s16 accel_x;
-	s16 accel_y;
-	s16 accel_z;
-	
-	s16 gyro_x;
-	s16 gyro_y;
-	s16 gyro_z;
+	s16Vec3 accel;
+	s16Vec3 gyro;
 };
 
 
-struct dmu_sampleAccumulator_T
-{
-	s32 accel_x;
-	s32 accel_y;
-	s32 accel_z;
-	
-	s32 gyro_x;
-	s32 gyro_y;
-	s32 gyro_z;
-	
-	u16 numberOfSamples;
-	
-}dmu_sampleAccumulator = {0, 0, 0, 0, 0, 0, 0};
+struct dmu_sampleAccumulator_T dmu_sampleAccumulator = {0, 0, 0, 0, 0, 0, 0};
 
-
-struct dmu_gyroOffset_T
-{
-	s16 x;
-	s16 y;
-	s16 z;
-
-}dmu_gyroOffset = {0,0,0};
+s16Vec3 dmu_gyroOffset = {0,0,0};
 
 struct dmu_data_T dmu_data = {_FALSE, NULL, 0, {_TRUE, 0, 0, 0, 0, NULL} };
 
@@ -141,9 +105,9 @@ void dmu_Init()
 	
 	dmu_DivideAccumulator(&dmu_sampleAccumulator);
 
-	dmu_gyroOffset.x = (s16)dmu_sampleAccumulator.gyro_x;
-	dmu_gyroOffset.y = (s16)dmu_sampleAccumulator.gyro_y;
-	dmu_gyroOffset.z = (s16)dmu_sampleAccumulator.gyro_z;
+	dmu_gyroOffset.x = (s16)dmu_sampleAccumulator.gyro.x;
+	dmu_gyroOffset.y = (s16)dmu_sampleAccumulator.gyro.y;
+	dmu_gyroOffset.z = (s16)dmu_sampleAccumulator.gyro.z;
 
 	dmu_CleanAccumulator(&dmu_sampleAccumulator);
 	
@@ -257,14 +221,14 @@ void dmu_StagesInit()
 
 void dmu_GetMeasurements(iic_ptr cb)
 {
-	dmu_ReceiveFromRegister(ADD_ACCEL_OUT, cb, NULL, sizeof(dmu_measurements), (u8*)&dmu_measurements);
+	dmu_ReceiveFromRegister(ADD_ACCEL_OUT, cb, dmu_CommFailed, sizeof(dmu_measurements), (u8*)&dmu_measurements);
 	return;
 }
 
 void dmu_PrintFormattedMeasurements(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
-	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel_x, dm->accel_y, dm->accel_z, dm->gyro_x, dm->gyro_y, dm->gyro_z);
+	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x, dm->gyro.y, dm->gyro.z);
 	return;
 }
 
@@ -273,7 +237,7 @@ void dmu_PrintFormattedMeasurements_WO(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
 	struct dmu_gyroOffset_T* gOff = &dmu_gyroOffset;
-	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel_x, dm->accel_y, dm->accel_z, dm->gyro_x - gOff->x, dm->gyro_y - gOff->y, dm->gyro_z - gOff->z);
+	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x - gOff->x, dm->gyro.y - gOff->y, dm->gyro.z - gOff->z);
 	return;
 }
 
@@ -281,7 +245,7 @@ void dmu_PrintFormattedMeasurements_WO(void)
 void dmu_PrintRawMeasurements(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
-	printf("%d %d %d %d %d %d, ", dm->accel_x, dm->accel_y, dm->accel_z, dm->gyro_x, dm->gyro_y, dm->gyro_z);
+	printf("%d %d %d %d %d %d, ", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x, dm->gyro.y, dm->gyro.z);
 	return;
 }
 
@@ -290,7 +254,7 @@ void dmu_PrintRawMeasurements_WO(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
 	struct dmu_gyroOffset_T* gOff = &dmu_gyroOffset;
-	printf("%d %d %d %d %d %d, ", dm->accel_x, dm->accel_y, dm->accel_z, dm->gyro_x - gOff->x, dm->gyro_y - gOff->y, dm->gyro_z - gOff->z);
+	printf("%d %d %d %d %d %d, ", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x - gOff->x, dm->gyro.y - gOff->y, dm->gyro.z - gOff->z);
 	return;
 }
 
@@ -407,7 +371,7 @@ void dmu_AverageSamples(void)
 	for (dmuSamples += dmu_data.fifo.avgDiscard; (u8*)dmuSamples < (iic_commData.data + limit); dmuSamples++)
 	{
 		#ifdef FIFO_DEBUG_PRINT_AVG_SAMPLES
-		printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dmuSamples->accel_x, dmuSamples->accel_y, dmuSamples->accel_z, dmuSamples->gyro_x, dmuSamples->gyro_y, dmuSamples->gyro_z);
+		printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dmuSamples->accel.x, dmuSamples->accel.y, dmuSamples->accel.z, dmuSamples->gyro.x, dmuSamples->gyro.y, dmuSamples->gyro.z);
 		#endif 
 		
 		dmu_AccumulateSamples(acc, dmuSamples);
@@ -430,13 +394,8 @@ void dmu_AverageSamples(void)
 
 void dmu_AccumulateSamples(struct dmu_sampleAccumulator_T* acc, struct dmu_samples_T* samples)
 {
-	acc->accel_x += samples->accel_x;
-	acc->accel_y += samples->accel_y;
-	acc->accel_z += samples->accel_z;
-
-	acc->gyro_x += samples->gyro_x;
-	acc->gyro_y += samples->gyro_y;
-	acc->gyro_z += samples->gyro_z;
+	dVec_AddInPlace(&(acc->accel), &(samples->accel));
+	dVec_AddInPlace(&(acc->gyro), &(samples->gyro));
 
 	acc->numberOfSamples++;
 	
@@ -446,13 +405,8 @@ void dmu_AccumulateSamples(struct dmu_sampleAccumulator_T* acc, struct dmu_sampl
 
 void dmu_AccumulateMeasurements(struct dmu_sampleAccumulator_T* acc, struct dmu_measurements_T* measurements)
 {
-	acc->accel_x += measurements->accel_x;
-	acc->accel_y += measurements->accel_y;
-	acc->accel_z += measurements->accel_z;
-
-	acc->gyro_x += measurements->gyro_x;
-	acc->gyro_y += measurements->gyro_y;
-	acc->gyro_z += measurements->gyro_z;
+	dVec_AddInPlace(&(acc->accel), &(measurements->accel));
+	dVec_AddInPlace(&(acc->gyro), &(measurements->gyro));
 	
 	acc->numberOfSamples++;
 
@@ -462,13 +416,8 @@ void dmu_AccumulateMeasurements(struct dmu_sampleAccumulator_T* acc, struct dmu_
 
 void dmu_DivideAccumulator(struct dmu_sampleAccumulator_T* acc)
 {
-	acc->accel_x /= acc->numberOfSamples;
-	acc->accel_y /= acc->numberOfSamples;
-	acc->accel_z /= acc->numberOfSamples;
-
-	acc->gyro_x /= acc->numberOfSamples;
-	acc->gyro_y /= acc->numberOfSamples;
-	acc->gyro_z /= acc->numberOfSamples;
+	dVec_DivInPlace(&(acc->accel), acc->numberOfSamples);
+	dVec_DivInPlace(&(acc->gyro), acc->numberOfSamples);
 	
 	return;
 }
@@ -476,13 +425,13 @@ void dmu_DivideAccumulator(struct dmu_sampleAccumulator_T* acc)
 
 void dmu_CleanAccumulator(struct dmu_sampleAccumulator_T* acc)
 {
-	acc->accel_x = 0;
-	acc->accel_y = 0;
-	acc->accel_z = 0;
+	acc->accel.x = 0;
+	acc->accel.y = 0;
+	acc->accel.z = 0;
 
-	acc->gyro_x = 0;
-	acc->gyro_y = 0;
-	acc->gyro_z = 0;
+	acc->gyro.x = 0;
+	acc->gyro.y = 0;
+	acc->gyro.z = 0;
 	
 	acc->numberOfSamples = 0;
 }
