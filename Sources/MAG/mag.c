@@ -117,6 +117,22 @@ void mag_GetTemperature(iic_ptr cb)
 }
 
 
+void mag_PrintFormattedMeasurements(void)
+{
+	struct mag_measurements_T* m = &mag_measurements;
+	printf("mx: %d, my: %d, mz: %d\n", dm->mField.x, dm->mField.y, dm->mField.z);
+	return;
+}
+
+
+void mag_PrintRawMeasurements(void)
+{
+	struct mag_measurements_T* m = &mag_measurements;
+	printf("%d %d %d,", dm->mField.x, dm->mField.y, dm->mField.z);
+	return;
+}
+
+
 void mag_CommFailed(void)
 {
 	return;
