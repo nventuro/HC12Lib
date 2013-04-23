@@ -1,8 +1,9 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
-#define BUS_CLOCK_MHZ 50
+#include <limits.h>
 
+#define BUS_CLOCK_MHZ 50
 
 // Typedefs
 
@@ -12,6 +13,12 @@ typedef unsigned int u16;
 typedef int s16;
 typedef unsigned long int u32;
 typedef long int s32;
+
+#define S16_MAX INT_MAX
+#define S16_MIN INT_MIN
+
+#define S32_MAX LONG_MAX
+#define S32_MIN (((s32)(-1))<<31)
 
 typedef char bool;
 #define _FALSE 0
