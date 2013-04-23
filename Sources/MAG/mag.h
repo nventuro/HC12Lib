@@ -14,23 +14,17 @@ struct mag_measurements_T
 {	
 	u8 status;
 
-	s16 x;
-	s16 y;
-	s16 z;
+	s16Vec3 mField;
 };
 
 struct mag_sampleAccumulator_T
 {
-	s32 x;
-	s32 y;
-	s32 z;
+	s32Vec3 mField;	
 	
 	u16 numberOfSamples;	
 };
 
 extern struct mag_measurements_T mag_measurements;
-
-
 
 
 void mag_Init(void);

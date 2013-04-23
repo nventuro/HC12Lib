@@ -48,10 +48,10 @@ enum {MAG_DATA_CORRECT=0, MAG_DATA_RAW};
 
 
 #define MAG_RESET(_x) (_x << 4)
-#define MAG_DATA_CORRECT(_x) (_x << 5)
+#define MAG_DATA_CORRECTION(_x) (_x << 5)
 
 // Reg 0x11, CTRL_2_INIT - DATA
-#define MAG_CTRL_2_INIT ( (MAG_AUTO_RESET << 7) | MAG_RESET(1) | MAG_DATA_CORRECT(MAG_DATA_CORRECTION_INIT) )
+#define MAG_CTRL_2_INIT ( (MAG_AUTO_RESET << 7) | MAG_RESET(1) | MAG_DATA_CORRECTION(MAG_DATA_CORRECTION_INIT) )
 
 
 enum 
@@ -85,5 +85,5 @@ enum
 	ADD_MAG_CTRL_2,
 };
 
-
+ 
 #endif // _MAG_DEFINITIONS_H
