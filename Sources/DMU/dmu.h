@@ -3,24 +3,31 @@
 
 #include "dmu_definitions.h"
 #include "dmu_macros.h"
+#include "arith.h"
 
-struct dmu_data_T
+struct dmu_measurements_T
 {
-	bool init;
+	s16Vec3 accel;
+		
+	s16 temp;
 	
-	iic_ptr userCb;
-	u8 stage;
-	
-	struct
-	{
-		bool enable;
-		s8 fetchTimes;
-		u8 remainingBytes;
-		u16 count;
-		u8 avgDiscard;
-		iic_ptr stageCb; 		
-	}fifo;
+	s16Vec3 gyro;
 };
+
+
+struct dmu_sampleAccumulator_T
+{
+	s32Vec3 accel;
+	s32Vec3 gyro;
+	
+	u16 numberOfSamples;	
+};
+
+
+extern struct dmu_measurements_T dmu_measurements;
+extern struct dmu_sampleAccumulator_T dmu_sampleAccumulator;
+extern struct dmu_gyroOffset_T dmu_gyroOffset;
+
 
 /*	Functions needed by the macros, that should not be used by user. */
 extern void dmu_PrintFifoMem(void);
