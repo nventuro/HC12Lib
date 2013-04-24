@@ -3,7 +3,6 @@
 
 #define BUS_CLOCK_MHZ 50
 
-
 // Typedefs
 
 typedef unsigned char u8;
@@ -12,6 +11,12 @@ typedef unsigned int u16;
 typedef int s16;
 typedef unsigned long int u32;
 typedef long int s32;
+
+#define S16_MAX ((s16) 0x7FFF)
+#define S16_MIN ((s16) 0x8000)
+
+#define S32_MAX ((s32) 0x7FFFFFFF)
+#define S32_MIN (((s32)0x80000000)
 
 typedef char bool;
 #define _FALSE 0

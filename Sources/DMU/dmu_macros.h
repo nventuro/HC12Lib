@@ -6,8 +6,26 @@
 
 #define MPU_ADDRESS 0b01101000
 
+struct dmu_data_T
+{
+	bool init;
+	
+	iic_ptr userCb;
+	u8 stage;
+	
+	struct
+	{
+		bool enable;
+		s8 fetchTimes;
+		u8 remainingBytes;
+		u16 count;
+		u8 avgDiscard;
+		iic_ptr stageCb; 		
+	}fifo;
+};
 
 extern struct dmu_data_T dmu_data;
+
 
 extern void dmu_FifoStageRead(void);
 
