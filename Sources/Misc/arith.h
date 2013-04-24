@@ -6,7 +6,6 @@
 
 #include <limits.h>
 #include "common.h"
-#include "dmu.h"
 
 typedef s16 frac;
 typedef s32 dfrac;
