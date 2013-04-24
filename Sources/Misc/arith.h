@@ -22,20 +22,20 @@ typedef s32 dfrac;
 #define DFRAC_almost1 (-(S32_MIN>>1)-1)
 #define DFRAC_minus1 (S32_MIN>>1)
 
-static  frac fmul(frac a, frac b)
+static frac fmul(frac a, frac b)
 { /* Toma dos numeros fraccionarios en formato 1.15 y devuelve el producto en
  * formato 1.15 */
 	return ((((dfrac)a) * b) << 1) >> FRAC_BIT;
 }
 
-static  dfrac fmul2(frac a, frac b)
+static dfrac fmul2(frac a, frac b)
 { /* Toma dos numeros fraccionarios en formato 1.15 y devuelve el producto en
  * formato 2.30 */
 	return (((dfrac)a) * b);
 }
 
-static  frac dtrunc(dfrac x)
-{ /* 2.30 -> 1.15 */
+static frac dtrunc(dfrac x)
+{ // 2.30 -> 1.15 
 	if (x >= DFRAC_1)
 		return FRAC_1;
 	else if ( x < DFRAC_minus1)
@@ -53,6 +53,7 @@ typedef struct {
 typedef struct {
 	dfrac x,y,z;
 } dvec3;
+
 
 #if (FRAC_BIT == 16)
 typedef vec3 s16Vec3;
@@ -175,6 +176,7 @@ typedef struct {
 
 static const quat UNIT_Q = {FRAC_1, {0, 0, 0}};
 /*const dquat UNIT_DQ = ;*/
+
 
 static  quat qtrunc(dquat q)
 {

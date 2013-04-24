@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include "iic.h"
-
+#include "arith.h"
 
 // Magnetometer sample rate.
 // To change this value, change reg 0x10 (CTRL_REG_1) initialization in mag_definitions.h, 
