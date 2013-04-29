@@ -30,38 +30,61 @@ struct tim_channelData dmu_timerData = {0,0};
 
 u16 overflowCnt = 0;
 u16 lastEdge = 0;
- 
- 
+
+extern quat QEst;
+extern void att_process(void);
+
+
+void sample_ready(void)
+{
+	if (tim_GetEdge(0) == EDGE_RISING) {
+		tim_SetFallingEdge(0);
+		dmu_GetMeasurements(att_process);
+	} else {
+		tim_SetRisingEdge(0);
+	}
+}
+
+void main (void)
+{
+	volatile s32 a = S32_MIN>>1;
+	Init ();	
+	
+	DDRA_DDRA0 = 1;
+	DDRA_DDRA1 = 1;
+	
+	tim_GetTimer(TIM_IC, sample_ready, NULL, 0);
+	tim_SetRisingEdge(0);
+	tim_ClearFlag(0);
+	tim_EnableInterrupts(0);
+	printf("%ld\n", DFRAC_1);
+	while (1) {
+		printf("%d %d %d %d\n", QEst.r, QEst.v.x, QEst.v.y, QEst.v.z);
+	}
+}
+
+
+
+
+
+
+/* MAIN de testeo para DMU. 
  void main (void)
  {
 	int a;
-//	s16Vec3 b, c;
 
 	PLL_SPEED(BUS_CLOCK_MHZ);
-/*	
-	b.x = 10;
-	b.y = 10;
-	b.z = 10;
-
-	c.x = 10;
-	c.y = 10;
-	c.z = 10;
-
-	vec_AddInPlace(&b, &c);
-	
-	printf("%d, %d, %d", b.x, b.y, b.z);
-*/	
 
 	Init ();
 
 //	DDRA = 0x01;
 
 
-/*
-	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
-	tim_EnableInterrupts(DMU_TIMER);
-	tim_SetRisingEdge(DMU_TIMER); 
-*/
+
+//	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
+//	tim_EnableInterrupts(DMU_TIMER);
+//	tim_SetRisingEdge(DMU_TIMER); 
+
 
 
 //	tim_GetTimer(TIM_IC, fifoOvf_Srv, NULL, DMU_TIMER);
@@ -76,7 +99,7 @@ u16 lastEdge = 0;
  	while (1)
  		;
 }
-
+*/
 
 void Init (void)
 {

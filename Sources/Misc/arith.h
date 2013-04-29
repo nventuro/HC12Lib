@@ -4,7 +4,6 @@
 #ifndef _ARITH_H_
 #define _ARITH_H_
 
-#include <limits.h>
 #include "common.h"
 
 typedef s16 frac;
@@ -142,7 +141,7 @@ static vec3 vec_Add(vec3 a, vec3 b)
 	return c;
 }
 
-static vec3 vecDiv(vec3 a, int f)
+static vec3 vec_Div(vec3 a, int f)
 {
 	vec3 c = a;
 	
@@ -151,7 +150,7 @@ static vec3 vecDiv(vec3 a, int f)
 	return c;
 }
 
-static vec3 vecMul(vec3 a, int f)
+static vec3 vec_Mul(vec3 a, int f)
 {
 	vec3 c = a;
 	
