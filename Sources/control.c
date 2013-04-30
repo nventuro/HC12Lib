@@ -26,7 +26,8 @@
  * 	donde D_Q_SCALE = 1/(0.5 * GYRO_SCALE / fs) = 2*fs / GYRO_SCALE
  */
 #define GYRO_SCALE 34.90658504 /* rad / s @ fsd ; son 5.125 bits */
-#define D_Q_SCALE 3 /*en realidad es 2.864788976, o 1.518 */
+//#define D_Q_SCALE 3 /*en realidad es 2.864788976, o 1.518 */
+#define D_Q_SCALE 57
 
 /* esto también va a mano
  *	machine_wmes = wmes / ACC_SCALE
@@ -81,6 +82,7 @@
  * Nota: El bias se suma para no tener que escribir una función de sustraccion
  * de vectores.
  */
+/* para 1000Hz: ???*/
 #define Ki 0.3
 #define D_BIAS_SCALE 2
 #define BIAS_SCALE2 17 /* GYRO_SCALE / BIAS_SCALE */
@@ -157,6 +159,7 @@ quat att_estim(vec3 gyro, vec3 accel)
 	p.r = 0;
 	p.v = vec_Add(vec_Add(gyro, vec_Div(bias, BIAS_SCALE2)), vec_Mul(wmes, WMES_MUL));
 	//p.v = vec_Add(gyro, vec_Div(wmes, WMES_DIV));
+	//p.v = gyro;
 	
 	d_q = qmul2(q_lowres, p, D_Q_SCALE);
 	
@@ -174,9 +177,12 @@ quat att_estim(vec3 gyro, vec3 accel)
 }
 
 quat QEst;
+bool have_to_output = 0;
 
 void att_process(void)
 {
+	static int ccount = 0;
+	
 	PORTA_PA0 = 1;
 	{
 		vec3 acc, gy;
@@ -189,8 +195,12 @@ void att_process(void)
 		gy.y = dmu_measurements.gyro.y;
 		gy.z = dmu_measurements.gyro.z;
 	
-//		QEst = att_estim(gy, acc);
-		printf("%d %d %d %d,", QEst.r, QEst.v.x, QEst.v.y, QEst.v.z);	
+		QEst = att_estim(gy, acc);
+		if (++ccount == 20) {
+			ccount = 0;	
+			have_to_output = 1;
+		}
+		//printf("%d %d %d %d,", QEst.r, QEst.v.x, QEst.v.y, QEst.v.z);	
 	}
 	PORTA_PA0 = 0;
 }

@@ -33,10 +33,12 @@ u16 lastEdge = 0;
 
 extern quat QEst;
 extern void att_process(void);
-
+extern bool have_to_output;
 
 void sample_ready(void)
 {
+//	printf ("che estoy en sample ready\n");
+
 	if (tim_GetEdge(0) == EDGE_RISING) {
 		tim_SetFallingEdge(0);
 		dmu_GetMeasurements(att_process);
@@ -57,9 +59,13 @@ void main (void)
 	tim_SetRisingEdge(0);
 	tim_ClearFlag(0);
 	tim_EnableInterrupts(0);
-	printf("%ld\n", DFRAC_1);
+//	printf("%ld\n", DFRAC_1);
 	while (1) {
-		printf("%d %d %d %d\n", QEst.r, QEst.v.x, QEst.v.y, QEst.v.z);
+		if (have_to_output) {
+			have_to_output = 0;
+			printf("%d %d %d %d,", QEst.r, QEst.v.x, 
+					QEst.v.y, QEst.v.z);
+		}
 	}
 }
 

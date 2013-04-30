@@ -35,7 +35,7 @@ typedef enum
 #define CONFIG (LP_FILTER_CONFIG | (EXT_SYNC_SET << 3) )
 
 // Set this value; an approximation will be used as sample rate according to the divider.
-#define SAMPLE_RATE (50)
+#define SAMPLE_RATE (1000)
 
 // Reg 25: ADD_SAMPLE_RATE_DIVIDER - DATA:
 #define SAMPLE_RATE_DIVIDER ((LP_FILTER_CONFIG == 0 ) ? (8000/SAMPLE_RATE-1) : (1000/SAMPLE_RATE-1))	// u8 - reg 25 ADD_SAMPLE_RATE_DIVIDER
@@ -154,7 +154,7 @@ enum {PWR_RUN=0, PWR_RESET};
 #define PWR_TEMP_DISABLE 0	// Temp disabled
 
 // Reg 107 - PWR_MGMT_1 - DATA
-#define PWR_MGMT_1_RESET ( (PWR_RESET << 7) | (PWR_SLEEP_ON << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
+#define PWR_MGMT_1_RESET ( (PWR_RESET << 7) | (PWR_SLEEP_ON << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (CLK_INTERNAL << 0) )
 #define PWR_MGMT_1_RUN 	 ( (PWR_RUN << 7) | (PWR_SLEEP_OFF << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
 #define PWR_MGMT_1_STOP	 ( (PWR_RUN << 7) | (PWR_SLEEP_ON << 6) | (PWR_CYCLE << 5) | (PWR_TEMP_DISABLE << 3) | (PWR_CLK_SOURCE << 0) )
 

@@ -6,7 +6,7 @@
 
 
 #define MAX_BURST_READS 252
-#define INITIAL_AVERAGE 256
+#define INITIAL_AVERAGE 0
 
 
 #define PRINT_START 1
@@ -92,6 +92,8 @@ void dmu_Init()
 
 	// Offset elimination
 
+#if (INITIAL_AVERAGE != 0)
+
 	rti_Init();
 	
 	offsetSampleRate = (((1000/SAMPLE_RATE) < 20) ? (20) : (1000/SAMPLE_RATE));
@@ -114,7 +116,10 @@ void dmu_Init()
 	#ifdef DMU_DEBUG_OFFSET
 	printf("ox: %d, oy: %d, oz: %d\n", dmu_gyroOffset.x, dmu_gyroOffset.y, dmu_gyroOffset.z);
 	#endif
-
+	
+#endif
+	
+	return;
 	
 }
 
@@ -124,20 +129,23 @@ void dmu_StagesInit()
 {	
 	switch (dmu_data.stage)
 	{	
+	u32 i,j;
 	case 0:
-			
+		//for (i=0; i<30000; i++)
+		//	for(j=0; j < 300; j++)
+		//		;	
 		iic_commData.data[0] = ADD_PWR_MGMT_1;
-		iic_commData.data[1] = PWR_MGMT_1_RESET;
+		iic_commData.data[1] = 0;
 
 		dmu_Send (dmu_StagesInit, dmu_CommFailed, 2, NULL);
 		
 		dmu_data.stage++;
 		
 		break;
-
+		
 	case 1:
 		// Note: inserting delay / putchars here screws configuration up.	
-				
+	
 		iic_commData.data[0] = ADD_SAMPLE_RATE_DIVIDER;
 		iic_commData.data[1] = SAMPLE_RATE_DIVIDER;	// 25
 		iic_commData.data[2] = CONFIG;				// 26
