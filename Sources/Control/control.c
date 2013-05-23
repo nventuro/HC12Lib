@@ -13,7 +13,7 @@
 #include <limits.h>
 #include "dmu.h"
 
-#define SAMPLERATE 50 // Hz */
+/* El samplerate es 1000  Hz */
 
 /*esto hay que hacerlo a mano
  * q[n+1] = q[n] + d_q/fs = q[n] + 0.5 * q[n] * p(omega + kp*wmes) / fs

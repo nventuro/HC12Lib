@@ -597,14 +597,14 @@ u32 tim_dGetTimeElapsed(u16 overflowCnt, tim_id timId, u16 lastEdge)
 	return ( (overflowCnt * TIM_CNT_MAX + tim_dGetValue(timId)) - lastEdge);
 }
 
-void tim7_dBoundTimer(u8 timerMask, u8 pinValue)
+void tim7_dLinkTimer(u8 timerMask, u8 pinValue)
 {
 	OC7M |= timerMask;
 	OC7D = (pinValue & timerMask);
 	return;
 }
 
-void tim7_dUnboundTimer(u8 timerMask)
+void tim7_dUnlinkTimer(u8 timerMask)
 {
 	OC7M &= (~timerMask);
 	return;

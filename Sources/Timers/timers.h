@@ -108,8 +108,8 @@ void tim_dSetOutputLow(tim_id id);
 void tim_dSetOutputToggle(tim_id id);
 void tim_dDisconnectOutput(tim_id id);
 
-void tim7_dBoundTimer(u8 timerMask, u8 pinValue);
-void tim7_dUnboundTimer(u8 timerMask);
+void tim7_dLinkTimer(u8 timerMask, u8 pinValue);
+void tim7_dUnlinkTimer(u8 timerMask);
 
 
 extern void interrupt tim0_Service(void);

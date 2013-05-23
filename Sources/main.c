@@ -85,34 +85,13 @@ void breakPoint_fcn(void)
 	putchar('a');
 }
 
-void tim7_Srv(void)
-{
-	static u16 latchedTime;
-	
 
-	
-	if ( PTT_PTT7 == 1)
-	{		
-		putchar('r');
-		latchedTime = tim_GetValue(7);
-		tim_SetValue(4, latchedTime + TIM4_DUTY);
-		tim_SetValue(5, latchedTime + TIM5_DUTY);
-		tim_SetValue(6, latchedTime + TIM6_DUTY);
-		tim_SetValue(7, latchedTime + TIM7_DUTY);
+struct motorData{
 
-		tim7_dUnboundTimer(0xF0);
-	}
-	else if (PTT_PTT7 == 0)
-	{
-		putchar('f');
+	u16 dutyTime[4];
+};
 
-		tim_SetValue(7, latchedTime + OC_PERIOD);
-		tim7_dBoundTimer(0xF0, 0xF0);
-	
-	}
-	else 
-		printf("edge error");
-}
+
 
 int main(void)
 {
@@ -123,7 +102,7 @@ int main(void)
 	qs_init(0, MON12X_BR);
  
  	asm cli;
-
+/*
 
 	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 4);
 	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 5);
@@ -141,7 +120,7 @@ int main(void)
 	tim_EnableInterrupts(7);
 	
 	printf("done");
-		
+*/		
 	while(1);
 }
 
