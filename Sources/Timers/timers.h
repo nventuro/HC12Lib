@@ -5,9 +5,9 @@
 #include "timers_macros.h"
 
 
-#define TIM_TICK_NS (1280)
+#define TIM_TICK_NS (320)
 
-// The resolution of the global timer (TCNT) is  1.280 microseconds. The TCNT overflows every 83.9 miliseconds.
+// The resolution of the global timer (TCNT) is 320 nanoseconds. The TCNT overflows every 20.9 miliseconds.
 // In order to change this value, TIMER_PRESCALER in timers.c must be changed and the file recompiled.
 
 #define TIM_OVERFLOW_TICKS 65536
@@ -107,6 +107,9 @@ void tim_dSetOutputHigh(tim_id id);
 void tim_dSetOutputLow(tim_id id);
 void tim_dSetOutputToggle(tim_id id);
 void tim_dDisconnectOutput(tim_id id);
+
+void tim7_dBoundTimer(u8 timerMask, u8 pinValue);
+void tim7_dUnboundTimer(u8 timerMask);
 
 
 extern void interrupt tim0_Service(void);

@@ -16,7 +16,7 @@
 
 extern struct dmu_data_T dmu_data;
  
- void Init (void);
+void Init (void);
 void PrintMeas (s32 measurement);
 void GetMeasurementsMask(void *data, rti_time period, rti_id id);
 void GetSamplesMask(void *data, rti_time period, rti_id id);
@@ -47,7 +47,7 @@ void sample_ready(void)
 	}
 }
 
-/*
+/* Main para control
 void main (void)
 {
 	volatile s32 a = S32_MIN>>1;
@@ -73,8 +73,72 @@ void main (void)
 */
 
 
+#define OC_PERIOD ((u8)62500)
+#define TIM4_DUTY 12000
+#define TIM5_DUTY 5000
+#define TIM6_DUTY 10000
+#define TIM7_DUTY 9375
 
 
+void breakPoint_fcn(void)
+{
+	putchar('a');
+}
+
+void tim7_Srv()
+{
+	static u16 latchedTime;
+	
+	if (tim_GetEdge(7) == EDGE_RISING)
+	{		
+		latchedTime = tim_GetValue(7);
+		tim_SetValue(4, latchedTime + TIM4_DUTY);
+		tim_SetValue(5, latchedTime + TIM5_DUTY);
+		tim_SetValue(6, latchedTime + TIM6_DUTY);
+		tim_SetValue(7, latchedTime + TIM7_DUTY);
+		
+		tim_SetFallingEdge(7);
+		tim7_dUnboundTimer(0x0F);
+	}
+	else if (tim_GetEdge(7) == EDGE_FALLING)
+	{
+		tim_SetRisingEdge(7);
+		
+		tim_SetValue(7, latchedTime + OC_PERIOD);
+		tim7_dBoundTimer(0x0F, 0x0F);
+	}
+	else 
+		printf("edge error");
+}
+
+int main(void)
+{
+	PLL_SPEED(BUS_CLOCK_MHZ);
+
+	tim_Init();
+	qs_init(0, MON12X_BR);
+ 
+ 	asm cli;
+
+	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 4);
+	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 5);
+	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 6);
+	tim_GetTimer(TIM_OC, tim7_Srv, NULL, 7);
+
+	tim_SetFallingEdge(4);
+	tim_SetFallingEdge(5);
+	tim_SetFallingEdge(6);
+	
+	tim7_dBoundTimer(0x0F, 0x0F);
+	tim_SetRisingEdge(7); 
+	tim_EnableInterrupts(7);
+		
+}
+
+
+
+
+/*
 // MAIN de testeo para DMU. 
  void main (void)
  {
@@ -106,7 +170,7 @@ void main (void)
  	while (1)
  		;
 }
-
+*/
 
 void Init (void)
 {

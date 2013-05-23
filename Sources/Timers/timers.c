@@ -1,6 +1,6 @@
 #include "timers.h"
 
-#define	TIMER_PRESCALER 6 	// 50MHz / 2^6 = 781.25 kHz. The TCNT resolution is 1.28us 
+#define	TIMER_PRESCALER 4 	// 50MHz / 2^4 = 3.125 MHz. The TCNT resolution is 320 ns 
 #define TIM_AMOUNT 8
 
 #define SET_TIOS_OC(i) (TIOS |= (1 << i))
@@ -595,6 +595,19 @@ void tim_dSetValue(tim_id timId, u16 value)
 u32 tim_dGetTimeElapsed(u16 overflowCnt, tim_id timId, u16 lastEdge)
 {
 	return ( (overflowCnt * TIM_CNT_MAX + tim_dGetValue(timId)) - lastEdge);
+}
+
+void tim7_dBoundTimer(u8 timerMask, u8 pinValue)
+{
+	OC7M |= timerMask;
+	OC7D = (pinValue & timerMask);
+	return;
+}
+
+void tim7_dUnboundTimer(u8 timerMask)
+{
+	OC7M &= (~timerMask);
+	return;
 }
 
 void interrupt tim0_Service(void)
