@@ -129,13 +129,10 @@ void dmu_StagesInit()
 {	
 	switch (dmu_data.stage)
 	{	
-	u32 i,j;
 	case 0:
-		//for (i=0; i<30000; i++)
-		//	for(j=0; j < 300; j++)
-		//		;	
+
 		iic_commData.data[0] = ADD_PWR_MGMT_1;
-		iic_commData.data[1] = 0;
+		iic_commData.data[1] = PWR_MGMT_1_RESET;
 
 		dmu_Send (dmu_StagesInit, dmu_CommFailed, 2, NULL);
 		

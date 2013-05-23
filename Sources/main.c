@@ -47,6 +47,7 @@ void sample_ready(void)
 	}
 }
 
+/*
 void main (void)
 {
 	volatile s32 a = S32_MIN>>1;
@@ -69,12 +70,12 @@ void main (void)
 	}
 }
 
+*/
 
 
 
 
-
-/* MAIN de testeo para DMU. 
+// MAIN de testeo para DMU. 
  void main (void)
  {
 	int a;
@@ -87,9 +88,9 @@ void main (void)
 
 
 
-//	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
-//	tim_EnableInterrupts(DMU_TIMER);
-//	tim_SetRisingEdge(DMU_TIMER); 
+	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
+	tim_EnableInterrupts(DMU_TIMER);
+	tim_SetRisingEdge(DMU_TIMER); 
 
 
 
@@ -105,7 +106,7 @@ void main (void)
  	while (1)
  		;
 }
-*/
+
 
 void Init (void)
 {
@@ -150,6 +151,8 @@ void PrintMeas (s32 measurement)
 
 void dataReady_Srv(void)
 {
+	static u8 count=0;
+
 	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING)
 	{
 		tim_SetFallingEdge(DMU_TIMER);	
