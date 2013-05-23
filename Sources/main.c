@@ -74,7 +74,7 @@ void main (void)
 
 
 #define OC_PERIOD ((u8)62500)
-#define TIM4_DUTY 12000
+#define TIM4_DUTY 14000
 #define TIM5_DUTY 5000
 #define TIM6_DUTY 10000
 #define TIM7_DUTY 9375
@@ -85,27 +85,30 @@ void breakPoint_fcn(void)
 	putchar('a');
 }
 
-void tim7_Srv()
+void tim7_Srv(void)
 {
 	static u16 latchedTime;
 	
-	if (tim_GetEdge(7) == EDGE_RISING)
+
+	
+	if ( PTT_PTT7 == 1)
 	{		
+		putchar('r');
 		latchedTime = tim_GetValue(7);
 		tim_SetValue(4, latchedTime + TIM4_DUTY);
 		tim_SetValue(5, latchedTime + TIM5_DUTY);
 		tim_SetValue(6, latchedTime + TIM6_DUTY);
 		tim_SetValue(7, latchedTime + TIM7_DUTY);
-		
-		tim_SetFallingEdge(7);
-		tim7_dUnboundTimer(0x0F);
+
+		tim7_dUnboundTimer(0xF0);
 	}
-	else if (tim_GetEdge(7) == EDGE_FALLING)
+	else if (PTT_PTT7 == 0)
 	{
-		tim_SetRisingEdge(7);
-		
+		putchar('f');
+
 		tim_SetValue(7, latchedTime + OC_PERIOD);
-		tim7_dBoundTimer(0x0F, 0x0F);
+		tim7_dBoundTimer(0xF0, 0xF0);
+	
 	}
 	else 
 		printf("edge error");
@@ -113,6 +116,7 @@ void tim7_Srv()
 
 int main(void)
 {
+	tim_id id;
 	PLL_SPEED(BUS_CLOCK_MHZ);
 
 	tim_Init();
@@ -120,19 +124,25 @@ int main(void)
  
  	asm cli;
 
+
 	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 4);
 	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 5);
 	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 6);
-	tim_GetTimer(TIM_OC, tim7_Srv, NULL, 7);
+	id = tim_GetTimer(TIM_OC, tim7_Srv, NULL, 7);
 
-	tim_SetFallingEdge(4);
-	tim_SetFallingEdge(5);
-	tim_SetFallingEdge(6);
+	printf("%d\n", id);
+
+	tim_SetOutputLow(4);
+	tim_SetOutputLow(5);
+	tim_SetOutputLow(6);
 	
-	tim7_dBoundTimer(0x0F, 0x0F);
-	tim_SetRisingEdge(7); 
+	tim7_dBoundTimer(0xF0, 0xF0);
+	tim_SetOutputToggle(7);
 	tim_EnableInterrupts(7);
+	
+	printf("done");
 		
+	while(1);
 }
 
 
