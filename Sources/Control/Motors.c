@@ -14,8 +14,8 @@
 #define MOT_DUTY_MAX_MS 2
 
 #define MOT_OVF_NS ((u32)TIM_OVERFLOW_TICKS*TIM_TICK_NS)
-#define MOT_CONSTANT_TERM TIM_US_TO_TICKS(1000*MOT_DUTY_MIN_MS)
-#define MOT_SLOPE (TIM_US_TO_TICKS(1000*MOT_DUTY_MAX_MS)-MOT_CONSTANT_TERM)
+#define MOT_CONSTANT_TERM_TICKS TIM_US_TO_TICKS(1000*MOT_DUTY_MIN_MS)
+#define MOT_SLOPE_TICKS (TIM_US_TO_TICKS(1000*MOT_DUTY_MAX_MS)-MOT_CONSTANT_TERM_TICKS)
 
 #define MOTOR_MASTER_PIN GLUE(PTT_PTT,MOTOR_MASTER_OC)
 
@@ -68,19 +68,19 @@ void mot_Init(void)
 void mot_MasterSrv(void)
 {
 	static u16 latchedTime;
-	static struct motorData motData = { {0,8191,16383,FRAC_1} };
+	static struct motorData motData = { {FRAC_1,8191,16383,24575} };
 
-	volatile u16 a = MOT_CONSTANT_TERM;
-	volatile u16 b = MOT_SLOPE;
+	volatile u16 a = MOT_CONSTANT_TERM_TICKS;
+	volatile u16 b = MOT_SLOPE_TICKS;
 	
 	if (MOTOR_MASTER_PIN == PIN_HIGH)
 	{  
 		latchedTime = tim_GetValue(MOTOR_MASTER_OC);
 
-		tim_SetValue(MOTOR_MASTER_OC, latchedTime + fmul(motData.duty[0], MOT_SLOPE) + MOT_CONSTANT_TERM);
-		tim_SetValue(MOTOR_SLAVE1_OC, latchedTime + fmul(motData.duty[1], MOT_SLOPE) + MOT_CONSTANT_TERM);
-		tim_SetValue(MOTOR_SLAVE2_OC, latchedTime + fmul(motData.duty[2], MOT_SLOPE) + MOT_CONSTANT_TERM);
-		tim_SetValue(MOTOR_SLAVE3_OC, latchedTime + fmul(motData.duty[3], MOT_SLOPE) + MOT_CONSTANT_TERM);
+		tim_SetValue(MOTOR_MASTER_OC, latchedTime + fmul(motData.duty[0], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
+		tim_SetValue(MOTOR_SLAVE1_OC, latchedTime + fmul(motData.duty[1], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
+		tim_SetValue(MOTOR_SLAVE2_OC, latchedTime + fmul(motData.duty[2], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
+		tim_SetValue(MOTOR_SLAVE3_OC, latchedTime + fmul(motData.duty[3], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
 		
 		mot_Unlink();
 		
