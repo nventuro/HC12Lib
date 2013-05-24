@@ -132,7 +132,19 @@ void dmu_StagesInit()
 	case 0:
 
 		iic_commData.data[0] = ADD_PWR_MGMT_1;
-		iic_commData.data[1] = PWR_MGMT_1_RESET;
+		iic_commData.data[1] = 0;
+
+		dmu_Send (dmu_StagesInit, dmu_CommFailed, 2, NULL);
+		
+		dmu_data.stage++;
+		
+		break;
+
+
+	case 1:
+
+		iic_commData.data[0] = ADD_PWR_MGMT_1;
+		iic_commData.data[1] = 0;
 
 		dmu_Send (dmu_StagesInit, dmu_CommFailed, 2, NULL);
 		
@@ -140,7 +152,7 @@ void dmu_StagesInit()
 		
 		break;
 		
-	case 1:
+	case 2:
 		// Note: inserting delay / putchars here screws configuration up.	
 	
 		iic_commData.data[0] = ADD_SAMPLE_RATE_DIVIDER;
@@ -162,7 +174,7 @@ void dmu_StagesInit()
 		
 		break;
 	
-	case 2:
+	case 3:
 	
 		iic_commData.data[0] = ADD_INT_PIN_CFG;
 		iic_commData.data[1] = INT_PIN_CFG;		// 55
@@ -175,7 +187,7 @@ void dmu_StagesInit()
 		
 		break;
 		
-	case 3:
+	case 4:
 
 		iic_commData.data[0] = ADD_SIGNAL_PATH_RESET;
 		iic_commData.data[1] = RESET_SIGNAL(1,1,1);
@@ -190,7 +202,7 @@ void dmu_StagesInit()
 
 		break;		
 
-	case 4:
+	case 5:
 
 		iic_commData.data[0] = ADD_USER_CTRL;
 		iic_commData.data[1] = USER_CTRL_INIT;	// Run means not reset.
@@ -202,7 +214,7 @@ void dmu_StagesInit()
 		break;		
 
 
-	case 5:
+	case 6:
 				
 		dmu_FifoReset(dmu_StagesInit);
 		dmu_data.stage++;
@@ -210,7 +222,7 @@ void dmu_StagesInit()
 		break;
 		
 
-	case 6:
+	case 7:
 				
 		dmu_data.init = _TRUE;
 		dmu_data.stage = 0;

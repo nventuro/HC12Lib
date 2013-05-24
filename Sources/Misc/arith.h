@@ -63,12 +63,22 @@ typedef vec3 s16Vec3;
 typedef dvec3 s32Vec3;
 #endif
 
+#define VEC0 {0,0,0}
 
 static void vec_AddInPlace(s16Vec3* This, s16Vec3* b)
 {
 	This->x += b->x;
 	This->y += b->y;
 	This->z += b->z;
+	
+	return;
+}
+
+static void vec_SubInPlace(s16Vec3* This, s16Vec3* b)
+{
+	This->x -= b->x;
+	This->y -= b->y;
+	This->z -= b->z;
 	
 	return;
 }
@@ -92,7 +102,6 @@ static void dVec_AddInPlace(s32Vec3* This, s16Vec3* b)
 	
 	return;
 }
-
 
 static void vec_MulInPlace(s16Vec3* This, s16 b)
 {
@@ -143,6 +152,15 @@ static vec3 vec_Add(vec3 a, vec3 b)
 	return c;
 }
 
+static vec3 vec_Sub(vec3 a, vec3 b)
+{
+	vec3 c = a;
+	
+	vec_SubInPlace(&c, &b);
+		
+	return c;
+}
+
 static vec3 vec_Div(vec3 a, int f)
 {
 	vec3 c = a;
@@ -161,6 +179,10 @@ static vec3 vec_Mul(vec3 a, int f)
 	return c;
 }
 
+#define vdiv vec_Div
+#define vsum vec_Add
+#define vsub vec_Sub
+#define vmul vec_Mul
 
 /* **** Cuaterniones ****/
 
@@ -209,6 +231,30 @@ static  dquat qscale2(quat q, frac f)
 	s.v.x = fmul2(q.v.x, f);
 	s.v.y = fmul2(q.v.y, f);
 	s.v.z = fmul2(q.v.z, f);
+	
+	return s;
+}
+
+static quat qconj(quat q)
+{
+	quat p;
+	
+	p.r = q.r;
+	p.v.x = -q.v.x;
+	p.v.y = -q.v.y;
+	p.v.z = -q.v.z;
+	
+	return p;
+}
+
+static  quat qmul(quat q, quat p)
+{
+	quat s;
+	
+	s.r = (fmul(q.r,p.r)-fmul(q.v.x,p.v.x)-fmul(q.v.y,p.v.y)-fmul(q.v.z,p.v.z));
+	s.v.x = (fmul(p.r,q.v.x)+fmul(p.v.x,q.r)-fmul(p.v.y,q.v.z)+fmul(p.v.z,q.v.y));
+	s.v.y = (fmul(p.r,q.v.y)+fmul(p.v.x,q.v.z)+fmul(p.v.y,q.r)-fmul(p.v.z,q.v.x));
+	s.v.z = (fmul(p.r,q.v.z)-fmul(p.v.x,q.v.y)+fmul(p.v.y,q.v.x)+fmul(p.v.z,q.r));
 	
 	return s;
 }

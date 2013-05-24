@@ -47,7 +47,9 @@ void sample_ready(void)
 	}
 }
 
-/* Main para control
+/* Main para control */
+
+
 void main (void)
 {
 	volatile s32 a = S32_MIN>>1;
@@ -70,7 +72,6 @@ void main (void)
 	}
 }
 
-*/
 
 
 #define OC_PERIOD ((u8)62500)
@@ -92,7 +93,7 @@ struct motorData{
 };
 
 
-
+/*
 int main(void)
 {
 	volatile frac f = FRAC_0_5;
@@ -117,7 +118,7 @@ int main(void)
 	}
 }
 
-
+*/
 
 
 /*
@@ -134,9 +135,9 @@ int main(void)
 
 
 
-	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
-	tim_EnableInterrupts(DMU_TIMER);
-	tim_SetRisingEdge(DMU_TIMER); 
+//	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
+//	tim_EnableInterrupts(DMU_TIMER);
+//	tim_SetRisingEdge(DMU_TIMER); 
 
 
 
