@@ -24,8 +24,9 @@ void mot_MasterSrv(void);
 
 extern struct motorData control(void);
 
-// Nota: los linkeos se pueden hacer más rápido si se utiliza MOT_LINK_MASK directamente en vez de llamar
-// a la función.
+// Macros to solve links in few assembly instructions.
+#define mot_Link() tim7_LinkTimer(MOT_LINK_MASK, MOT_LINK_MASK)
+#define mot_Unlink() tim7_UnlinkTimer(MOT_LINK_MASK)
 
 void mot_Init(void) 
 {
@@ -43,7 +44,7 @@ void mot_Init(void)
 	tim_SetOutputLow(MOTOR_SLAVE2_OC);
 	tim_SetOutputLow(MOTOR_SLAVE3_OC);
 
-	tim7_dLinkTimer(MOT_LINK_MASK, MOT_LINK_MASK);
+	mot_Link();
 	tim_SetOutputToggle(MOTOR_MASTER_OC);
 	tim_EnableInterrupts(MOTOR_MASTER_OC);
 
@@ -58,7 +59,7 @@ void mot_MasterSrv(void)
 
 	
 	if ( PTT_PTT7 == PIN_HIGH)
-	{		 
+	{
 		latchedTime = tim_GetValue(MOTOR_MASTER_OC);
 		
 		tim_SetValue(MOTOR_MASTER_OC, latchedTime + motData.duty[0]);
@@ -66,14 +67,14 @@ void mot_MasterSrv(void)
 		tim_SetValue(MOTOR_SLAVE2_OC, latchedTime + motData.duty[2]);
 		tim_SetValue(MOTOR_SLAVE3_OC, latchedTime + motData.duty[3]);
 		
-		tim7_dUnlinkTimer(MOT_LINK_MASK);
+		mot_Unlink();
 		
 		motData = control();
 	}
 	else
 	{
 		tim_SetValue(MOTOR_MASTER_OC, latchedTime + MOT_PERIOD);
-		tim7_dLinkTimer(MOT_LINK_MASK, MOT_LINK_MASK);
+		mot_Link();
 	}
 	
 	return;

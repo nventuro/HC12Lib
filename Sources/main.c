@@ -95,33 +95,26 @@ struct motorData{
 
 int main(void)
 {
-	tim_id id;
+	volatile frac f = FRAC_0_5;
+	DDRT = 0x80;
+	
 	PLL_SPEED(BUS_CLOCK_MHZ);
-
-	tim_Init();
 	qs_init(0, MON12X_BR);
  
  	asm cli;
-/*
+ 	
+ 	
+ 	
+ 	printf("%x, %x", fsqrt(FRAC_1), fsqrt(FRAC_0_5));
 
-	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 4);
-	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 5);
-	tim_GetTimer(TIM_OC, breakPoint_fcn, NULL, 6);
-	id = tim_GetTimer(TIM_OC, tim7_Srv, NULL, 7);
-
-	printf("%d\n", id);
-
-	tim_SetOutputLow(4);
-	tim_SetOutputLow(5);
-	tim_SetOutputLow(6);
 	
-	tim7_dBoundTimer(0xF0, 0xF0);
-	tim_SetOutputToggle(7);
-	tim_EnableInterrupts(7);
 	
-	printf("done");
-*/		
-	while(1);
+	while(1)
+	{
+		PTT_PTT7 = 1;
+		fsqrt(f);
+		PTT_PTT7 = 0;
+	}
 }
 
 

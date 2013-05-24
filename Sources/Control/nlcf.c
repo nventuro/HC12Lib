@@ -1,6 +1,9 @@
 /*
- * control.c
+ * nlcf.c
  * 
+ *
+ * Non linear complementary filter for attitude estimation
+ *
  * Referencias:
  * 	R. Mahony, T. Hamel, and J.-M. Pflimlin, “Non-linear complementary 
  * 	filters on the special orthogonal group,” IEEE Trans. Automatic Control,
@@ -204,36 +207,3 @@ void att_process(void)
 	}
 	PORTA_PA0 = 0;
 }
-
-#if 0
-int main(int argc, char *argv[])
-{
-	while (1) {
-		int n;
-		//float ax, ay, az, gx, gy, gz;
-		vec3 gyro;
-		vec3 acc;
-		quat q;
-
-		n = scanf("%hd %hd %hd %hd %hd %hd\n", &acc.x, &acc.y, &acc.z, 
-						&gyro.x, &gyro.y, &gyro.z);
-		
-		if (n != 6)
-			break;
-		
-#define F_TO_FRAC(f) ((f) / (1 << 15))
-
-		q = att_estim(gyro, acc);
-
-#ifdef PRINTQ
-		printf("%g, %g, %g, %g\n", 
-				FRAC2DBL(q.r),
-				FRAC2DBL(q.v.x),
-				FRAC2DBL(q.v.y),
-				FRAC2DBL(q.v.z));
-#endif //PRINTQ
-	}
-	
-	return 0;
-}
-#endif

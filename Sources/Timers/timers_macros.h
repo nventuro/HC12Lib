@@ -55,4 +55,13 @@ enum {EDGE_RISING = 1, EDGE_FALLING, EDGE_BOTH};
 
 #define tim_GetTimeElapsed(_overflowCnt, _timId, _lastEdge) (((u32)_overflowCnt * (u32)TIM_CNT_MAX + (u32)tim_GetValue(_timId)) - (u32)_lastEdge)
 
+
+#define tim7_LinkTimer(timerMask, pinValue)	do 	\
+{												\
+	OC7M |= timerMask;							\
+	OC7D = (pinValue & timerMask);				\
+}while(0);										
+
+#define tim7_UnlinkTimer(timerMask) (OC7M &= (~timerMask))
+
 #endif

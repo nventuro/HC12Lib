@@ -9,6 +9,8 @@
 typedef s16 frac;
 typedef s32 dfrac;
 
+frac fsqrt(frac b);
+
 #define FRAC_BIT (16)
 #define DFRAC_BIT (32)
 
