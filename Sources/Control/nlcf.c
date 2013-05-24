@@ -43,9 +43,14 @@
  * WMES_DIV = GYRO_SCALE / (kp * ACC_SCALE)
  */
 #define ACC_SCALE (16*9.81) /* = 156.96 = 16g m*s^2 , son 7.29 bits */
-#define Kp (1)
-#define WMES_DIV 0.2223 /* debiera ser 0.2223 o -2.16 bits */
-#define WMES_MUL 4 /* debiera ser 1/WMES_DIV, o 4.497 */
+
+//Estos valores le dan demasiada importancia al acelerometro
+//#define Kp (1)
+//#define WMES_DIV 0.2223 /* debiera ser 0.2223 o -2.16 bits */
+//#define WMES_MUL 4 /* debiera ser 1/WMES_DIV, o 4.497 */
+
+// esto es mejor
+#define WMES_DIV 2 /*para probar */
 
 /* Con el bias hay 2 grados de libertad
  *  (1) bias en sí, que depende de wmes.
@@ -87,8 +92,13 @@
  */
 /* para 1000Hz: ???*/
 #define Ki 0.3
-#define D_BIAS_SCALE 2
-#define BIAS_SCALE2 17 /* GYRO_SCALE / BIAS_SCALE */
+
+// esto tambien es muy violento
+//#define D_BIAS_SCALE 2
+#define D_BIAS_SCALE 8
+
+//#define BIAS_SCALE2 17 /* GYRO_SCALE / BIAS_SCALE */
+#define BIAS_SCALE2 0 /* para probar */
 
 #include "arith.h"
 
@@ -160,9 +170,9 @@ quat att_estim(vec3 gyro, vec3 accel)
 	
 	// d_q 
 	p.r = 0;
-	p.v = vec_Add(vec_Add(gyro, vec_Div(bias, BIAS_SCALE2)), vec_Mul(wmes, WMES_MUL));
-	//p.v = vec_Add(gyro, vec_Div(wmes, WMES_DIV));
-	//p.v = gyro;
+	//p.v = vec_Add(vec_Add(gyro, vec_Div(bias, BIAS_SCALE2)), vec_Mul(wmes, WMES_MUL));
+	//p.v = vec_Add(vec_Add(gyro, vec_Div(bias, BIAS_SCALE2)), vec_Div(wmes, WMES_DIV));
+	p.v = vec_Add(gyro, vec_Div(wmes, WMES_DIV));
 	
 	d_q = qmul2(q_lowres, p, D_Q_SCALE);
 	

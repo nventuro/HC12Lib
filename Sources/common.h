@@ -16,7 +16,7 @@ typedef long int s32;
 #define S16_MIN ((s16) 0x8000)
 
 #define S32_MAX ((s32) 0x7FFFFFFF)
-#define S32_MIN ((s32)0x80000000)
+#define S32_MIN ((s32) 0x80000000)
 
 typedef char bool;
 #define _FALSE 0
@@ -44,6 +44,9 @@ typedef union {
 #endif
 
 #define DIV_CEIL(a,b) (((a) % (b) == 0) ? ((a)/(b)) : (((a)/(b))+1))
+
+#define PIN_LOW 0
+#define PIN_HIGH 1
 
 #define BOOL(a) ((a) ? _TRUE:_FALSE)
 

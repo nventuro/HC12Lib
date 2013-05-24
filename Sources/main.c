@@ -10,7 +10,7 @@
 #include <limits.h>
 
 #include "arith.h"
-
+#include "motors.h"
 
 #define DMU_TIMER 0
 
@@ -49,7 +49,7 @@ void sample_ready(void)
 
 /* Main para control */
 
-
+/*
 void main (void)
 {
 	volatile s32 a = S32_MIN>>1;
@@ -73,7 +73,7 @@ void main (void)
 }
 
 
-
+*/
 #define OC_PERIOD ((u8)62500)
 #define TIM4_DUTY 14000
 #define TIM5_DUTY 5000
@@ -93,32 +93,25 @@ struct motorData{
 };
 
 
-/*
+
 int main(void)
 {
 	volatile frac f = FRAC_0_5;
-	DDRT = 0x80;
 	
 	PLL_SPEED(BUS_CLOCK_MHZ);
 	qs_init(0, MON12X_BR);
  
  	asm cli;
  	
+ 	mot_Init();
  	
- 	
- 	printf("%x, %x", fsqrt(FRAC_1), fsqrt(FRAC_0_5));
+	
+	
+	while(1);
 
-	
-	
-	while(1)
-	{
-		PTT_PTT7 = 1;
-		fsqrt(f);
-		PTT_PTT7 = 0;
-	}
 }
 
-*/
+
 
 
 /*
@@ -160,7 +153,6 @@ void Init (void)
 	PLL_SPEED(BUS_CLOCK_MHZ);
 
  	// Modules that don't require interrupts to be enabled
-	iic_FlushBuffer();
 	tim_Init();
 	rti_Init();	
 	qs_init(0, MON12X_BR);

@@ -16,6 +16,10 @@
 
 #define TIM_TICKS_TO_US(ticks) (DIV_CEIL(ticks*TIM_TICK_NS, 1000)) // Converts timer ticks to microseconds
 
+#define TIM_HNS_TO_TICKS(hns) (DIV_CEIL(((u32)hns)*100,TIM_TICK_NS)) // Converts hecto-nanoseconds (100 ns) to timer ticks
+
+#define TIM_TICKS_TO_HNS(ticks) (DIV_CEIL(ticks*TIM_TICK_NS, 100)) // Converts timer ticks to hecto-nanoseconds (100 ns)
+
 #define TIM_CNT_MAX ((u32)65536)
 
 struct tim_channelData
