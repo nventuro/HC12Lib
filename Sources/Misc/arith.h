@@ -153,6 +153,14 @@ static void dVec_DivInPlace(s32Vec3* This, s16 b)
 	return;
 }
 
+static dvec3 dvec_Add(dvec3 a, dvec3 b)
+{
+	dvec3 c = a;
+
+	dVec_dAddInPlace(&c, &b);
+
+	return c;
+}
 
 static vec3 vec_Add(vec3 a, vec3 b)
 {
@@ -190,10 +198,33 @@ static vec3 vec_Mul(vec3 a, int f)
 	return c;
 }
 
+static dvec3 vfmul2(vec3 a, frac f)
+{
+	dvec3 r;
+	
+	r.x = fmul2(a.x, f);
+	r.y = fmul2(a.y, f);
+	r.z = fmul2(a.z, f);
+	
+	return r;
+}
+
+static vec3 vec_clip_d(dvec3 a)
+{
+	vec3 r;
+#define _DFRAC_CLIP(k) (((k) >= DFRAC_minus1)? (((k) < DFRAC_1)? (k): FRAC_1) : FRAC_minus1)
+	r.x = _DFRAC_CLIP(a.x);
+	r.y = _DFRAC_CLIP(a.y);
+	r.z = _DFRAC_CLIP(a.z);
+	
+	return r;
+}
+
 #define vdiv vec_Div
 #define vsum vec_Add
 #define vsub vec_Sub
 #define vmul vec_Mul
+#define dvsum dvec_Add
 
 /* **** Quaternions ****/
 

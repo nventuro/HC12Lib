@@ -3,8 +3,8 @@
 
 #include "common.h"
 
-#define USONIC_ECHO_TIMER 5 // The timer module used for measuring the echo, connected to the device's echo pin.
-#define USONIC_TRIGG_TIMER 6 // The timer moduled used for generating the trigger pulse, connected to the device's trigger pin.
+#define USONIC_ECHO_TIMER 3 // The timer module used for measuring the echo, connected to the device's echo pin.
+#define USONIC_TRIGG_TIMER 2 // The timer moduled used for generating the trigger pulse, connected to the device's trigger pin.
 // If any of the timers is changed, usonic.c must be recompiled.
 
 #define USONIC_INVALID_MEAS (-1) // An invalid measurement, caused by a lack of echo.

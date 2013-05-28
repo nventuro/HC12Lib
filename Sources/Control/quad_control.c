@@ -5,7 +5,7 @@
 
 
 #include <limits.h>
-#include "arith.h"
+#include "quad_control.h"
 
 /* todo esto hay que meterlo en arith.h */
 /*
@@ -20,11 +20,12 @@ void xform4(frac (*M)[4][4], frac (*v)[4], frac (*res)[4])
 	}
 }
 */
-
+/*
 #define att_pre_err_div 1
 #define att_Kp_div 1
 #define att_Kd_div 25
-
+*/
+/*
 typedef struct { int min, med, max;} triplet;
 
 triplet int_Order3(int a, int b, int c)
@@ -108,8 +109,10 @@ int int_SumSat3(int a, int b, int c)
     else
         return int_SumSat2(ordVec.max, ordVec.med);
 }
+*/
 
-#define att_Kd_mul 1
+#define att_Kp FRAC_1
+#define att_Kd (FRAC_1/2)
 
 vec3 adv_att_control(quat setpoint, quat att)
 {
@@ -117,12 +120,13 @@ vec3 adv_att_control(quat setpoint, quat att)
 	static vec3 int_error = VEC0;
 
 	quat setp_c = qconj(setpoint);
-	vec3 t_error = vdiv(qmul(setp_c, att).v, att_pre_err_div);
+	vec3 t_error = qmul(setp_c, att).v;
 	vec3 torques;
 	/* ¿tenemos que hacer la derivada saturada?? */
-	torques = vsum(	vdiv(t_error, att_Kp_div),
-			vmul(	vsub(t_error, err_prev),
-				att_Kd_mul
+	torques = vec_clip_d(dvsum(	vfmul2(t_error, att_Kp),
+			vfmul2(	vsub(t_error, err_prev),
+				att_Kd
+				)
 			)
 		);
 	err_prev = t_error;
@@ -144,16 +148,35 @@ frac h_control(frac setpoint, frac h)
 	return thrust;
 }
 
-#define k_thrust_
-#define k_roll_div
-#define k_pitch_div
-#define k_yaw_div
-/*
-struct vec4 control_mixer(frac thrust, vec3 torque)
-{
-	1;
-}
+#define mix_thrust_shift 0
+#define	mix_roll_shift 2
+#define mix_pitch_shift 2
+#define mix_yaw_shift 3
 
+frac gammainv(frac T, frac t1, frac t2, frac t3)
+{
+	dfrac r = 0;
+	
+	r += (((dfrac)T) << mix_thrust_shift);
+	r += (((dfrac)t1) << mix_roll_shift);
+	r += (((dfrac)t2) << mix_pitch_shift);
+	r += (((dfrac)t3) << mix_yaw_shift);
+	
+	return fsqrt((r > 0)? ((r < FRAC_1)? r : FRAC_1) : 0);
+}				
+
+struct motorData control_mixer(frac thrust, vec3 torque)
+{
+	struct motorData output;
+	
+	output.speed[0] = gammainv(thrust, 0, torque.y, -torque.z);
+	output.speed[1] = gammainv(thrust, -torque.x, 0, torque.z);
+	output.speed[2] = gammainv(thrust, 0, -torque.y, -torque.z);
+	output.speed[3] = gammainv(thrust, torque.x, 0, torque.z);
+	
+	return output;
+}
+/*
 int main(int argc, char **argv)
 {
 

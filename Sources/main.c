@@ -8,11 +8,11 @@
  #include "pll.h"
 #include "quick_serial.h"
 #include <limits.h>
+#include "usonic.h"
 
-#include "arith.h"
-#include "motors.h"
+#include "quad_control.h"
 
-#define DMU_TIMER 0
+#define DMU_TIMER 1
 
 extern struct dmu_data_T dmu_data;
  
@@ -35,10 +35,11 @@ extern quat QEst;
 extern void att_process(void);
 extern bool have_to_output;
 
+extern bool readyToCalculate;
+extern struct motorData motData;
+
 void sample_ready(void)
 {
-//	printf ("che estoy en sample ready\n");
-
 	if (tim_GetEdge(0) == EDGE_RISING) {
 		tim_SetFallingEdge(0);
 		dmu_GetMeasurements(att_process);
@@ -52,7 +53,7 @@ void sample_ready(void)
 /*
 void main (void)
 {
-	volatile s32 a = S32_MIN>>1;
+	quat setpoint = {1,0,0,0};
 	Init ();	
 	
 	DDRA_DDRA0 = 1;
@@ -62,18 +63,35 @@ void main (void)
 	tim_SetRisingEdge(0);
 	tim_ClearFlag(0);
 	tim_EnableInterrupts(0);
-//	printf("%ld\n", DFRAC_1);
+
+	mot_Init();
+
+
 	while (1) {
-		if (have_to_output) {
-			have_to_output = 0;
-			printf("%d %d %d %d,", QEst.r, QEst.v.x, 
-					QEst.v.y, QEst.v.z);
+	
+		frac thrust = 0;
+		vec3 torque = {0,0,0};
+		
+		if (readyToCalculate){
+			asm sei;
+		
+			thrust = h_control(0, 0);
+			torque = adv_att_control(setpoint, QEst);
+	
+			motData = control_mixer(thrust, torque);
+			
+			
+			printf("%d\n", thrust);
+			
+			readyToCalculate = _FALSE;
+			
+			asm cli;
 		}
 	}
 }
-
-
 */
+
+
 #define OC_PERIOD ((u8)62500)
 #define TIM4_DUTY 14000
 #define TIM5_DUTY 5000
@@ -86,14 +104,7 @@ void breakPoint_fcn(void)
 	putchar('a');
 }
 
-
-struct motorData{
-
-	u16 dutyTime[4];
-};
-
-
-
+/*
 int main(void)
 {
 	volatile frac f = FRAC_0_5;
@@ -111,14 +122,15 @@ int main(void)
 
 }
 
+*/
+void measure (s32 measurement);
 
 
-
-/*
 // MAIN de testeo para DMU. 
  void main (void)
  {
 	int a;
+	char vel;
 
 	PLL_SPEED(BUS_CLOCK_MHZ);
 
@@ -127,11 +139,13 @@ int main(void)
 //	DDRA = 0x01;
 
 
+/*
+	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
+	tim_EnableInterrupts(DMU_TIMER);
+	tim_SetRisingEdge(DMU_TIMER); 
+*/
 
-//	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
-//	tim_EnableInterrupts(DMU_TIMER);
-//	tim_SetRisingEdge(DMU_TIMER); 
-
+	mot_Init();
 
 
 //	tim_GetTimer(TIM_IC, fifoOvf_Srv, NULL, DMU_TIMER);
@@ -141,12 +155,39 @@ int main(void)
 
 //	rti_Register(GetSamplesMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(
 
-	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
- 
+//	rti_Register(GetMeasurementsMask, NULL, RTI_MS_TO_TICKS(500), RTI_MS_TO_TICKS(500));
+//	usonic_Measure(measure);
  	while (1)
- 		;
+ 	{
+ 		vel = qs_getchar(0);
+	 	if(vel == 'u')
+	 	{
+	 		motData.speed[0] += 300;
+	 		motData.speed[1] += 300;
+	 		motData.speed[2] += 300;
+	 		motData.speed[3] += 300;
+	 	}
+	 	else if(vel == 'd')
+	 	{
+	 		motData.speed[0] -= 300;
+	 		motData.speed[1] -= 300;
+	 		motData.speed[2] -= 300;
+	 		motData.speed[3] -= 300;
+	 	}
+
+ 	}
+ 		
 }
-*/
+
+void measure (s32 measurement)
+{
+	if (measurement != USONIC_INVALID_MEAS)
+		printf("Distance: %ld cm.\n",measurement);
+	else
+		printf("Invalid measurement.\n");
+		
+	 usonic_Measure(measure);
+}
 
 void Init (void)
 {
@@ -161,7 +202,8 @@ void Init (void)
  
  	// Modules that do require interrupts to be enabled
 	iic_Init();
-	dmu_Init();
+//	dmu_Init();
+//	usonic_Init();
 
 	printf("Init done\n");		
 
@@ -190,12 +232,16 @@ void PrintMeas (s32 measurement)
 
 void dataReady_Srv(void)
 {
-	static u8 count=0;
+	static u16 count=0;
 
 	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING)
 	{
-		tim_SetFallingEdge(DMU_TIMER);	
-		dmu_GetMeasurements(dmu_PrintFormattedMeasurements_WO);
+		tim_SetFallingEdge(DMU_TIMER);
+		if (++count == 500)
+		{
+			dmu_GetMeasurements(dmu_PrintFormattedMeasurements);
+			count = 0;
+		}
 	}
 	else 
 		tim_SetRisingEdge(DMU_TIMER);

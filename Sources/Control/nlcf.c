@@ -247,17 +247,7 @@ void att_process(void)
 
 	PORTA_PA0 = 1;
 	{
-		vec3 acc, gy;
-
-		acc.x = dmu_measurements.accel.x;
-		acc.y = dmu_measurements.accel.y;
-		acc.z =	dmu_measurements.accel.z;
-
-		gy.x = dmu_measurements.gyro.x;
-		gy.y = dmu_measurements.gyro.y;
-		gy.z = dmu_measurements.gyro.z;
-
-		QEst = att_estim(gy, acc);
+		QEst = att_estim(dmu_measurements.gyro, dmu_measurements.accel);
 		if (++ccount == 20) {
 			ccount = 0;
 			have_to_output = 1;

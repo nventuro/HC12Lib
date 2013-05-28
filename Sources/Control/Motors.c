@@ -1,7 +1,7 @@
 #include "timers.h"
-#include "arith.h"
 #include "error.h"
 #include "common.h"
+#include "motors.h"
 #include <stdio.h>
 
 #define MOTOR_SLAVE1_OC 4
@@ -25,19 +25,20 @@
 #define MOT_FRAC_TO_ESC_HNS(_frac) (10000 + (DIV_CEIL(((u32)_frac)*10000,32767)))
 #define MOT_FRAC_TO_TIM_TICKS(_frac) TIM_HNS_TO_TICKS(MOT_FRAC_TO_ESC_HNS(_frac))
 
-struct motorData{
-
-	frac duty[4];
-};
 
 void mot_SlaveErr(void);
 void mot_MasterSrv(void);
 
 extern struct motorData control(void);
 
+struct motorData motData = { {0,0,0,0} };
+bool readyToCalculate = _FALSE;
+
+
 // Macros to solve links in few assembly instructions.
 #define mot_Link() tim7_LinkTimer(MOT_LINK_MASK, MOT_LINK_MASK)
 #define mot_Unlink() tim7_UnlinkTimer(MOT_LINK_MASK)
+
 
 void mot_Init(void) 
 {
@@ -68,23 +69,19 @@ void mot_Init(void)
 void mot_MasterSrv(void)
 {
 	static u16 latchedTime;
-	static struct motorData motData = { {FRAC_1,8191,16383,24575} };
-
-	volatile u16 a = MOT_CONSTANT_TERM_TICKS;
-	volatile u16 b = MOT_SLOPE_TICKS;
 	
 	if (MOTOR_MASTER_PIN == PIN_HIGH)
 	{  
 		latchedTime = tim_GetValue(MOTOR_MASTER_OC);
 
-		tim_SetValue(MOTOR_MASTER_OC, latchedTime + fmul(motData.duty[0], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
-		tim_SetValue(MOTOR_SLAVE1_OC, latchedTime + fmul(motData.duty[1], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
-		tim_SetValue(MOTOR_SLAVE2_OC, latchedTime + fmul(motData.duty[2], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
-		tim_SetValue(MOTOR_SLAVE3_OC, latchedTime + fmul(motData.duty[3], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
+		tim_SetValue(MOTOR_MASTER_OC, latchedTime + fmul(motData.speed[0], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
+		tim_SetValue(MOTOR_SLAVE1_OC, latchedTime + fmul(motData.speed[1], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
+		tim_SetValue(MOTOR_SLAVE2_OC, latchedTime + fmul(motData.speed[2], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
+		tim_SetValue(MOTOR_SLAVE3_OC, latchedTime + fmul(motData.speed[3], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
 		
 		mot_Unlink();
 		
-	//	motData = control();
+		readyToCalculate = _TRUE;
 	}
 	else
 	{
