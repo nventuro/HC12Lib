@@ -1,23 +1,51 @@
+/* common.h
+ *
+ * Common Macros
+ *  */
+
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#ifdef __unix__
+#include <stdint.h>
+#endif
+
 #define BUS_CLOCK_MHZ 50
 
-// Typedefs
+/*  Typedefs */
 
+/* 8-bit */
 typedef unsigned char u8;
 typedef char s8;
+
+
+#ifdef __unix__
+
+#define S16_MAX INT16_MAX
+#define S16_MIN INT16_MIN
+typedef uint16_t u16;
+typedef int16_t s16;
+
+#define S32_MAX INT32_MAX
+#define S32_MIN INT32_MIN
+typedef uint32_t u32;
+typedef int32_t s32;
+
+#elif (defined __HC12__)
+
+#define S16_MAX ((s16)((((u16)1)<<16)-1))
+#define S16_MIN ((s16)(((u16)1)<<16))
 typedef unsigned int u16;
 typedef int s16;
+
+#define S32_MAX ((s32)((((u32)1)<<31)-1))
+#define S32_MIN ((s32)(((u32)1)<<31))
 typedef unsigned long int u32;
 typedef long int s32;
 
-#define S16_MAX ((s16) 0x7FFF)
-#define S16_MIN ((s16) 0x8000)
+#endif /*__unix__*/
 
-#define S32_MAX ((s32) 0x7FFFFFFF)
-#define S32_MIN ((s32) 0x80000000)
-
+/* Booloean */
 typedef char bool;
 #define _FALSE 0
 #define _TRUE 1
@@ -36,8 +64,7 @@ typedef union {
 	};
 } bit;
 
-
-// Macros
+/* Macros */
 
 #ifndef NULL
 #define NULL ((void*)0)
@@ -52,8 +79,8 @@ typedef union {
 
 #define BIT(n) (1<<(n))
 
-extern u8 firstBitsMem[]; // firtBitsMem[0] = 00000001, firstBitsMem[3] = 00001111
-extern u8 lastBitsMem[]; // lastBitsMem[0] = 10000000, lastBitsMem[3] = 11110000
+extern u8 firstBitsMem[]; /* firtBitsMem[0] = 00000001, firstBitsMem[3] = 00001111 */
+extern u8 lastBitsMem[]; /* lastBitsMem[0] = 10000000, lastBitsMem[3] = 11110000 */
 
 #define firstBits(n) ((n > 7) ? 0xFF : ((n < 0) ? 0 : firstBitsMem[n]))
 #define lastBits(n) ((n > 7) ? 0xFF : ((n < 0) ? 0 : lastBitsMem[n]))
@@ -66,20 +93,20 @@ extern u8 lastBitsMem[]; // lastBitsMem[0] = 10000000, lastBitsMem[3] = 11110000
 
 #define DDR_OUT 0xFF
 
-
-// Monitor IO
+/* Monitor IO */
 
 void TERMIO_PutChar(char ch);
 char TERMIO_GetChar(void);
 
 
-// Interrupt inhibiting
+/* Interrupt inhibiting */
 
-bool SafeSei(void); 
-// Inhibits interrupts and returns the value of the I bit before performing this action. To be used in conjunction with SafeCli().
+bool SafeSei(void);
+/* Inhibits interrupts and returns the value of the I bit before performing
+ * this action. To be used in conjunction with SafeCli(). */
 
 #define SafeCli(interruptsWereEnabled) do{if (interruptsWereEnabled) {_asm cli;}} while(0)
-// Disinhibits interrupts if they were previously uninhibited. This function receives the value returned by SafeSei();
-
+/* Disinhibits interrupts if they were previously uninhibited. This function
+ * receives the value returned by SafeSei(); */
 
 #endif

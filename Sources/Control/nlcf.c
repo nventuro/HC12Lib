@@ -1,20 +1,24 @@
 /*
  * nlcf.c
- * 
+ *
  *
  * Non linear complementary filter for attitude estimation
  *
  * Referencias:
- * 	R. Mahony, T. Hamel, and J.-M. Pflimlin, ‚ÄúNon-linear complementary 
- * 	filters on the special orthogonal group,‚Äù IEEE Trans. Automatic Control,
- * 	vol. 53, no. 5, pp. 1203‚Äì1218, June 2008. 
+ * 	R. Mahony, T. Hamel, and J.-M. Pflimlin, ìNon-linear complementary
+ * 	filters on the special orthogonal group,î IEEE Trans. Automatic Control,
+ * 	vol. 53, no. 5, pp. 1203ñ1218, June 2008.
  *
  */
+
+#ifdef __HC12__
 #include "derivative.h"
+#include "dmu.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include "dmu.h"
 
 /* El samplerate es 1000  Hz */
 
@@ -32,7 +36,7 @@
 //#define D_Q_SCALE 3 /*en realidad es 2.864788976, o 1.518 */
 #define D_Q_SCALE 57
 
-/* esto tambi√©n va a mano
+/* esto tambiÈn va a mano
  *	machine_wmes = wmes / ACC_SCALE
  * wmes va sumado al gyro, por lo tanto:
  * 	v = omega + kp*wmes
@@ -44,60 +48,63 @@
  */
 #define ACC_SCALE (16*9.81) /* = 156.96 = 16g m*s^2 , son 7.29 bits */
 
-//Estos valores le dan demasiada importancia al acelerometro
-//#define Kp (1)
-//#define WMES_DIV 0.2223 /* debiera ser 0.2223 o -2.16 bits */
-//#define WMES_MUL 4 /* debiera ser 1/WMES_DIV, o 4.497 */
+/*
+Estos valores le dan demasiada importancia al acelerometro
+#define Kp (1)
+#define WMES_DIV 0.2223 // deberÌa ser 0.2223 o -2.16 bits
+#define WMES_MUL 4 // deberia ser 1/WMES_DIV, o 4.497
+*/
 
-// esto es mejor
+/*esto es mejor */
 #define WMES_DIV 2 /*para probar */
 
 /* Con el bias hay 2 grados de libertad
- *  (1) bias en s√≠, que depende de wmes.
+ *  (1) bias en sÌ, que depende de wmes.
  *  (2) bias con respecto a omega
- * La clave est√° en saber en que rango puede estar bias para aprovechar todo
- * el rango din√°mico (1), y a partir de eso determinar (2)
- * MPU-6000 Zero rate output (ZRO): +- 20 ¬∞/s = 0.35 rad / s. Empirico: 0.1 max
- * 
+ * La clave est· en saber en que rango puede estar bias para aprovechar todo
+ * el rango din·mico (1), y a partir de eso determinar (2)
+ * MPU-6000 Zero rate output (ZRO): +- 20 ∞/s = 0.35 rad / s. Empirico: 0.1 max
+ *
  * machine_bias = bias / BIAS_SCALE
- * 
+ *
  * (1)
  * 	bias[n+1] = bias[n] + Ki * wmes / fs
- * 	machine_bias[n+1] = bias[n+1] / BIAS_SCALE 
+ * 	machine_bias[n+1] = bias[n+1] / BIAS_SCALE
  * 			= bias[n]/BIAS_SCALE + Ki * wmes / (BIAS_SCALE * fs)
  * 				= machine_bias + machine_wmes / D_BIAS_SCALE
- * machine_wmes = 
+ * machine_wmes =
  * 	=>
  * 	Ki*wmes/(BIAS_SCALE*fs) = machine_wmes / D_BIAS_SCALE
  * 	Ki*(machine_wmes * ACC_SCALE)/(BIAS_SCALE*fs) = machine_wmes / D_BIAS_SCALE
  * 	D_BIAS_SCALE = BIAS_SCALE*fs / (ACC_SCALE * Ki)
- * 
+ *
  * (2)
  *	omega_corrected = omega + bias
  * 	machine_omega_corrected = omega_corrected / GYRO_SCALE
  * 	omega/GYRO_SCALE + bias/GYRO_SCALE = machine_omega + machine_bias / BIAS_SCALE2
  * 	machine_bias * BIAS_SCALE / GYRO_SCALE = machine_bias / BIAS_SCALE2;
  * 		=> BIAS_SCALE2 = GYRO_SCALE / BIAS_SCALE
- * 
- * Soluci√≥n 1: BIAS_SCALE = ZRO (empirico) = 0.1
+ *
+ * SoluciÛn 1: BIAS_SCALE = ZRO (empirico) = 0.1
  *		BIAS_SCALE2 = 349
  * 		D_BIAS_SCALE = 5/(156*0.3) = 0.106
  * 	Problema: en una multiplico y en la otra divido
  * Solucion 2: BIAS_SCALE = 2
  * 		BIAS_SCALE2 = 17
  * 		D_BIAS_SCALE = 2
- * 
- * Nota: El bias se suma para no tener que escribir una funci√≥n de sustraccion
+ *
+ * Nota: El bias se suma para no tener que escribir una funciÛn de sustraccion
  * de vectores.
  */
 /* para 1000Hz: ???*/
 #define Ki 0.3
 
-// esto tambien es muy violento
-//#define D_BIAS_SCALE 2
+/* esto tambien es muy violento
+#define D_BIAS_SCALE 2
+*/
 #define D_BIAS_SCALE 8
 
-//#define BIAS_SCALE2 17 /* GYRO_SCALE / BIAS_SCALE */
+/*#define BIAS_SCALE2 17*/ /* GYRO_SCALE / BIAS_SCALE */
 #define BIAS_SCALE2 0 /* para probar */
 
 #include "arith.h"
@@ -110,12 +117,12 @@ static OPT_INLINE vec3 z_dir(quat q)
 {
 	vec3 zd;
 	frac tmp;
-	
+
 	zd.x = 2*(-fmul(q.v.y, q.r) + fmul(q.v.z, q.v.x));
 	zd.y = 2*(fmul(q.v.z, q.v.y) + fmul(q.v.x, q.r));
 	tmp = -fmul(q.v.x, q.v.x) - fmul(q.v.y, q.v.y);
 	zd.z = FRAC_1 + tmp + tmp;
-	
+
 	return zd;
 }
 
@@ -123,26 +130,25 @@ static OPT_INLINE vec3 z_dir(quat q)
 static OPT_INLINE vec3 verror(vec3 x, vec3 y)
 {
 	vec3 zd;
-	
+
 	zd.x = fmul(y.z, x.y) - fmul(x.z, y.y);
 	zd.y = fmul(y.x, x.z) - fmul(x.x, y.z);
 	zd.z = fmul(y.y, x.x) - fmul(x.y, y.x);
-	
+
 	return zd;
 }
 
-#define FRAC2DBL(n) (((double)(n))/(-(double)FRAC_minus1))
 quat att_estim(vec3 gyro, vec3 accel)
 {
-	static dquat q = {DFRAC_1, {0, 0, 0}}; // UNIT_DQ;
+	static dquat q = UNIT_DQ;
 	static vec3 bias = {0, 0, 0};
 	vec3 z_estim, wmes, d_bias;
 	quat p;
 	quat q_lowres = qtrunc(q);
 	dquat d_q, correction;
 	frac err;
-	
-	// wmes, bias 
+
+	/* wmes, bias */
 	z_estim = z_dir(q_lowres);
 
 #ifdef PRINTZ
@@ -150,7 +156,7 @@ quat att_estim(vec3 gyro, vec3 accel)
 	printf("%g %g %g\n",	FRAC2DBL(z_estim.x),
 				FRAC2DBL(z_estim.y),
 				FRAC2DBL(z_estim.z));
-#endif //PRINTZ
+#endif /* PRINTZ */
 
 	wmes = verror(accel, z_estim);
 
@@ -158,62 +164,105 @@ quat att_estim(vec3 gyro, vec3 accel)
 	printf("%g %g %g\n",	FRAC2DBL(wmes.x),
 				FRAC2DBL(wmes.y),
 				FRAC2DBL(wmes.z));
-#endif // PRINTW
-	
-	d_bias = vec_Div(wmes, D_BIAS_SCALE);
+#endif /* PRINTW */
+
+	d_bias = vdiv(wmes, D_BIAS_SCALE);
 
 #ifdef PRINTB
 	printf("%g %g %g\n",	FRAC2DBL(bias.x),
 				FRAC2DBL(bias.y),
 				FRAC2DBL(bias.z));
-#endif //PRINTB
-	
-	// d_q 
+#endif /* PRINTB */
+
+	/* d_q */
 	p.r = 0;
-	//p.v = vec_Add(vec_Add(gyro, vec_Div(bias, BIAS_SCALE2)), vec_Mul(wmes, WMES_MUL));
-	//p.v = vec_Add(vec_Add(gyro, vec_Div(bias, BIAS_SCALE2)), vec_Div(wmes, WMES_DIV));
-	p.v = vec_Add(gyro, vec_Div(wmes, WMES_DIV));
-	
+	/* la correccion de bias se estaba portando mal */
+	/*p.v = vsum(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vmul(wmes, WMES_MUL));
+	p.v = vsum(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vdiv(wmes, WMES_DIV));
+	*/
+	p.v = vsum(gyro, vdiv(wmes, WMES_DIV));
+
 	d_q = qmul2(q_lowres, p, D_Q_SCALE);
-	
-	// bias, q 
-	bias = vec_Add(bias, d_bias);
+
+	/* bias, q */
+	bias = vsum(bias, d_bias);
 	q = dqsum(q, d_q);
-	
-	// renormalizaci√≥n 
+
+	/* renormalizaciÛn */
 	err = q_normerror(qtrunc(q));
 	correction = qscale2(q_lowres, err);
 	q = dqsum(q, correction);
-	// q = dqsum(q, d_q);
-	
+
 	return qtrunc(q);
 }
 
+#define CAL_ITERATIONS 12
+
+struct qpair {
+	quat p0, p1;
+};
+
+#define Q_COMPONENTS(q) (q).r, (q).v.x, (q).v.y, (q).v.z
+
+struct qpair calibrate(quat mes0, quat mes1)
+{
+	const quat pos0 = UNIT_Q, pos1 = {23170, {16384, 16384, 0}};
+	quat k0 = UNIT_Q, k1 = UNIT_Q;
+	dquat p0, p1;
+	struct qpair r;
+	int i;
+
+	for (i = 0; i < CAL_ITERATIONS; i++) {
+		p0 = qmul2(qconj(qmul(k0, pos0)), mes0, 1);
+		p1 = qmul2(qconj(qmul(k1, pos1)), mes1, 1);
+
+		p0 = dqrenorm(p0);
+		p1 = dqrenorm(p1);
+#ifdef PRINT_CAL_STEPS
+		{
+			printf("%d %d %d %d, ", Q_COMPONENTS(qtrunc(p0)));
+			printf("%d %d %d %d\n", Q_COMPONENTS(qtrunc(p1)));
+		}
+#endif /*PRINT_CAL_STEPS*/
+		k0 = qmul(mes0, qconj(qmul(pos0, qtrunc(p1))));
+		k1 = qmul(mes1, qconj(qmul(pos1, qtrunc(p0))));
+
+		k0 = qdecompose(k0, AXIS_Z);
+		k1 = qdecompose(k1, AXIS_Z);
+	}
+
+	r.p0 = qtrunc(p0);
+	r.p1 = qtrunc(p1);
+
+	return r;
+}
+
+#ifdef __HC12__
 quat QEst;
 bool have_to_output = 0;
 
 void att_process(void)
 {
 	static int ccount = 0;
-	
+
 	PORTA_PA0 = 1;
 	{
 		vec3 acc, gy;
-	
+
 		acc.x = dmu_measurements.accel.x;
 		acc.y = dmu_measurements.accel.y;
 		acc.z =	dmu_measurements.accel.z;
-	
+
 		gy.x = dmu_measurements.gyro.x;
 		gy.y = dmu_measurements.gyro.y;
 		gy.z = dmu_measurements.gyro.z;
-	
+
 		QEst = att_estim(gy, acc);
 		if (++ccount == 20) {
-			ccount = 0;	
+			ccount = 0;
 			have_to_output = 1;
 		}
-		//printf("%d %d %d %d,", QEst.r, QEst.v.x, QEst.v.y, QEst.v.z);	
 	}
 	PORTA_PA0 = 0;
 }
+#endif

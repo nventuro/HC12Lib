@@ -1,22 +1,19 @@
 /*
  * arith.c
- * 
+ *
  * Aritmetica Fraccionaria (punto fijo)
  */
 
 #include "arith.h"
 
-#define FRAC2DBL(n) (((double)(n))/(-(double)FRAC_minus1))
-#define F_TO_FRAC(f) ((frac)(-f*FRAC_minus1))
-
 #define TBL_SZ_BITS 4
 #define TBL_SZ (1<<TBL_SZ_BITS)
-#define TBL_MASK ((unsigned short)(~((0xFFFF) >> (TBL_SZ_BITS+1))))
+#define TBL_MASK ((u16)(~((0xFFFF) >> (TBL_SZ_BITS+1))))
 #define F_TO_TBL(x, tbl) ((tbl)[((x)&TBL_MASK) >> (16 - TBL_SZ_BITS-1)])
 #define F_TO_INVTBL(x) F_TO_TBL(x, invtbl)
 #define F_TO_STARTTBL(x) F_TO_TBL(x, starttbl)
 
-frac fsqrt(frac b) /*, int iters)*/
+frac fsqrt(frac b)
 {
 	const int iters = 2;
 	static const int invtbl[TBL_SZ] = {
@@ -28,10 +25,10 @@ frac fsqrt(frac b) /*, int iters)*/
 	};
 	frac x = F_TO_STARTTBL(b);
 	int i;
-	
+
 	for (i = 0; i < iters; i++) {
 		x = (b - fmul(x,x))*F_TO_INVTBL(x)/2 + x;
 	}
-	
+
 	return x;
 }
