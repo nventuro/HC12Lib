@@ -11,6 +11,7 @@
 #include "usonic.h"
 
 #include "quad_control.h"
+#include "nlcf.h"
 
 #define DMU_TIMER 1
 
@@ -40,56 +41,119 @@ extern struct motorData motData;
 
 void sample_ready(void)
 {
-	if (tim_GetEdge(0) == EDGE_RISING) {
-		tim_SetFallingEdge(0);
+	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING) {
+		tim_SetFallingEdge(DMU_TIMER);
 		dmu_GetMeasurements(att_process);
 	} else {
-		tim_SetRisingEdge(0);
+		tim_SetRisingEdge(DMU_TIMER);
 	}
 }
 
 /* Main para control */
 
-/*
+#define Q_COMPONENTS(q) (q).r, (q).v.x, (q).v.y, (q).v.z
+
 void main (void)
 {
-	quat setpoint = {1,0,0,0};
+	u8 userInput;
+	u8 measurementCount = 0;
+
+	u16 torqueCount = 0;
+	quat setpoint = {FRAC_1,0,0,0};
 	Init ();	
-	
 	DDRA_DDRA0 = 1;
 	DDRA_DDRA1 = 1;
 	
-	tim_GetTimer(TIM_IC, sample_ready, NULL, 0);
-	tim_SetRisingEdge(0);
-	tim_ClearFlag(0);
-	tim_EnableInterrupts(0);
+	tim_GetTimer(TIM_IC, sample_ready, NULL, DMU_TIMER);
+	tim_SetRisingEdge(DMU_TIMER);
+	tim_ClearFlag(DMU_TIMER);
+	tim_EnableInterrupts(DMU_TIMER);
 
-	mot_Init();
+
+	printf("Press 'm' to calibrate\n");
+
+	while (measurementCount < 2)
+	{
+		struct cal_output calibrationOutput;
+		struct qpair calibration;
+		
+		if ((userInput = qs_getchar(0)) != 'm')
+			continue;
+		
+		if (measurementCount == 0)
+		{	asm sei;
+			calibration.p0 = QEst;
+			asm cli;
+			printf("First measurement done\n");
+		}
+		else if (measurementCount == 1)
+		{
+			asm sei;
+			calibration.p1 = QEst;
+			asm cli;
+			printf("Second measurement done\n");
+		}
+		measurementCount++;
+		
+		if (measurementCount == 2)
+		{
+			calibrationOutput = att_calibrate(calibration.p0, calibration.p1);			
+			printf("Cal output: %d\n", calibrationOutput.quality);
+			printf("Correction: %d %d %d %d\n", calibrationOutput.correction.r, Q_COMPONENTS(calibrationOutput.correction));
+			
+			if (calibrationOutput.quality == CAL_BAD)
+			{
+				measurementCount = 0;	
+				printf("Calibrate again\n");
+			}
+
+			att_apply_correction(calibrationOutput);
+		}
+	}
+
+
+//	mot_Init();
 
 
 	while (1) {
 	
+	#define Q_COMPONENTS(q) (q).r, (q).v.x, (q).v.y, (q).v.z
+
+		if (have_to_output)
+		{
+			printf("%d %d %d %d,", Q_COMPONENTS(QEst));
+			have_to_output = 0;
+		}
+	
+	/*
 		frac thrust = 0;
 		vec3 torque = {0,0,0};
 		
 		if (readyToCalculate){
+			quat QEstAux;
+			
 			asm sei;
-		
-			thrust = h_control(0, 0);
-			torque = adv_att_control(setpoint, QEst);
-	
-			motData = control_mixer(thrust, torque);
-			
-			
-			printf("%d\n", thrust);
-			
 			readyToCalculate = _FALSE;
-			
+			QEstAux = QEst;
 			asm cli;
+			
+			thrust = h_control(10000, 0);
+			torque = adv_att_control(setpoint, QEstAux);
+			
+			if (torqueCount++ >= 10)
+			{
+				torqueCount = 0;
+				printf(">%d %d %d %d\n", Q_COMPONENTS(QEstAux));
+				printf("%d %d %d\n", torque.x, torque.y, torque.z);
+			}
+			
+			motData = control_mixer(thrust, torque);
+		
 		}
+	*/
 	}
 }
-*/
+
 
 
 #define OC_PERIOD ((u8)62500)
@@ -98,11 +162,6 @@ void main (void)
 #define TIM6_DUTY 10000
 #define TIM7_DUTY 9375
 
-
-void breakPoint_fcn(void)
-{
-	putchar('a');
-}
 
 /*
 int main(void)
@@ -125,7 +184,7 @@ int main(void)
 */
 void measure (s32 measurement);
 
-
+/*
 // MAIN de testeo para DMU. 
  void main (void)
  {
@@ -139,13 +198,13 @@ void measure (s32 measurement);
 //	DDRA = 0x01;
 
 
-/*
+
 	tim_GetTimer(TIM_IC, dataReady_Srv, NULL, DMU_TIMER);
 	tim_EnableInterrupts(DMU_TIMER);
 	tim_SetRisingEdge(DMU_TIMER); 
-*/
 
-	mot_Init();
+
+//	mot_Init();
 
 
 //	tim_GetTimer(TIM_IC, fifoOvf_Srv, NULL, DMU_TIMER);
@@ -178,7 +237,7 @@ void measure (s32 measurement);
  	}
  		
 }
-
+*/
 void measure (s32 measurement)
 {
 	if (measurement != USONIC_INVALID_MEAS)
@@ -195,14 +254,14 @@ void Init (void)
 
  	// Modules that don't require interrupts to be enabled
 	tim_Init();
-	rti_Init();	
+//	rti_Init();	
 	qs_init(0, MON12X_BR);
  
  	asm cli;
  
  	// Modules that do require interrupts to be enabled
 	iic_Init();
-//	dmu_Init();
+	dmu_Init();
 //	usonic_Init();
 
 	printf("Init done\n");		
@@ -237,7 +296,7 @@ void dataReady_Srv(void)
 	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING)
 	{
 		tim_SetFallingEdge(DMU_TIMER);
-		if (++count == 500)
+		if (++count == 100)
 		{
 			dmu_GetMeasurements(dmu_PrintFormattedMeasurements);
 			count = 0;
@@ -272,7 +331,7 @@ void fifoOvf_Srv(void)
 }
 
 
-
+/*
 void icFcn()
 {
 	u32 time;
@@ -286,3 +345,4 @@ void icFcn()
  
  	return;
  }
+*/

@@ -123,6 +123,7 @@ vec3 adv_att_control(quat setpoint, quat att)
 	vec3 t_error = qmul(setp_c, att).v;
 	vec3 torques;
 	/* ¿tenemos que hacer la derivada saturada?? */
+	
 	torques = vec_clip_d(dvsum(	vfmul2(t_error, att_Kp),
 			vfmul2(	vsub(t_error, err_prev),
 				att_Kd
@@ -130,7 +131,10 @@ vec3 adv_att_control(quat setpoint, quat att)
 			)
 		);
 	err_prev = t_error;
-
+	
+	//torques = vec_clip_d(vfmul2(t_error, att_Kp));
+	
+	torques.z = 0;
 	return torques;
 }
 

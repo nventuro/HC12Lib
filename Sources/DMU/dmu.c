@@ -127,6 +127,7 @@ void dmu_Init()
 
 void dmu_StagesInit()
 {	
+
 	switch (dmu_data.stage)
 	{	
 	case 0:

@@ -212,7 +212,7 @@ static dvec3 vfmul2(vec3 a, frac f)
 static vec3 vec_clip_d(dvec3 a)
 {
 	vec3 r;
-#define _DFRAC_CLIP(k) (((k) >= DFRAC_minus1)? (((k) < DFRAC_1)? (k): FRAC_1) : FRAC_minus1)
+#define _DFRAC_CLIP(k) (((k) >= DFRAC_minus1)? (((k) < DFRAC_1)? dtrunc(k): FRAC_1) : FRAC_minus1)
 	r.x = _DFRAC_CLIP(a.x);
 	r.y = _DFRAC_CLIP(a.y);
 	r.z = _DFRAC_CLIP(a.z);

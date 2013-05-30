@@ -33,8 +33,10 @@ typedef int32_t s32;
 
 #elif (defined __HC12__)
 
-#define S16_MAX ((s16)((((u16)1)<<16)-1))
-#define S16_MIN ((s16)(((u16)1)<<16))
+#warning "HC12 man!"
+
+#define S16_MAX ((s16)((((u16)1)<<15)-1))
+#define S16_MIN ((s16)(((u16)1)<<15))
 typedef unsigned int u16;
 typedef int s16;
 
@@ -42,6 +44,10 @@ typedef int s16;
 #define S32_MIN ((s32)(((u32)1)<<31))
 typedef unsigned long int u32;
 typedef long int s32;
+
+#else
+
+#error "Cannot define integer types"
 
 #endif /*__unix__*/
 

@@ -14,11 +14,13 @@
 #ifdef __HC12__
 #include "derivative.h"
 #include "dmu.h"
+#include "quick_serial.h"
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include "nlcf.h"
 
 /* El samplerate es 1000  Hz */
 
@@ -113,6 +115,8 @@ Estos valores le dan demasiada importancia al acelerometro
 
 #define OPT_INLINE /*nada */
 
+static quat Q_Correction = UNIT_Q;
+
 static OPT_INLINE vec3 z_dir(quat q)
 {
 	vec3 zd;
@@ -127,7 +131,7 @@ static OPT_INLINE vec3 z_dir(quat q)
 }
 
 
-static OPT_INLINE vec3 verror(vec3 x, vec3 y)
+static OPT_INLINE vec3 verror(vec3 y, vec3 x)
 {
 	vec3 zd;
 
@@ -193,18 +197,14 @@ quat att_estim(vec3 gyro, vec3 accel)
 	correction = qscale2(q_lowres, err);
 	q = dqsum(q, correction);
 
-	return qtrunc(q);
+	return qmul(qtrunc(q), Q_Correction);
 }
 
 #define CAL_ITERATIONS 12
 
-struct qpair {
-	quat p0, p1;
-};
-
 #define Q_COMPONENTS(q) (q).r, (q).v.x, (q).v.y, (q).v.z
 
-struct qpair calibrate(quat mes0, quat mes1)
+struct qpair _calibrate(quat mes0, quat mes1)
 {
 	const quat pos0 = UNIT_Q, pos1 = {23170, {16384, 16384, 0}};
 	quat k0 = UNIT_Q, k1 = UNIT_Q;
@@ -236,6 +236,39 @@ struct qpair calibrate(quat mes0, quat mes1)
 
 	return r;
 }
+
+#define ERR_1DG ((dfrac)1073700939)
+#define ERR_2DG ((dfrac)1073578288)
+#define ERR_5DG ((dfrac)1072719860)
+
+struct cal_output att_calibrate(quat mes0, quat mes1)
+{
+	struct qpair p;
+	dfrac err;
+	struct cal_output r;
+	
+	p = _calibrate(mes0, mes1);
+	err = qmul2(p.p0, qconj(p.p1), 1).r;
+	
+	r.correction = qconj(p.p0);
+	
+	if (err > ERR_1DG)
+		r.quality = CAL_EXCELLENT;
+	else if (err > ERR_2DG)
+		r.quality = CAL_GOOD;
+	else if (err > ERR_5DG)
+		r.quality = CAL_UGLY;
+	else
+		r.quality = CAL_BAD;
+	
+	return r;
+}
+
+void att_apply_correction(struct cal_output c)
+{
+	Q_Correction = c.correction;
+}
+
 
 #ifdef __HC12__
 quat QEst;
