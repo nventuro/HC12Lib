@@ -104,10 +104,10 @@ Estos valores le dan demasiada importancia al acelerometro
 /* esto tambien es muy violento
 #define D_BIAS_SCALE 2
 */
-#define D_BIAS_SCALE 8
+#define D_BIAS_SCALE 32
 
-/*#define BIAS_SCALE2 17*/ /* GYRO_SCALE / BIAS_SCALE */
-#define BIAS_SCALE2 0 /* para probar */
+#define BIAS_SCALE2 2 /* GYRO_SCALE / BIAS_SCALE */
+//#define BIAS_SCALE2 0 /* para probar */
 
 #include "arith.h"
 
@@ -141,7 +141,7 @@ static OPT_INLINE vec3 verror(vec3 y, vec3 x)
 
 	return zd;
 }
-
+//vec3 Bias;
 quat att_estim(vec3 gyro, vec3 accel)
 {
 	static dquat q = UNIT_DQ;
@@ -181,17 +181,17 @@ quat att_estim(vec3 gyro, vec3 accel)
 	/* d_q */
 	p.r = 0;
 	/* la correccion de bias se estaba portando mal */
-	/*p.v = vsum(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vmul(wmes, WMES_MUL));
-	p.v = vsum(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vdiv(wmes, WMES_DIV));
-	*/
+	///p.v = vsum(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vmul(wmes, WMES_MUL));
+	//p.v = vsub(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vdiv(wmes, WMES_DIV));
+	
 	p.v = vsum(gyro, vdiv(wmes, WMES_DIV));
 
 	d_q = qmul2(q_lowres, p, D_Q_SCALE);
 
 	/* bias, q */
-	bias = vsum(bias, d_bias);
+	bias = vsub(bias, d_bias);
 	q = dqsum(q, d_q);
-
+//	Bias = bias;
 	/* renormalización */
 	err = q_normerror(qtrunc(q));
 	correction = qscale2(q_lowres, err);

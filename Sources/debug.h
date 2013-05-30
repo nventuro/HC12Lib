@@ -5,7 +5,7 @@
 // General keys
 
 //#define IIC_DEBUG
-//#define DMU_DEBUG
+#define DMU_DEBUG
 
 
 // Particular keys for IIC
@@ -20,6 +20,7 @@
 //#define FIFO_DEBUG_COUNT
 #define DMU_DEBUG_OFFSET
 //#define FIFO_DEBUG_PRINT_AVG_SAMPLES
+//#define DMU_DEBUG_PRINT_ACCUMULATION
 
 #endif	// FIFO_DEBUG
 

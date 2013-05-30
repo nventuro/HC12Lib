@@ -52,7 +52,7 @@ void sample_ready(void)
 /* Main para control */
 
 #define Q_COMPONENTS(q) (q).r, (q).v.x, (q).v.y, (q).v.z
-
+extern vec3 Bias;
 void main (void)
 {
 	u8 userInput;
@@ -69,15 +69,27 @@ void main (void)
 	tim_ClearFlag(DMU_TIMER);
 	tim_EnableInterrupts(DMU_TIMER);
 
-
+/*
 	printf("Press 'm' to calibrate\n");
 
 	while (measurementCount < 2)
 	{
 		struct cal_output calibrationOutput;
 		struct qpair calibration;
+
+		userInput = qs_getchar(0);
 		
-		if ((userInput = qs_getchar(0)) != 'm')
+		if (userInput == 'c')
+		{
+			quat aux;
+			asm sei;
+			aux = QEst;
+			asm cli;
+			printf("Current quaternion: %d %d %d %d\n", Q_COMPONENTS(aux));
+			continue;		
+		}
+		
+		if (userInput != 'm')
 			continue;
 		
 		if (measurementCount == 0)
@@ -99,11 +111,11 @@ void main (void)
 		{
 			calibrationOutput = att_calibrate(calibration.p0, calibration.p1);			
 			printf("Cal output: %d\n", calibrationOutput.quality);
-			printf("Correction: %d %d %d %d\n", calibrationOutput.correction.r, Q_COMPONENTS(calibrationOutput.correction));
+			printf("Correction: %d %d %d %d\n", Q_COMPONENTS(calibrationOutput.correction));
 			
 			if (calibrationOutput.quality == CAL_BAD)
 			{
-				measurementCount = 0;	
+				measurementCount = 1;	// Stay looping second measurement.
 				printf("Calibrate again\n");
 			}
 
@@ -111,17 +123,17 @@ void main (void)
 		}
 	}
 
-
+*/
 //	mot_Init();
 
 
 	while (1) {
 	
-	#define Q_COMPONENTS(q) (q).r, (q).v.x, (q).v.y, (q).v.z
 
 		if (have_to_output)
 		{
 			printf("%d %d %d %d,", Q_COMPONENTS(QEst));
+			//printf("%d %d %d\n", Bias.x, Bias.y, Bias.z);
 			have_to_output = 0;
 		}
 	

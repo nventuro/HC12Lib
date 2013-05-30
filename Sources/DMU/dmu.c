@@ -6,7 +6,7 @@
 
 
 #define MAX_BURST_READS 252
-#define INITIAL_AVERAGE 0
+#define INITIAL_AVERAGE 120
 
 
 #define PRINT_START 1
@@ -467,7 +467,7 @@ void dmu_AccumulateGlobalMeasurements(void)
 {
 	dmu_AccumulateMeasurements(&dmu_sampleAccumulator, &dmu_measurements);
 	
-	#ifdef DMU_DEBUG_OFFSET
+	#ifdef DMU_DEBUG_PRINT_ACCUMULATION
 	dmu_PrintFormattedMeasurements();
 	#endif
 	

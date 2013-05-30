@@ -180,10 +180,3 @@ struct motorData control_mixer(frac thrust, vec3 torque)
 	
 	return output;
 }
-/*
-int main(int argc, char **argv)
-{
-
-	return 0;
-}
-*/
