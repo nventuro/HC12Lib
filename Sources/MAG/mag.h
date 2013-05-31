@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "iic.h"
+#include "arith.h"
 
 
 // Magnetometer sample rate.
