@@ -49,7 +49,7 @@ struct
 	u8 startUpStage;
 	s8 timId;
 	rtc_ptr extCB;
-} rtc_intData = {_FALSE, 0, TIM_INVALID_ID, NULL};
+} rtc_intData = {_FALSE, 0, 0, NULL};
 
 
 void rtc_startUp (void);
@@ -67,7 +67,8 @@ void rtc_init (void)
 		iic_Init();
 
 		tim_Init();
-		rtc_intData.timId = tim_GetTimer(TIM_IC,rtc_intSrv,NULL,RTC_TIMER);
+		rtc_intData.timId = RTC_TIMER;
+		tim_GetTimer(TIM_IC,rtc_intSrv,NULL,RTC_TIMER);
 		tim_dSetRisingEdge(rtc_intData.timId);
 		rtc_intData.extCB = NULL;
 		

@@ -14,7 +14,7 @@
 
 #define TIM_US_TO_TICKS(us) (DIV_CEIL(((u32)us)*1000,TIM_TICK_NS)) // Converts microseconds to timer ticks
 
-#define TIM_TICKS_TO_US(ticks) (DIV_CEIL(ticks*TIM_TICK_NS, 1000)) // Converts timer ticks to microseconds
+#define TIM_TICKS_TO_US(ticks) (DIV_CEIL((u32)ticks*TIM_TICK_NS, 1000)) // Converts timer ticks to microseconds
 
 #define TIM_CNT_MAX ((u32)65536)
 
@@ -46,15 +46,12 @@ tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow);
 // The received timer has normal an overflow interrupts (they have to be enabled using tim_EnableInterrupts and tim_EnableOvfInterrupts).
 // Returns the tim_id of the assigned timer. 
 
-tim_id tim_GetTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow, tim_id timNumber);
+void tim_GetTimer(tim_type reqType, tim_ptr callback, tim_ptr overflow, tim_id timNumber);
 // Same as tim_GetTimer, but instead of assigning a random timer, timNUmberisUsed. 
 // timNumber is a number, from 0 to 7, which indicates which timer module will be used.
-// If the requested timer is free, the return value will equal timNumber.
 
 void tim_FreeTimer(tim_id id);
 // Deletes the overflow and interrupt callbacks from a previously set timer, and releases it so it can be reassigned using tim_GetTimer.
-
-#define TIM_INVALID_ID (-1) // Returned by tim_GetFreeTimer if all timers are being used, or by tim_GetTimer if timNumber is being used.
 
 
 // All of the functions below will fail or behave unexpectedly if they receive an invalid timer id.

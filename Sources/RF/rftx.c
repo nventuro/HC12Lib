@@ -2,33 +2,22 @@
 #include "hamming1511.h"
 #include "cb.h"
 #include "timers.h"
-#include <stdio.h>
+#include "error.h"
 
 #define RFTX_DATA GLUE(PTT_PTT,RFTX_DATA_TIMER)
 #define RFTX_DATA_DDR GLUE(DDRT_DDRT,RFTX_DATA_TIMER)
 
-//f = 3khz
-#define RFTX_1_HIGH_TIME_US 130
-#define RFTX_1_LOW_TIME_US 200
-#define RFTX_0_HIGH_TIME_US 200
-#define RFTX_0_LOW_TIME_US 130
-
-#define RFTX_DEAD_TIME_US 400
-#define RFTX_START_TX_TIME_US 100
-
 #define RFTX_QUEUE_SIZE 8
-
 
 struct rftx_commData
 {
 	u8 id;
 	u8 *data;
-	s8 length;
+	u8 length;
 	rftx_ptr eot;
 };
 
 typedef struct rftx_commData rftx_commData;
-
 
 typedef cbuf rfqueue;
 
@@ -51,6 +40,7 @@ typedef enum
 	IDLE,
 	SENDING,
 	WAITING_FOR_DEAD_TIME_TO_END,
+	WAITING_FOR_TICK_TO_END,
 } RFTX_STATUS;
 
 struct
@@ -62,8 +52,8 @@ struct
 	rftx_commData currComm;
 	u16 currData;
 	s8 currDataIndex;
-	bool bitHalfSent;
 	u8 dataIndex;
+	bool bitHalfSent;
 } rftx_data;
 
 bool rftx_isInit = _FALSE;
@@ -82,8 +72,6 @@ void rftx_Init (bool ecc)
 	rftx_isInit = _TRUE;
 	
 	rftx_data.ecc = ecc;
-	DDRA = 0xFF;
-	PORTA_PA1 = 0;
 	
 	RFTX_DATA_DDR = DDR_OUT;
 		
@@ -99,41 +87,41 @@ void rftx_Init (bool ecc)
 	tim_EnableInterrupts(RFTX_DATA_TIMER);
 	
 	RFTX_DATA = 1;
-	
+
 	return;
 }
 
-bool rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
+void rftx_Send(u8 id, u8 *data, u8 length, rftx_ptr eot)
 {
-		
+	if (data == NULL)
+		err_Throw("rftx: data is NULL.\n");
+	
 	if (rftx_data.status == IDLE)
 	{		
-		putchar('s');
 		rftx_data.status = SENDING;
 		rftx_data.currComm.id = id & 0x07;
 		rftx_data.currComm.data = data;
-		rftx_data.currComm.length = (s8) (length & 0x7F) - 1;
+		rftx_data.currComm.length = length & 0x7F;
 		rftx_data.currComm.eot = eot;
 	
 		rftx_CommenceTX();
 		
-		return _TRUE;
+		return;
 	}
 	else
 	{
 		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_FULL)
-			return _FALSE;
+	    	err_Throw("rftx: attempted to send data, but queue is full.\n");
 		else
 		{
 			rftx_commData requestedComm;
-			putchar('q');
 			requestedComm.id = id & 0x07;
 			requestedComm.data = data;
-			requestedComm.length = (s8) (length & 0x7F) - 1;
+			requestedComm.length = length & 0x7F;
 			requestedComm.eot = eot;
 			rfqueue_Push(&rftx_data.queue,requestedComm);
 			
-			return _TRUE;
+			return;
 		}
 	}
 }
@@ -149,24 +137,18 @@ void rftx_CommenceTX (void)
 	RFTX_DATA = 0;
 	
 	tim_SetValue(RFTX_DATA_TIMER, tim_GetGlobalValue() + TIM_US_TO_TICKS(RFTX_START_TX_TIME_US));
-	tim_ClearFlag(RFTX_DATA_TIMER);
-	tim_EnableInterrupts(RFTX_DATA_TIMER);
-	
 	
 	return;
 }
 
 void rftx_TimerCallback(void)
-{
-	PORTA_PA1 = 1;
-	
+{	
 	if (rftx_data.status == WAITING_FOR_DEAD_TIME_TO_END)
 	{
 		if (rfqueue_Status(&rftx_data.queue) == RFQUEUE_EMPTY)
 		{
 			rftx_data.status = IDLE;
-			tim_DisableInterrupts(RFTX_DATA_TIMER);
-			
+			tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_TICK_TIMEOUT_US));
 		}
 		else
 		{
@@ -174,12 +156,24 @@ void rftx_TimerCallback(void)
 			rftx_data.status = SENDING;
 			rftx_data.currComm.id = newComm.id & 0x07;
 			rftx_data.currComm.data = newComm.data;
-			rftx_data.currComm.length = (s8) (newComm.length & 0x7F);
+			rftx_data.currComm.length = newComm.length & 0x7F;
 			rftx_data.currComm.eot = newComm.eot;
 		
 			rftx_CommenceTX();
-			
 		}
+	}
+	else if (rftx_data.status == IDLE)
+	{
+		rftx_data.status = WAITING_FOR_TICK_TO_END;
+		RFTX_DATA = 0;
+		tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_TICK_DURATION_US));
+
+	}
+	else if (rftx_data.status == WAITING_FOR_TICK_TO_END)
+	{
+		rftx_data.status = WAITING_FOR_DEAD_TIME_TO_END;
+		RFTX_DATA = 1;
+		tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_DEAD_TIME_US));
 	}
 	else // SENDING
 	{
@@ -218,7 +212,9 @@ void rftx_TimerCallback(void)
 					
 					rftx_data.status = WAITING_FOR_DEAD_TIME_TO_END;
 					tim_SetValue(RFTX_DATA_TIMER, tim_GetValue(RFTX_DATA_TIMER) + TIM_US_TO_TICKS(RFTX_DEAD_TIME_US));
-					rftx_data.currComm.eot();
+					
+					if (rftx_data.currComm.eot != NULL)
+						rftx_data.currComm.eot();
 				}
 				else // Fetch new data
 				{
@@ -233,44 +229,22 @@ void rftx_TimerCallback(void)
 
 					rftx_data.bitHalfSent = _TRUE;
 				}
-				
-				
 			}
 		}
 	}
-	PORTA_PA1 = 0;
 }
+
+u32 readMask[] = {0xFFE00000,0x7FF00000,0x3FF80000,0x1FFC0000,0xFFE0000,0x7FF0000,0x3FF8000,0x1FFC000};
 
 void rftx_FetchNewData (void)
 {
-	s8 bitIndex; 
-	u8 firstByte; 
-	u8 bitsToSend;					
-
-	if ((rftx_data.currComm.length - rftx_data.dataIndex) < 10)
-		bitsToSend = rftx_data.currComm.length - rftx_data.dataIndex + 1;
-	else
-		bitsToSend = 11;
+	u8 bitIndex; 
+	u8 firstByte;
 
 	bitIndex = rftx_data.dataIndex % 8;
 	firstByte = rftx_data.dataIndex / 8;
 
-	// First byte
-	rftx_data.currData = ((u16) (rftx_data.currComm.data[firstByte] & firstBits(8 - bitIndex))) << (3 + bitIndex);
-
-	// Second byte
-	if (bitIndex < 5) // If bitIndex == 5, 3 bits were read from the first byte, and shift is 0
-		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 1] & lastBits(3 + bitIndex))) << (bitIndex - 5);
-	else
-		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 1] & lastBits(3 + bitIndex))) >> (5 - bitIndex);
-
-	// Third byte					
-	if (bitIndex == 6)
-		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 2] & lastBits(1))) >> 7;
-	else if (bitIndex == 7)
-		rftx_data.currData += ((u16) (rftx_data.currComm.data[firstByte + 2] & lastBits(2))) >> 6;
-						
-	// Fix: si bitsToSend < 11, tengo que sacar un par de las que lei. Problema: lei uno o dos bytes de más
+	rftx_data.currData = (u16) (((*((u32*)(rftx_data.currComm.data + firstByte))) & readMask[bitIndex]) >> (21 - bitIndex));
 
 	rftx_data.dataIndex = rftx_data.dataIndex + 11;
 	if (rftx_data.ecc)
@@ -325,7 +299,7 @@ rftx_commData rfqueue_Pop(rfqueue* queue)
 		read.data = (u8 *) (((u16) read.data + (((u16)cb_pop(queue)) << 8))); 
 		read.eot = (u8 *) cb_pop(queue);
 		read.eot = (u8 *) (((u16) read.eot + (((u16)cb_pop(queue)) << 8))); 
-		read.length = (s8) cb_pop(queue);
+		read.length = cb_pop(queue);
 	}
 	
 	return read;

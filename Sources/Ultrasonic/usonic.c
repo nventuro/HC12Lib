@@ -1,6 +1,7 @@
 #include "usonic.h"
 #include "timers.h"
 #include "rti.h"
+#include "error.h"
  
 #define USONIC_TRIGG GLUE(PTT_PTT,USONIC_TRIGG_TIMER)
 #define USONIC_TRIGG_DDR GLUE(DDRT_DDRT,USONIC_TRIGG_TIMER)
@@ -76,10 +77,10 @@ void usonic_InitCallback (void *data, rti_time period, rti_id id)
 	usonic_isInit = _TRUE;
 }
 
-bool usonic_Measure (usonic_ptr callback)
+void usonic_Measure (usonic_ptr callback)
 {
 	if ((usonic_data.stage != IDLE) || (callback == NULL))
-		return _FALSE;
+		err_Throw("usonic: attempted to perform a measurement while the device is busy, or with a NULL callback.\n");
 	
 	usonic_data.callback = callback;
 	usonic_data.halfReady = _FALSE;
@@ -95,7 +96,7 @@ bool usonic_Measure (usonic_ptr callback)
 	
 	usonic_data.stage = TRIGGERING;
 	
-	return _TRUE;
+	return;
 }
 
 void usonic_TriggerCallback (void)

@@ -14,12 +14,11 @@ typedef void (*usonic_ptr) (s32 measurement); // A function callback used by uso
 void usonic_Init (void);
 // Initializes the Ultrasonic module. This requires the RTI and Timers modules to work, and interrupts to be enabled.
 
-bool usonic_Measure (usonic_ptr callback);
+void usonic_Measure (usonic_ptr callback);
 // Commences a measurement, and registers a callback function to be called after it is done.
 // If the measurement was successful, the measured distance will be returned (in centimeters).
 // If errors occured, or the device was not able to perform a correct measurement (because of a lack of echo),
 // USONIC_INVALID_MEAS is returned. 
-// If the device is idle and measurments can be made, _TRUE is returned. Else, usonic_Measure returns _FALSE.
 // The Ultrasonic module will always be ready to perform a new measurement after callback is called, even if errors occured while measuring.
 // A successful measurement takes around 30ms, and a failed one no more than 300ms.
 

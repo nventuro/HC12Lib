@@ -1,5 +1,6 @@
-#include <mc9s12xdp512.h>
+#include "mc9s12xdp512.h"
 #include "rti.h"
+#include "error.h"
 
 enum {BASE_2=0, BASE_10};
 #define RTI_DIVIDER_BASE BASE_10
@@ -62,7 +63,7 @@ rti_id rti_Register (rti_ptr callback, void *data, rti_time period, rti_time del
 	}
 		
 	if (i == RTI_MAX_FCNS)
-		i = RTI_INVALID_ID;
+		err_Throw("rti: attempted to store a callback but the memory is full.\n");
 	
 	return i;
 }

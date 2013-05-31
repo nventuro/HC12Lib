@@ -1,4 +1,5 @@
 #include "timers.h"
+#include "error.h"
 
 #define	TIMER_PRESCALER 6 	// 50MHz / 2^6 = 781.25 kHz. The TCNT resolution is 1.28us 
 #define TIM_AMOUNT 8
@@ -46,14 +47,17 @@ void tim_Init(void)
 	return;
 }
 
-tim_id tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
+void tim_GetTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf, tim_id timNumber)
 {
 	if ((tim_data.isTimerUsed[timNumber] == _TRUE) || (cb == NULL))
-		return TIM_INVALID_ID;
+		err_Throw("timer: attempted to reserve a timer that's already in use.\n");
+	
+	if ((timNumber < 0) || (timNumber > 7))
+		err_Throw("timer: attempted to reserve an invalid timer number.\n");
 	
 	tim_AssignTimer(reqType, cb, ovf, timNumber);
 	
-	return timNumber;
+	return;	
 }
 
 
@@ -62,7 +66,7 @@ tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 	tim_id i;
 
 	if (cb == NULL)
-		return TIM_INVALID_ID;
+		err_Throw("timer: null callback received.\n");
 
 	for (i = 0; i < TIM_AMOUNT; i++)
 		if (tim_data.isTimerUsed[i] == _FALSE)
@@ -72,7 +76,7 @@ tim_id tim_GetFreeTimer(tim_type reqType, tim_ptr cb, tim_ptr ovf)
 		}
 		
 	if (i == TIM_AMOUNT)
-		i = TIM_INVALID_ID;
+		err_Throw("timer: no more free timers.\n");
 	
 	return i;	
 }

@@ -10,5 +10,5 @@ void err_Throw(char* errMsg)
 	while (1)
 		;
 		
-	return; //no jjjoda.
+	return;
 }
