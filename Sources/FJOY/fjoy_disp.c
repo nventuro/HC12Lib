@@ -1,6 +1,7 @@
 #include "fjoy_disp.h"
 #include "fjoy.h"
 #include "lcd.h"
+#include "rti.h"
 
 // Format is:
 // Ax:  val [---|---]
@@ -24,6 +25,8 @@
 #define PITCH_ROW 1
 #define ROLL_ROW 2
 #define ELEV_ROW 3
+
+void PeriodicPrint (void *data, rti_time period, rti_id id);
 
 void InitRows (void);
 void u8ToChar (u8 x, char *c);
@@ -118,6 +121,17 @@ void fjoy_PrintAxes (void)
 	lcd_PrintRow(rows[ELEV_ROW],ELEV_ROW);
 }
 
+void fjoy_PrintAxesPeriodically (void)
+{	
+	rti_Init();
+	rti_Register(PeriodicPrint, NULL, RTI_MS_TO_TICKS(FJOY_REFRESH_PERIOD_MS), RTI_NOW);
+}
+
+void PeriodicPrint (void *data, rti_time period, rti_id id)
+{
+	fjoy_PrintAxes();
+}
+
 void InitRows (void)
 {
 	u8 i, j;
@@ -133,7 +147,7 @@ void InitRows (void)
 			rows[i][j++] = ' ';
 	}
 	
-	fjoy_PrintAxes();		
+	return;
 }
 
 
@@ -176,7 +190,7 @@ u8 StrLen (char *c)
 void u8ToBar (u8 x, char *c)
 {
 	u8 i;
-	u8 notch = x / BAR_DIVIDER;
+	u8 notch = x / (BAR_DIVIDER+1);
 	
 	for (i = 0; i < BAR_LEN; i++)
 		if (i == notch)
