@@ -1,12 +1,32 @@
 #include "fjoy.h"
 #include "rti.h"
-#include "atd.h"
 #include "error.h"
+#include <stdio.h>
 
-void fjoy_PeriodicCall (void *data, rti_time period, rti_id id);
+#define FJOY_READ_CHANNEL(chann, cb) atd_SetTask(FJOY_ATD_MODULE, chann, FJOY_ATD_OVERSAMPLING, _FALSE, _FALSE, cb)
+
+void fjoy_UpdateStatus (void *data, rti_time period, rti_id id);
+void fjoy_ATDCallback (s16* mem, const struct atd_task* taskData);
+
+#define FJOY_ATD_FIRST_CHANN FJOY_YAW_CHANN
+
+#define LINEAR_SCALE_U8(x,min,max) (((x-min)*255)/(max-min))
+#define LINEAR_SCALE_S8(x,min,max) (((x-min)*255)/(max-min))
+
+#define SATURATE_U8(x) ((x > 255) ? 255 : ((x < 0) ? 0 : x))
+#define SATURATE_S8(x) ((x > 127) ? 127 : ((x < -128) ? -128 : x))
+
+#define ELEV_MIN 78
+#define ELEV_MAX 221
+
 
 struct {
 	fjoy_callback callback[FJOY_MAX_CALLBACKS];
+	s32 yawSum;
+	s32 pitchSum;
+	s32 rollSum;
+	s32 elevSum;
+	bool axesRead;
 } fjoy_data;
 
 bool fjoy_isInit = _FALSE;
@@ -19,29 +39,24 @@ void fjoy_Init(void)
 	if (fjoy_isInit == _TRUE)
 		return;
 	
-	fjoy_isInit = _TRUE;
-	
 	
 	for (i = 0; i < FJOY_MAX_CALLBACKS; i++)
 		fjoy_data.callback[i] = NULL;
-		
+
 	rti_Init();	
-	rti_Register(fjoy_PeriodicCall, NULL, RTI_MS_TO_TICKS(FJOY_SAMPLE_PERIOD_MS), RTI_NOW);
+	//rti_Register(fjoy_UpdateStatus, NULL, RTI_MS_TO_TICKS(FJOY_SAMPLE_PERIOD_MS), RTI_NOW); BUTTON SMAPLING FUNCT
 	
-	atd_Init(ATD0);
+	atd_Init(FJOY_ATD_MODULE);
+	fjoy_data.axesRead = _FALSE;
+	FJOY_READ_CHANNEL(FJOY_ATD_FIRST_CHANN, fjoy_ATDCallback);
+
+	while (fjoy_data.axesRead == _FALSE) // && !buttons_read
+		;
+	
+	rti_Register(fjoy_UpdateStatus, NULL, RTI_MS_TO_TICKS(FJOY_SAMPLE_PERIOD_MS), RTI_NOW);
 	
 	return;
 }
-
-void fjoy_PeriodicCall (void *data, rti_time period, rti_id id)
-{
-	// do stuff (average samples of buttons and analog inputs, scale inputs)
-	
-	// call registered callbacks
-	
-	return;
-}
-
 
 void fjoy_CallOnUpdate(fjoy_callback cb)
 {
@@ -61,3 +76,84 @@ void fjoy_CallOnUpdate(fjoy_callback cb)
 	
 	return;
 }
+
+void fjoy_ATDCallback (s16* mem, const atd_task* taskData)
+{
+	u8 i;
+
+	switch (taskData->channel)
+	{
+		case FJOY_YAW_CHANN:
+		
+			fjoy_data.yawSum = 0;
+			for (i = 0; i < FJOY_ATD_OVERSAMPLING; i++)
+				fjoy_data.yawSum += mem[i];
+				
+			FJOY_READ_CHANNEL(FJOY_PITCH_CHANN, fjoy_ATDCallback);
+			
+			break;
+		case FJOY_PITCH_CHANN:
+		
+			fjoy_data.pitchSum = 0;
+			for (i = 0; i < FJOY_ATD_OVERSAMPLING; i++)
+				fjoy_data.pitchSum += mem[i];
+				
+			FJOY_READ_CHANNEL(FJOY_ROLL_CHANN, fjoy_ATDCallback);
+			
+			break;
+		case FJOY_ROLL_CHANN:
+		
+			fjoy_data.rollSum = 0;
+			for (i = 0; i < FJOY_ATD_OVERSAMPLING; i++)
+				fjoy_data.rollSum += mem[i];
+				
+			FJOY_READ_CHANNEL(FJOY_ELEV_CHANN, fjoy_ATDCallback);
+			
+			break;
+		case FJOY_ELEV_CHANN:
+		
+			fjoy_data.elevSum = 0;
+			for (i = 0; i < FJOY_ATD_OVERSAMPLING; i++)
+				fjoy_data.elevSum += mem[i];
+				
+			fjoy_data.axesRead = _TRUE;
+			
+			break;
+	}
+}
+
+void fjoy_UpdateStatus (void *data, rti_time period, rti_id id)
+{
+	u8 i;
+	
+	if (fjoy_data.axesRead == _FALSE)
+		err_Throw("fjoy: axes sampling frequency is too low.\n");
+	
+	// do stuff (average samples of buttons and analog inputs, scale inputs)
+	
+	
+	// Division by 4 is required since the inputs are sampled at 10 bits resolution (which must be lowered to 8 bits)
+	// Yaw, pitch and roll are s8, substracting 128 makes them go from -128 to 127
+	fjoy_data.yawSum = fjoy_data.yawSum / (FJOY_ATD_OVERSAMPLING * 4) - 128;
+	fjoy_data.pitchSum = fjoy_data.pitchSum / (FJOY_ATD_OVERSAMPLING * 4) - 128;
+	fjoy_data.rollSum = fjoy_data.rollSum / (FJOY_ATD_OVERSAMPLING * 4) - 128;
+	// Elevation potentiometer is u8, but the potentiometer is inverted, substracting the measurement from 255 fixes that
+	fjoy_data.elevSum = 255 - fjoy_data.elevSum / (FJOY_ATD_OVERSAMPLING * 4); 
+
+
+	// Scaling and saturation
+	fjoy_data.elevSum = LINEAR_SCALE_U8(fjoy_data.elevSum, ELEV_MIN, ELEV_MAX);
+	fjoy_status.elev = SATURATE_U8(fjoy_data.elevSum);
+	
+
+	for (i = 0; i < FJOY_MAX_CALLBACKS; i++)
+		if (fjoy_data.callback[i] != NULL)
+			(*fjoy_data.callback[i]) ();
+		
+	fjoy_data.axesRead = _FALSE;
+	FJOY_READ_CHANNEL(FJOY_ATD_FIRST_CHANN, fjoy_ATDCallback);
+	
+	return;
+}
+
+

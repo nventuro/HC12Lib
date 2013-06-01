@@ -2,15 +2,23 @@
 #define _FJOY_H
 
 #include "common.h"
+#include "atd.h"
 
 #define FJOY_SAMPLE_PERIOD_MS 20
 
-#define FJOY_BUTTONS 11 // 
+#define FJOY_BUTTONS 11
 
 #define FJOY_MAX_CALLBACKS 3
 
+#define FJOY_ATD_OVERSAMPLING 8
+#define FJOY_BUTTON_OVERSAMPLING 3
 
 // Connections
+#define FJOY_ATD_MODULE ATD0
+#define FJOY_YAW_CHANN 1
+#define FJOY_ROLL_CHANN 0
+#define FJOY_PITCH_CHANN 3
+#define FJOY_ELEV_CHANN 2
 
 
 extern struct 
