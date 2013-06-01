@@ -144,7 +144,7 @@ void lcd_PrintRow (char* string, u8 row)
 			i++;
 		}
 		while (i < 16)
-			lcd_data.memory[i++] = ' ';
+			lcd_data.memory[i++ + row*16] = ' ';
 	}
 	else if (lcd_data.type == LCD_2004)
 	{
@@ -157,7 +157,7 @@ void lcd_PrintRow (char* string, u8 row)
 			i++;
 		}
 		while (i < 20)
-			lcd_data.memory[i++] = ' ';
+			lcd_data.memory[i++ + row*20] = ' ';
 	}
 }
 
