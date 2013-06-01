@@ -1,15 +1,31 @@
 #include "fjoy_disp.h"
+#include "fjoy.h"
 #include "lcd.h"
-#include <stdio.h>
 
+// Format is:
+// Ax:  val [---|---]
+// The "Ax:" string has a length of up to AX_LEN
+// The val string (not including the trailing whitespace) has a length of up to VALUE_LEN
+// The bar is always of len BAR_LEN, and has two brackets: one at the beginning and another at the end
+// The bar starts at BAR_START_POS (name, value and the trailing whitespace)
+// Empty spaces are completed with whitespaces
+#define AX_LEN 6
+#define VALUE_LEN 4
+#define BAR_START_POS (AX_LEN+VALUE_LEN+1)
 #define BAR_LEN 7
+
 #define BAR_DIVIDER (255/BAR_LEN)
 
 // 20x4 display (LCD_2004)
 #define COLS 20
 #define ROWS 4
-s8 yaw = -128;
 
+#define YAW_ROW 0
+#define PITCH_ROW 1
+#define ROLL_ROW 2
+#define ELEV_ROW 3
+
+void InitRows (void);
 void u8ToChar (u8 x, char *c);
 void s8ToChar (s8 x, char *c);
 void u8ToBar (u8 x, char *c);
@@ -18,9 +34,91 @@ u8 StrLen (char *c);
 
 char rows[ROWS][COLS];
 char *staticRows[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
-char auxStr[5]; // Used for converting numbers to strings
+char auxStr[VALUE_LEN]; // Used for converting numbers to strings
 
-void fjoy_InitRows (void)
+bool init = _FALSE;
+
+
+void fjoy_PrintAxes (void)
+{
+	u8 i, len;
+	
+	if (init == _FALSE)
+	{
+		init = _TRUE;
+		InitRows();		
+	}
+	
+	
+	// Yaw
+	s8ToChar(fjoy_status.yaw,auxStr);
+	len = StrLen(auxStr);
+	for (i = 0; i < VALUE_LEN; i++)
+	{
+		if (i < (VALUE_LEN - len))
+			rows[YAW_ROW][i+AX_LEN] = ' ';
+		else
+			rows[YAW_ROW][i+AX_LEN] = auxStr[i-(VALUE_LEN-len)];
+	}
+	rows[YAW_ROW][i+AX_LEN] = ' '; // Trailing whitespace
+
+
+	s8ToBar(fjoy_status.yaw,rows[YAW_ROW]+BAR_START_POS);
+	lcd_PrintRow(rows[YAW_ROW],YAW_ROW);
+	
+	
+	// Pitch
+	s8ToChar(fjoy_status.pitch,auxStr);
+	len = StrLen(auxStr);
+	for (i = 0; i < VALUE_LEN; i++)
+	{
+		if (i < (VALUE_LEN - len))
+			rows[PITCH_ROW][i+AX_LEN] = ' ';
+		else
+			rows[PITCH_ROW][i+AX_LEN] = auxStr[i-(VALUE_LEN-len)];
+	}
+	rows[PITCH_ROW][i+AX_LEN] = ' '; // Trailing whitespace
+
+
+	s8ToBar(fjoy_status.pitch,rows[PITCH_ROW]+BAR_START_POS);
+	lcd_PrintRow(rows[PITCH_ROW],PITCH_ROW);
+	
+	
+	// Roll
+	s8ToChar(fjoy_status.roll,auxStr);
+	len = StrLen(auxStr);
+	for (i = 0; i < VALUE_LEN; i++)
+	{
+		if (i < (VALUE_LEN - len))
+			rows[ROLL_ROW][i+AX_LEN] = ' ';
+		else
+			rows[ROLL_ROW][i+AX_LEN] = auxStr[i-(VALUE_LEN-len)];
+	}
+	rows[ROLL_ROW][i+AX_LEN] = ' '; // Trailing whitespace
+
+
+	s8ToBar(fjoy_status.roll,rows[ROLL_ROW]+BAR_START_POS);
+	lcd_PrintRow(rows[ROLL_ROW],ROLL_ROW);
+	
+	
+	// Elevation
+	u8ToChar(fjoy_status.elev,auxStr);
+	len = StrLen(auxStr);
+	for (i = 0; i < VALUE_LEN; i++)
+	{
+		if (i < (VALUE_LEN - len))
+			rows[ELEV_ROW][i+AX_LEN] = ' ';
+		else
+			rows[ELEV_ROW][i+AX_LEN] = auxStr[i-(VALUE_LEN-len)];
+	}
+	rows[ELEV_ROW][i+AX_LEN] = ' '; // Trailing whitespace
+
+
+	u8ToBar(fjoy_status.elev,rows[ELEV_ROW]+BAR_START_POS);
+	lcd_PrintRow(rows[ELEV_ROW],ELEV_ROW);
+}
+
+void InitRows (void)
 {
 	u8 i, j;
 	for (i = 0; i < ROWS; i ++)
@@ -36,30 +134,6 @@ void fjoy_InitRows (void)
 	}
 	
 	fjoy_PrintAxes();		
-}
-
-void fjoy_PrintAxes (void)
-{
-	u8 i, len;
-	
-	s8ToChar(yaw,auxStr);
-	len = StrLen(auxStr);
-	for (i = 6; i < (6+5-1); i++)
-	{
-		if ((i-6) < (4 - len))
-			rows[0][i] = ' ';
-		else
-			rows[0][i] = auxStr[i-6+len-4];
-	}
-
-
-	s8ToBar(yaw,rows[0]+11);
-	lcd_PrintRow(rows[0],0);
-	
-	/*lcd_PrintRow("Yaw:  -128 [|------]",0);
-	lcd_PrintRow("Pitch:-120 [-|-----]",1);
-	lcd_PrintRow("Roll: -105 [--|----]",2);
-	lcd_PrintRow("Elev:  128 [---|---]",3);*/
 }
 
 
