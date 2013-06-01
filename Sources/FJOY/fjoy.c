@@ -21,10 +21,17 @@ void fjoy_ATDCallback (s16* mem, const struct atd_task* taskData);
 
 // Calibration
 
+#define YAW_MIN 78
+#define YAW_MAX 117
+#define YAW_REPOS 106
+
 #define PITCH_MIN -81
 #define PITCH_MAX 92
 #define PITCH_REPOS 0
 
+#define ROLL_MIN 82
+#define ROLL_MAX 121
+#define ROLL_REPOS 114
 
 #define ELEV_MIN 78
 #define ELEV_MAX 221
@@ -149,8 +156,14 @@ void fjoy_UpdateStatus (void *data, rti_time period, rti_id id)
 	fjoy_data.rollSum = fjoy_data.rollSum / (FJOY_ATD_OVERSAMPLING * 4) - 128;
 	// Elevation potentiometer is u8, but the potentiometer is inverted, substracting the measurement from 255 fixes that
 	fjoy_data.elevSum = 255 - fjoy_data.elevSum / (FJOY_ATD_OVERSAMPLING * 4); 
-
+	
 	// Scaling and saturation
+	fjoy_data.yawSum = LINEAR_SCALE_S8(fjoy_data.yawSum, YAW_MIN, YAW_MAX, YAW_REPOS);
+	fjoy_status.yaw = SATURATE_S8(fjoy_data.yawSum);
+
+	fjoy_data.rollSum = LINEAR_SCALE_S8(fjoy_data.rollSum, ROLL_MIN, ROLL_MAX, ROLL_REPOS);
+	fjoy_status.roll = SATURATE_S8(fjoy_data.rollSum);
+	
 	fjoy_data.pitchSum = LINEAR_SCALE_S8(fjoy_data.pitchSum, PITCH_MIN, PITCH_MAX, PITCH_REPOS);
 	fjoy_status.pitch = SATURATE_S8(fjoy_data.pitchSum);
 	
