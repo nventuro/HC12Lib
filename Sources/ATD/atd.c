@@ -1,6 +1,6 @@
 #include "atd.h"
 #include "mc9s12xdp512.h"
-
+#include "error.h"
 
 typedef struct
 {
@@ -65,16 +65,6 @@ enum {FALLING_EDGE, RISING_EDGE, LOW_LEVEL, HIGH_LEVEL};
 #define ATD0_8BIT(a) (ATD0CTL4_SRES8 = a)
 #define ATD1_8BIT(a) (ATD1CTL4_SRES8 = a)
 
-// divider from 2 to 64
-/* lo mande al header */
-/*
-#define ATD0_SET_DIVIDER(a) do {ATD0CTL4 &= 0xE0; ATD0CTL4 |= (a/2-1);} while(0)
-#define ATD1_SET_DIVIDER(a) do {ATD1CTL4 &= 0xE0; ATD1CTL4 |= (a/2-1);} while(0)
-
-enum {LENGTH_2=0, LENGTH_4, LENGTH_8, LENGTH_16};
-#define ATD0_SAMPLE_TIME(a) do {ATD0CTL4 &= 0x9F; ATD0CTL4 |= (a<<5);} while(0)
-#define ATD1_SAMPLE_TIME(a) do {ATD1CTL4 &= 0x9F; ATD1CTL4 |= (a<<5);} while(0)
-*/
 
 /******************		CTL5	****************/
 
@@ -233,7 +223,7 @@ atd_taskId atd_SetTask(atd_module module, u8 channel, u8 length, bool mult, bool
 	moduleData = getModuleData(module);
 	
 	if (cb == NULL)
-		return INVALID_TASK_ID;
+		err_Throw("atd: null callback received.\n");
 	
 	for (i = 0; i < TASK_MAX; i++)
 	{
@@ -251,7 +241,7 @@ atd_taskId atd_SetTask(atd_module module, u8 channel, u8 length, bool mult, bool
 	}
 	
 	if (i == TASK_MAX)
-		return INVALID_TASK_ID;
+		err_Throw("atd: attempt to register more tasks than there's memory for.\n");
 	
 	if (moduleData->taskCount == 1)
 	{
