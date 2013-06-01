@@ -1,5 +1,6 @@
 #include "lcd.h"
 #include "timers.h"
+#include "error.h"
 
 #define LCD_RS_INSTR 0
 #define LCD_RS_DATA 1
@@ -38,7 +39,7 @@
 
 #define LCD_WRITE_DDRAM BIT(7)
 
-/*
+/* Some displays work with a very short enable pulse. For those, these two lines are commented out.
 #define LCD_ENABLE_NOPS 10
 #define LCD_ENABLE_STROBE() do{u8 i;LCD_ENABLE = 1;	for (i = 0; i < LCD_ENABLE_NOPS; i++) asm nop; LCD_ENABLE = 0;} while (0)
 */
@@ -124,6 +125,38 @@ void lcd_Print (char* string)
 			i++;
 		}
 		while (i < 80)
+			lcd_data.memory[i++] = ' ';
+	}
+}
+
+void lcd_PrintRow (char* string, u8 row)
+{
+	u8 i = 0;	
+	
+	if (lcd_data.type == LCD_1602)
+	{
+		if (row >= 2)
+			err_Throw("lcd: attempt to access an invalid row.\n");
+		
+		while ((string[i] != '\0') && (i < 16))
+		{
+			lcd_data.memory[i+row*16] = string[i];
+			i++;
+		}
+		while (i < 16)
+			lcd_data.memory[i++] = ' ';
+	}
+	else if (lcd_data.type == LCD_2004)
+	{
+		if (row >= 4)
+			err_Throw("lcd: attempt to access an invalid row.\n");
+		
+		while ((string[i] != '\0') && (i < 20))
+		{
+			lcd_data.memory[i+row*20] = string[i];
+			i++;
+		}
+		while (i < 20)
 			lcd_data.memory[i++] = ' ';
 	}
 }

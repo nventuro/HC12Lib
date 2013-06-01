@@ -34,4 +34,11 @@ void lcd_Print (char* string);
 // If the string has less characters than the device can display, the remaining characters are left empty.
 // This deletes any message previously printed on the device.
 
+void lcd_PrintRow (char* string, u8 row);
+// Prints a string on the device, starting on the first column of the row row. The first row is row 0.
+// If the string is not null-terminated, or too long, the module will only print as many characters as the device is capable of displaying.
+// Only the contents of the selected row will be modified.
+// If the string has less characters than the device can display, the remaining characters are left empty.
+// This deletes any message previously printed on the device (on that row).
+
 #endif
