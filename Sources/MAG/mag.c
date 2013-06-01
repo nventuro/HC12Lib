@@ -1,4 +1,4 @@
-#include "mag_definitions.h"
+/*#include "mag_definitions.h"
 #include "mag.h"
 #include "rti.h"
 #include "error.h"
@@ -137,3 +137,4 @@ void mag_CommFailed(void)
 {
 	return;
 }
+*/
