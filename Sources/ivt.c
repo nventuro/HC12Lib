@@ -3,6 +3,7 @@
 #include "rti.h"
 #include "iic.h"
 #include "timers.h"
+#include "atd.h"
 
 #ifndef NOTUSED
 #define NOTUSED ((const *)0xFFFF)
@@ -116,8 +117,8 @@ void (* const interrupt_vector_table[])() ={
     NOTUSED,	// VECT26	timmdcu
     NOTUSED,	// VECT25	porth
     NOTUSED,	// VECT24	portj
-    NOTUSED,	// VECT23	atd1
-    NOTUSED,	// VECT22	atd0
+    atd1_srv,	// VECT23	atd1
+    atd0_srv,	// VECT22	atd0
     NOTUSED,	// VECT21	sci1
     NOTUSED,	// VECT20	sci0
     NOTUSED,	// VECT19	spi0
