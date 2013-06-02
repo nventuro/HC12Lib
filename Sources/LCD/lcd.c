@@ -46,8 +46,6 @@
 // If a delay is required when strobing enable, comment out this line.
 //#define LCD_ENABLE_STROBE() do{LCD_ENABLE = 1;LCD_ENABLE = 0;} while (0)
 
-#define LCD_MEMORY 80
-
 #define LCD_SHORT_DELAY_US 200
 #define LCD_LONG_DELAY_US 3200
 
@@ -55,7 +53,6 @@ struct
 {
 	lcd_type type;
 	u8 index;
-	char memory[LCD_MEMORY];
 	u8 initStage;
 } lcd_data;
 
@@ -81,7 +78,7 @@ void lcd_Init(lcd_type type)
 	// Initialize the driver's memory
 	lcd_data.type = type;
 	for (i = 0; i < LCD_MEMORY; i++)
-			lcd_data.memory[i] = ' ';
+			lcd_memory[i] = ' ';
 	
 	lcd_data.index = 0;
 
@@ -112,21 +109,21 @@ void lcd_Print (char* string)
 	{
 		while ((string[i] != '\0') && (i < 32))
 		{
-			lcd_data.memory[i] = string[i];
+			lcd_memory[i] = string[i];
 			i++;
 		}
 		while (i < 32)
-			lcd_data.memory[i++] = ' ';
+			lcd_memory[i++] = ' ';
 	}
 	else if (lcd_data.type == LCD_2004)
 	{
 		while ((string[i] != '\0') && (i < 80))
 		{
-			lcd_data.memory[i] = string[i];
+			lcd_memory[i] = string[i];
 			i++;
 		}
 		while (i < 80)
-			lcd_data.memory[i++] = ' ';
+			lcd_memory[i++] = ' ';
 	}
 }
 
@@ -141,11 +138,11 @@ void lcd_PrintRow (char* string, u8 row)
 		
 		while ((string[i] != '\0') && (i < 16))
 		{
-			lcd_data.memory[i+row*16] = string[i];
+			lcd_memory[i+row*16] = string[i];
 			i++;
 		}
 		while (i < 16)
-			lcd_data.memory[i++ + row*16] = ' ';
+			lcd_memory[i++ + row*16] = ' ';
 	}
 	else if (lcd_data.type == LCD_2004)
 	{
@@ -154,18 +151,18 @@ void lcd_PrintRow (char* string, u8 row)
 		
 		while ((string[i] != '\0') && (i < 20))
 		{
-			lcd_data.memory[i+row*20] = string[i];
+			lcd_memory[i+row*20] = string[i];
 			i++;
 		}
 		while (i < 20)
-			lcd_data.memory[i++ + row*20] = ' ';
+			lcd_memory[i++ + row*20] = ' ';
 	}
 }
 
 void lcd_PrintCallback (void)
 {
 	LCD_RS = LCD_RS_DATA;
-	LCD_DATA = lcd_data.memory[lcd_data.index++];
+	LCD_DATA = lcd_memory[lcd_data.index++];
 	LCD_ENABLE_STROBE();
 		
 	if ((lcd_data.index == 16) && (lcd_data.type == LCD_1602))
