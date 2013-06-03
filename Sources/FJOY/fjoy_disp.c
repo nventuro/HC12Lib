@@ -28,97 +28,27 @@
 
 void PeriodicPrint (void *data, rti_time period, rti_id id);
 
-void InitRows (void);
+void PrintAxesNames (void);
+void PrintAxesMeasurements (void);
+void PrintAxisMeasurements (s8 meas, u8 row, bool isSigned);
+void PrintBars (void);
+void PrintBar (s8 meas, u8 row, bool isSigned);
+
 void u8ToChar (u8 x, char *c);
 void s8ToChar (s8 x, char *c);
 void u8ToBar (u8 x, char *c);
 void s8ToBar (s8 x, char *c);
 u8 StrLen (char *c);
 
-char rows[DISPLAY_ROWS][DISPLAY_COLS];
-char *staticRows[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
+char *axesNames[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
 char auxStr[VALUE_LEN]; // Used for converting numbers to strings
-
-bool init = _FALSE;
 
 
 void fjoy_PrintAxes (void)
 {
-	u8 i, len;
-
-	if (init == _FALSE)
-	{
-		init = _TRUE;
-		InitRows();		
-	}
-	
-	
-	// Yaw
-	s8ToChar(fjoy_status.yaw,auxStr);
-	len = StrLen(auxStr);
-	for (i = 0; i < VALUE_LEN; i++)
-	{
-		if (i < (VALUE_LEN - len))
-			rows[YAW_ROW][i+AX_LEN] = ' ';
-		else
-			rows[YAW_ROW][i+AX_LEN] = auxStr[i-(VALUE_LEN-len)];
-	}
-	rows[YAW_ROW][i+AX_LEN] = ' '; // Trailing whitespace
-
-
-	s8ToBar(fjoy_status.yaw,rows[YAW_ROW]+BAR_START_POS);
-	lcd_PrintRow(rows[YAW_ROW],YAW_ROW);
-	
-	
-	// Pitch
-	s8ToChar(fjoy_status.pitch,auxStr);
-	len = StrLen(auxStr);
-	for (i = 0; i < VALUE_LEN; i++)
-	{
-		if (i < (VALUE_LEN - len))
-			rows[PITCH_ROW][i+AX_LEN] = ' ';
-		else
-			rows[PITCH_ROW][i+AX_LEN] = auxStr[i-(VALUE_LEN-len)];
-	}
-	rows[PITCH_ROW][i+AX_LEN] = ' '; // Trailing whitespace
-
-
-	s8ToBar(fjoy_status.pitch,rows[PITCH_ROW]+BAR_START_POS);
-	lcd_PrintRow(rows[PITCH_ROW],PITCH_ROW);
-	
-	
-	// Roll
-	s8ToChar(fjoy_status.roll,auxStr);
-	len = StrLen(auxStr);
-	for (i = 0; i < VALUE_LEN; i++)
-	{
-		if (i < (VALUE_LEN - len))
-			rows[ROLL_ROW][i+AX_LEN] = ' ';
-		else
-			rows[ROLL_ROW][i+AX_LEN] = auxStr[i-(VALUE_LEN-len)];
-	}
-	rows[ROLL_ROW][i+AX_LEN] = ' '; // Trailing whitespace
-
-
-	s8ToBar(fjoy_status.roll,rows[ROLL_ROW]+BAR_START_POS);
-	lcd_PrintRow(rows[ROLL_ROW],ROLL_ROW);
-	
-	
-	// Elevation
-	u8ToChar(fjoy_status.elev,auxStr);
-	len = StrLen(auxStr);
-	for (i = 0; i < VALUE_LEN; i++)
-	{
-		if (i < (VALUE_LEN - len))
-			rows[ELEV_ROW][i+AX_LEN] = ' ';
-		else
-			rows[ELEV_ROW][i+AX_LEN] = auxStr[i-(VALUE_LEN-len)];
-	}
-	rows[ELEV_ROW][i+AX_LEN] = ' '; // Trailing whitespace
-
-
-	u8ToBar(fjoy_status.elev,rows[ELEV_ROW]+BAR_START_POS);
-	lcd_PrintRow(rows[ELEV_ROW],ELEV_ROW);
+	PrintAxesNames();
+	PrintAxesMeasurements();
+	PrintBars();
 }
 
 void fjoy_PrintAxesPeriodically (void)
@@ -132,24 +62,67 @@ void PeriodicPrint (void *data, rti_time period, rti_id id)
 	fjoy_PrintAxes();
 }
 
-void InitRows (void)
+void PrintAxesNames (void)
 {
 	u8 i, j;
 	for (i = 0; i < DISPLAY_ROWS; i ++)
 	{
 		for (j = 0; j < DISPLAY_COLS; j++)
-			if (staticRows[i][j] == '\0')
+			if (axesNames[i][j] == '\0')
 				break;
 			else
-				rows[i][j] = staticRows[i][j];
+				lcd_memory[i*DISPLAY_COLS + j] = axesNames[i][j];
 			
 		while (j < DISPLAY_COLS)
-			rows[i][j++] = ' ';
+			lcd_memory[i*DISPLAY_COLS + j++] = ' ';
 	}
 	
 	return;
 }
 
+void PrintAxesMeasurements (void)
+{
+	PrintAxisMeasurements (fjoy_status.yaw, YAW_ROW, _TRUE);
+	PrintAxisMeasurements (fjoy_status.pitch, PITCH_ROW, _TRUE);
+	PrintAxisMeasurements (fjoy_status.roll, ROLL_ROW, _TRUE);
+	PrintAxisMeasurements (fjoy_status.elev, ELEV_ROW, _FALSE);
+}
+
+void PrintAxisMeasurements (s8 meas, u8 row, bool isSigned)
+{
+	u8 i, len;
+	
+	if (isSigned == _TRUE)
+		s8ToChar(meas,auxStr);
+	else
+		u8ToChar((u8)meas,auxStr);
+	
+	len = StrLen(auxStr);
+	for (i = 0; i < VALUE_LEN; i++)
+	{
+		if (i < (VALUE_LEN - len))
+			lcd_memory[row*DISPLAY_COLS + i + AX_LEN] = ' ';
+		else
+			lcd_memory[row*DISPLAY_COLS + i + AX_LEN] = auxStr[i-(VALUE_LEN-len)];
+	}
+	lcd_memory[row*DISPLAY_COLS + i + AX_LEN] = ' '; // Trailing whitespace	
+}
+
+void PrintBars (void)
+{
+	PrintBar (fjoy_status.yaw, YAW_ROW, _TRUE);
+	PrintBar (fjoy_status.pitch, PITCH_ROW, _TRUE);
+	PrintBar (fjoy_status.roll, ROLL_ROW, _TRUE);
+	PrintBar (fjoy_status.elev, ELEV_ROW, _FALSE);
+}
+
+void PrintBar (s8 meas, u8 row, bool isSigned)
+{
+	if (isSigned == _TRUE)
+		s8ToBar(meas,lcd_memory + row*DISPLAY_COLS + BAR_START_POS);	
+	else
+		u8ToBar((u8)meas,lcd_memory + row*DISPLAY_COLS + BAR_START_POS);	
+}
 
 void u8ToChar (u8 x, char *c)
 {
