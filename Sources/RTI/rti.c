@@ -16,7 +16,7 @@ enum {BASE_2=0, BASE_10};
 
 #define RTI_IS_VALID_ID(id) (((id >= 0) && (id < RTI_MAX_FCNS)) ? _TRUE : _FALSE)
 
-struct rti_cb {
+typedef struct rti_cb {
 	rti_time period;
 	rti_time count;
 	rti_ptr callback;
@@ -25,7 +25,7 @@ struct rti_cb {
 
 bool rti_isInit = _FALSE;
 
-struct rti_cb rti_tbl[RTI_MAX_FCNS];
+rti_cb rti_tbl[RTI_MAX_FCNS];
 
 
 void rti_Init()

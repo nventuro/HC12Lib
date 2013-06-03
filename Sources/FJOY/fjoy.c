@@ -5,9 +5,6 @@
 
 #define FJOY_READ_CHANNEL(chann, cb) atd_SetTask(FJOY_ATD_MODULE, chann, FJOY_ATD_OVERSAMPLING, _FALSE, _FALSE, cb)
 
-void fjoy_UpdateStatus (void *data, rti_time period, rti_id id);
-void fjoy_ATDCallback (s16* mem, const struct atd_task* taskData);
-
 #define FJOY_ATD_FIRST_CHANN FJOY_YAW_CHANN
 
 #define LINEAR_SCALE_U(x,min,max) (((x-min)*(POW_2(ATD_CONV_BITS)-1))/(max-min))
@@ -48,6 +45,8 @@ struct {
 
 bool fjoy_isInit = _FALSE;
 
+void fjoy_UpdateStatus (void *data, rti_time period, rti_id id);
+void fjoy_ATDCallback (s16* mem, const struct atd_task* taskData);
 
 void fjoy_Init(void)
 {

@@ -10,7 +10,17 @@
 #define ATD_CONV_BITS 10
 
 
-enum {ATD_CH0=0, ATD_CH1, ATD_CH2, ATD_CH3, ATD_CH4, ATD_CH5, ATD_CH6, ATD_CH7};
+typedef enum 
+{
+	ATD_CH0 = 0, 
+	ATD_CH1, 
+	ATD_CH2, 
+	ATD_CH3, 
+	ATD_CH4, 
+	ATD_CH5, 
+	ATD_CH6, 
+	ATD_CH7
+} atd_channel;
 
 
 typedef void (*atd_ptr) (s16* mem, const struct atd_task* taskData);
@@ -23,14 +33,14 @@ typedef struct
 	bool scan;
 	
 	atd_ptr eocCB;
-}atd_task;
+} atd_task;
 
 
 typedef enum 
 {
 	ATD0 = 0,
 	ATD1
-}atd_module;
+} atd_module;
 
 
 typedef s8 atd_taskId;
