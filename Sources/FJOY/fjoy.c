@@ -10,32 +10,31 @@ void fjoy_ATDCallback (s16* mem, const struct atd_task* taskData);
 
 #define FJOY_ATD_FIRST_CHANN FJOY_YAW_CHANN
 
-#define LINEAR_SCALE_U8(x,min,max) (((x-min)*255)/(max-min))
-#define LINEAR_SCALE_S8(x,min,max,repos) ((x > repos) ? LINEAR_SCALE_S8_UPP(x,repos,max) : LINEAR_SCALE_S8_LOW(x,repos,min))
-#define LINEAR_SCALE_S8_UPP(x,repos,max) (((x-repos)*127)/(max-repos))
-#define LINEAR_SCALE_S8_LOW(x,repos,min) (((x-repos)*(-128))/(min-repos))
+#define LINEAR_SCALE_U(x,min,max,bits) (((x-min)*(POW_2(bits)-1))/(max-min))
+#define LINEAR_SCALE_S(x,min,max,repos,bits) ((x > repos) ? LINEAR_SCALE_S_UPP(x,repos,max,bits) : LINEAR_SCALE_S_LOW(x,repos,min,bits))
+#define LINEAR_SCALE_S_UPP(x,repos,max,bits) ((((x-repos)*(POW_2(bits-1)-1)))/(max-repos))
+#define LINEAR_SCALE_S_LOW(x,repos,min,bits) (((x-repos)*(-(POW_2(bits-1))))/(min-repos))
 
-
-#define SATURATE_U8(x) ((x > 255) ? 255 : ((x < 0) ? 0 : x))
-#define SATURATE_S8(x) ((x > 127) ? 127 : ((x < -128) ? -128 : x))
+#define SATURATE_U(x,bits) ((x > (POW_2(bits)-1)) ? (POW_2(bits)-1) : ((x < 0) ? 0 : x))
+#define SATURATE_S(x,bits) ((x > (POW_2(bits-1)-1)) ? (POW_2(bits-1)-1) : ((x < (-(POW_2(bits-1)))) ? (-(POW_2(bits-1))) : x))
 
 
 // Calibration
 
-#define YAW_MIN 78
-#define YAW_MAX 117
-#define YAW_REST 106
+#define YAW_MIN 78/4
+#define YAW_MAX 117/4
+#define YAW_REST 106/4
 
-#define PITCH_MIN -81
-#define PITCH_MAX 92
+#define PITCH_MIN -81/4
+#define PITCH_MAX 92/4
 #define PITCH_REST 0
 
-#define ROLL_MIN 82
-#define ROLL_MAX 121
-#define ROLL_REST 114
+#define ROLL_MIN 82/4
+#define ROLL_MAX 121/4
+#define ROLL_REST 114/4
 
-#define ELEV_MIN 78
-#define ELEV_MAX 221
+#define ELEV_MIN 38
+#define ELEV_MAX 109
 
 
 struct {
@@ -139,6 +138,7 @@ void fjoy_ATDCallback (s16* mem, const atd_task* taskData)
 			break;
 	}
 }
+#include <stdio.h>
 
 void fjoy_UpdateStatus (void *data, rti_time period, rti_id id)
 {
@@ -150,26 +150,27 @@ void fjoy_UpdateStatus (void *data, rti_time period, rti_id id)
 	// do stuff (average samples of buttons and analog inputs, scale inputs)
 	
 	
-	// Division by 4 is required since the inputs are sampled at 10 bits resolution (which must be lowered to 8 bits)
-	// Yaw, pitch and roll are s8, substracting 128 makes them go from -128 to 127
-	fjoy_data.yawSum = fjoy_data.yawSum / (FJOY_ATD_OVERSAMPLING * 4) - 128;
-	fjoy_data.pitchSum = fjoy_data.pitchSum / (FJOY_ATD_OVERSAMPLING * 4) - 128;
-	fjoy_data.rollSum = fjoy_data.rollSum / (FJOY_ATD_OVERSAMPLING * 4) - 128;
-	// Elevation potentiometer is u8, but the potentiometer is inverted, substracting the measurement from 255 fixes that
-	fjoy_data.elevSum = 255 - fjoy_data.elevSum / (FJOY_ATD_OVERSAMPLING * 4); 
-	
-	// Scaling and saturation
-	fjoy_data.yawSum = LINEAR_SCALE_S8(fjoy_data.yawSum, YAW_MIN, YAW_MAX, YAW_REST);
-	fjoy_status.yaw = SATURATE_S8(fjoy_data.yawSum);
+	// Division is required since the inputs are sampled at 10 bits resolution (which must be lowered to the different amounts of bits)
+	// Yaw, pitch and roll are s8, so the lower bound must be substracted from them (so that zero maps to that value)
+	fjoy_data.yawSum = fjoy_data.yawSum / (FJOY_ATD_OVERSAMPLING * POW_2(10-FJOY_YAW_BITS)) - POW_2(FJOY_YAW_BITS-1);
+	fjoy_data.pitchSum = fjoy_data.pitchSum / (FJOY_ATD_OVERSAMPLING * POW_2(10-FJOY_PITCH_BITS)) - POW_2(FJOY_PITCH_BITS-1);
+	fjoy_data.rollSum = fjoy_data.rollSum / (FJOY_ATD_OVERSAMPLING * POW_2(10-FJOY_ROLL_BITS)) - POW_2(FJOY_ROLL_BITS-1);
+	// Elevation potentiometer is u8, but the potentiometer is inverted, substracting the measurement from the upper bound fixes that
+	fjoy_data.elevSum = POW_2(FJOY_ELEV_BITS) - 1 - (fjoy_data.elevSum / (FJOY_ATD_OVERSAMPLING * POW_2(10-FJOY_ELEV_BITS))); 
 
-	fjoy_data.rollSum = LINEAR_SCALE_S8(fjoy_data.rollSum, ROLL_MIN, ROLL_MAX, ROLL_REST);
-	fjoy_status.roll = SATURATE_S8(fjoy_data.rollSum);
+	printf("y %ld p %ld r %ld e %ld\n", fjoy_data.yawSum, fjoy_data.pitchSum, fjoy_data.rollSum, fjoy_data.elevSum);
+	// Scaling and saturation
+	fjoy_data.yawSum = LINEAR_SCALE_S(fjoy_data.yawSum, YAW_MIN, YAW_MAX, YAW_REST, FJOY_YAW_BITS);
+	fjoy_status.yaw = SATURATE_S(fjoy_data.yawSum, FJOY_YAW_BITS);
+
+	fjoy_data.rollSum = LINEAR_SCALE_S(fjoy_data.rollSum, ROLL_MIN, ROLL_MAX, ROLL_REST, FJOY_PITCH_BITS);
+	fjoy_status.roll = SATURATE_S(fjoy_data.rollSum, FJOY_PITCH_BITS);
 	
-	fjoy_data.pitchSum = LINEAR_SCALE_S8(fjoy_data.pitchSum, PITCH_MIN, PITCH_MAX, PITCH_REST);
-	fjoy_status.pitch = SATURATE_S8(fjoy_data.pitchSum);
+	fjoy_data.pitchSum = LINEAR_SCALE_S(fjoy_data.pitchSum, PITCH_MIN, PITCH_MAX, PITCH_REST, FJOY_ROLL_BITS);
+	fjoy_status.pitch = SATURATE_S(fjoy_data.pitchSum, FJOY_ROLL_BITS);
 	
-	fjoy_data.elevSum = LINEAR_SCALE_U8(fjoy_data.elevSum, ELEV_MIN, ELEV_MAX);
-	fjoy_status.elev = SATURATE_U8(fjoy_data.elevSum);
+	fjoy_data.elevSum = LINEAR_SCALE_U(fjoy_data.elevSum, ELEV_MIN, ELEV_MAX, FJOY_ELEV_BITS);
+	fjoy_status.elev = SATURATE_U(fjoy_data.elevSum, FJOY_ELEV_BITS);
 	
 
 	for (i = 0; i < FJOY_MAX_CALLBACKS; i++)

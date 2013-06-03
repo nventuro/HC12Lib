@@ -15,7 +15,7 @@
 #define BAR_START_POS (AX_LEN+VALUE_LEN+1)
 #define BAR_LEN 7
 
-#define BAR_DIVIDER (255/BAR_LEN)
+#define BAR_DIVIDER(bits) ((POW_2(bits)-1)/BAR_LEN)
 
 #define DISPLAY LCD_2004
 #define DISPLAY_ROWS GLUE(DISPLAY,_ROWS)
@@ -32,12 +32,12 @@ void PrintAxesNames (void);
 void PrintAxesMeasurements (void);
 void PrintAxisMeasurements (s8 meas, u8 row, bool isSigned);
 void PrintBars (void);
-void PrintBar (s8 meas, u8 row, bool isSigned);
+void PrintBar (s8 meas, u8 row, bool isSigned, u8 bits);
 
 void u8ToChar (u8 x, char *c);
 void s8ToChar (s8 x, char *c);
-void u8ToBar (u8 x, char *c);
-void s8ToBar (s8 x, char *c);
+void u8ToBar (u8 x, char *c, u8 bits);
+void s8ToBar (s8 x, char *c, u8 bits);
 u8 StrLen (char *c);
 
 char *axesNames[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
@@ -110,18 +110,18 @@ void PrintAxisMeasurements (s8 meas, u8 row, bool isSigned)
 
 void PrintBars (void)
 {
-	PrintBar (fjoy_status.yaw, YAW_ROW, _TRUE);
-	PrintBar (fjoy_status.pitch, PITCH_ROW, _TRUE);
-	PrintBar (fjoy_status.roll, ROLL_ROW, _TRUE);
-	PrintBar (fjoy_status.elev, ELEV_ROW, _FALSE);
+	PrintBar (fjoy_status.yaw, YAW_ROW, _TRUE, FJOY_YAW_BITS);
+	PrintBar (fjoy_status.pitch, PITCH_ROW, _TRUE, FJOY_PITCH_BITS);
+	PrintBar (fjoy_status.roll, ROLL_ROW, _TRUE, FJOY_ROLL_BITS);
+	PrintBar (fjoy_status.elev, ELEV_ROW, _FALSE, FJOY_ELEV_BITS);
 }
 
-void PrintBar (s8 meas, u8 row, bool isSigned)
+void PrintBar (s8 meas, u8 row, bool isSigned, u8 bits)
 {
 	if (isSigned == _TRUE)
-		s8ToBar(meas,lcd_memory + row*DISPLAY_COLS + BAR_START_POS);	
+		s8ToBar(meas,lcd_memory + row*DISPLAY_COLS + BAR_START_POS, bits);	
 	else
-		u8ToBar((u8)meas,lcd_memory + row*DISPLAY_COLS + BAR_START_POS);	
+		u8ToBar((u8)meas,lcd_memory + row*DISPLAY_COLS + BAR_START_POS, bits);	
 }
 
 void u8ToChar (u8 x, char *c)
@@ -160,10 +160,10 @@ u8 StrLen (char *c)
 	return i;
 }
 
-void u8ToBar (u8 x, char *c)
+void u8ToBar (u8 x, char *c, u8 bits)
 {
 	u8 i;
-	u8 notch = x / (BAR_DIVIDER+1);
+	u8 notch = x / (BAR_DIVIDER(bits) + 1);
 	
 	for (i = 0; i < BAR_LEN; i++)
 		if (i == notch)
@@ -175,9 +175,9 @@ void u8ToBar (u8 x, char *c)
 	c[BAR_LEN + 1] = ']';
 }
 
-void s8ToBar (s8 x, char *c)
+void s8ToBar (s8 x, char *c, u8 bits)
 {
-	s16 aux = x + 128;
+	s16 aux = x + POW_2(bits-1);
 	
-	u8ToBar((u8) aux, c);
+	u8ToBar((u8) aux, c, bits);
 }
