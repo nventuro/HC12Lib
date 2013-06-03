@@ -48,6 +48,7 @@ typedef union {
 #define BOOL(a) ((a) ? _TRUE:_FALSE)
 
 #define BIT(n) (1<<(n))
+#define POW_2(n) BIT(n)
 
 extern u8 firstBitsMem[]; // firtBitsMem[0] = 00000001, firstBitsMem[3] = 00001111
 extern u8 lastBitsMem[]; // lastBitsMem[0] = 10000000, lastBitsMem[3] = 11110000

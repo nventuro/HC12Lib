@@ -15,6 +15,7 @@ void fjoy_ATDCallback (s16* mem, const struct atd_task* taskData);
 #define LINEAR_SCALE_S8_UPP(x,repos,max) (((x-repos)*127)/(max-repos))
 #define LINEAR_SCALE_S8_LOW(x,repos,min) (((x-repos)*(-128))/(min-repos))
 
+
 #define SATURATE_U8(x) ((x > 255) ? 255 : ((x < 0) ? 0 : x))
 #define SATURATE_S8(x) ((x > 127) ? 127 : ((x < -128) ? -128 : x))
 
@@ -23,15 +24,15 @@ void fjoy_ATDCallback (s16* mem, const struct atd_task* taskData);
 
 #define YAW_MIN 78
 #define YAW_MAX 117
-#define YAW_REPOS 106
+#define YAW_REST 106
 
 #define PITCH_MIN -81
 #define PITCH_MAX 92
-#define PITCH_REPOS 0
+#define PITCH_REST 0
 
 #define ROLL_MIN 82
 #define ROLL_MAX 121
-#define ROLL_REPOS 114
+#define ROLL_REST 114
 
 #define ELEV_MIN 78
 #define ELEV_MAX 221
@@ -158,13 +159,13 @@ void fjoy_UpdateStatus (void *data, rti_time period, rti_id id)
 	fjoy_data.elevSum = 255 - fjoy_data.elevSum / (FJOY_ATD_OVERSAMPLING * 4); 
 	
 	// Scaling and saturation
-	fjoy_data.yawSum = LINEAR_SCALE_S8(fjoy_data.yawSum, YAW_MIN, YAW_MAX, YAW_REPOS);
+	fjoy_data.yawSum = LINEAR_SCALE_S8(fjoy_data.yawSum, YAW_MIN, YAW_MAX, YAW_REST);
 	fjoy_status.yaw = SATURATE_S8(fjoy_data.yawSum);
 
-	fjoy_data.rollSum = LINEAR_SCALE_S8(fjoy_data.rollSum, ROLL_MIN, ROLL_MAX, ROLL_REPOS);
+	fjoy_data.rollSum = LINEAR_SCALE_S8(fjoy_data.rollSum, ROLL_MIN, ROLL_MAX, ROLL_REST);
 	fjoy_status.roll = SATURATE_S8(fjoy_data.rollSum);
 	
-	fjoy_data.pitchSum = LINEAR_SCALE_S8(fjoy_data.pitchSum, PITCH_MIN, PITCH_MAX, PITCH_REPOS);
+	fjoy_data.pitchSum = LINEAR_SCALE_S8(fjoy_data.pitchSum, PITCH_MIN, PITCH_MAX, PITCH_REST);
 	fjoy_status.pitch = SATURATE_S8(fjoy_data.pitchSum);
 	
 	fjoy_data.elevSum = LINEAR_SCALE_U8(fjoy_data.elevSum, ELEV_MIN, ELEV_MAX);

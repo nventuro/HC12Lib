@@ -40,14 +40,16 @@
 #define LCD_WRITE_DDRAM BIT(7)
 
 // Some displays work with a very short enable pulse. For those, these two lines are commented out.
-#define LCD_ENABLE_NOPS 175
-#define LCD_ENABLE_STROBE() do{u8 i;LCD_ENABLE = 1;	for (i = 0; i < LCD_ENABLE_NOPS; i++) asm nop; LCD_ENABLE = 0;} while (0)
+//#define LCD_ENABLE_NOPS 150
+//#define LCD_ENABLE_STROBE() do{u8 i;LCD_ENABLE = 1;	for (i = 0; i < LCD_ENABLE_NOPS; i++) asm nop; LCD_ENABLE = 0;} while (0)
 
 // If a delay is required when strobing enable, comment out this line.
-//#define LCD_ENABLE_STROBE() do{LCD_ENABLE = 1;LCD_ENABLE = 0;} while (0)
+#define LCD_ENABLE_STROBE() do{LCD_ENABLE = 1;LCD_ENABLE = 0;} while (0)
 
 #define LCD_SHORT_DELAY_US 200
 #define LCD_LONG_DELAY_US 3200
+
+char lcd_memory[LCD_MEMORY];
 
 struct
 {

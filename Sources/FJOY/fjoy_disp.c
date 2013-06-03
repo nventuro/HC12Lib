@@ -17,9 +17,9 @@
 
 #define BAR_DIVIDER (255/BAR_LEN)
 
-// 20x4 display (LCD_2004)
-#define COLS 20
-#define ROWS 4
+#define DISPLAY LCD_2004
+#define DISPLAY_ROWS GLUE(DISPLAY,_ROWS)
+#define DISPLAY_COLS GLUE(DISPLAY,_COLS)
 
 #define YAW_ROW 0
 #define PITCH_ROW 1
@@ -35,7 +35,7 @@ void u8ToBar (u8 x, char *c);
 void s8ToBar (s8 x, char *c);
 u8 StrLen (char *c);
 
-char rows[ROWS][COLS];
+char rows[DISPLAY_ROWS][DISPLAY_COLS];
 char *staticRows[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
 char auxStr[VALUE_LEN]; // Used for converting numbers to strings
 
@@ -45,7 +45,7 @@ bool init = _FALSE;
 void fjoy_PrintAxes (void)
 {
 	u8 i, len;
-	
+
 	if (init == _FALSE)
 	{
 		init = _TRUE;
@@ -135,15 +135,15 @@ void PeriodicPrint (void *data, rti_time period, rti_id id)
 void InitRows (void)
 {
 	u8 i, j;
-	for (i = 0; i < ROWS; i ++)
+	for (i = 0; i < DISPLAY_ROWS; i ++)
 	{
-		for (j = 0; j < COLS; j++)
+		for (j = 0; j < DISPLAY_COLS; j++)
 			if (staticRows[i][j] == '\0')
 				break;
 			else
 				rows[i][j] = staticRows[i][j];
 			
-		while (j < COLS)
+		while (j < DISPLAY_COLS)
 			rows[i][j++] = ' ';
 	}
 	
