@@ -30,7 +30,7 @@ typedef enum
 
 
 #define LCD_MEMORY (LCD_2004_ROWS * LCD_2004_COLS)
-char lcd_memory[LCD_MEMORY];
+extern char lcd_memory[LCD_MEMORY];
 // After calling lcd_Init(), the LCD's screen will match what's on lcd_memory. A new row commences every (lcd_type)_COLS characters.
 // If the memory can hold more characters than the LCD can (because it's of a smaller size), only the first characters are used.
 
