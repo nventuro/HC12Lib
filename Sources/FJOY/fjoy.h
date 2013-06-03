@@ -20,9 +20,9 @@
 #define FJOY_PITCH_CHANN 3
 #define FJOY_ELEV_CHANN 2
 
-#define FJOY_YAW_BITS 6
-#define FJOY_PITCH_BITS 6
-#define FJOY_ROLL_BITS 6
+#define FJOY_YAW_BITS 5
+#define FJOY_PITCH_BITS 5
+#define FJOY_ROLL_BITS 5
 #define FJOY_ELEV_BITS 7
 
 

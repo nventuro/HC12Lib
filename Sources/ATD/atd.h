@@ -7,6 +7,8 @@
 #define TASK_MAX 8
 #define INVALID_TASK_ID (-1)	// if != (-1), chech getNextTask
 
+#define ATD_CONV_BITS 10
+
 
 enum {ATD_CH0=0, ATD_CH1, ATD_CH2, ATD_CH3, ATD_CH4, ATD_CH5, ATD_CH6, ATD_CH7};
 
