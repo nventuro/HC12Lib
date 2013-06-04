@@ -104,6 +104,14 @@ static void dVec_dAddInPlace(s32Vec3* This, s32Vec3* b)
 	return;
 }
 
+static void dVec_dSubInPlace(s32Vec3* This, s32Vec3* b)
+{
+	This->x -= b->x;
+	This->y -= b->y;
+	This->z -= b->z;
+
+	return;
+}
 
 static void dVec_AddInPlace(s32Vec3* This, s16Vec3* b)
 {
@@ -158,6 +166,15 @@ static dvec3 dvec_Add(dvec3 a, dvec3 b)
 	dvec3 c = a;
 
 	dVec_dAddInPlace(&c, &b);
+
+	return c;
+}
+
+static dvec3 dvec_Sub(dvec3 a, dvec3 b)
+{
+	dvec3 c = a;
+
+	dVec_dSubInPlace(&c, &b);
 
 	return c;
 }
@@ -225,6 +242,7 @@ static vec3 vec_clip_d(dvec3 a)
 #define vsub vec_Sub
 #define vmul vec_Mul
 #define dvsum dvec_Add
+#define dvsub dvec_Sub
 
 /* **** Quaternions ****/
 

@@ -3,15 +3,33 @@
 #include "rti.h"
 #include "iic.h"
 #include "timers.h"
+#include "quick_serial.h"
 
 
 #include <stdio.h>
 void interrupt catch_all()
 {
+	u16 rpc;
+	
 	PORTA_PA5 = 1;
+	
+	asm ldx 10,sp;
+	asm stx rpc;
+	
+	//qs_putchar(0, rpc&0xF000 + 'a');
+	//qs_putchar(0, rpc&0x0F00 + 'a');
+	//qs_putchar(0, rpc&0x0F00 + 'a');
+	//qs_putchar(0, rpc&0x000F + 'a');
+	
 	PORTA_PA5 = 0;
 }
 
+void interrupt sci_matador()
+{
+	PORTA_PA6 = 1;
+	while(1)
+		;
+}
 
 #ifndef NOTUSED
 #define NOTUSED ((const *)0xFFFF)

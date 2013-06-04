@@ -47,10 +47,12 @@ void sample_ready(void)
 	
 	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING) 
 	{
+		/*
 		if ((count > 0) && TIM_TICKS_TO_US(tim_GetTimeElapsed(overflowCnt, DMU_TIMER, latchedTime)) < 999 )
 		{	
 			printf("interrupt before 1ms; count = %lu", count);
 		}
+		*/
 		tim_SetFallingEdge(DMU_TIMER);
 		dmu_GetMeasurements(att_process);
 		
@@ -84,6 +86,8 @@ void main (void)
 	PORTA_PA3 = 0;
 	DDRA_DDRA5 = DDR_OUT;
 	PORTA_PA5 = 0;
+	DDRA_DDRA6 = DDR_OUT;
+	PORTA_PA6 = 0;
 	
 	tim_GetTimer(TIM_IC, sample_ready, dataReady_Ovf, DMU_TIMER);
 	tim_SetRisingEdge(DMU_TIMER);
@@ -150,6 +154,16 @@ void main (void)
 
 	while(!motDelayDone)
 		;
+	
+	motData.speed[0] = 0;//S16_MAX;
+	motData.speed[1] = S16_MAX;
+	motData.speed[2] = 0;//S16_MAX;
+	motData.speed[3] = S16_MAX;
+	motDelayDone = _FALSE;
+	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(3000));
+
+	while(!motDelayDone)
+		;
 
 	printf("Entering loop");
 
@@ -174,7 +188,7 @@ void main (void)
 			QEstAux = QEst;
 			asm cli;
 			
-			thrust = h_control(10000, 0);
+			thrust = h_control(2000, 0);
 			torque = adv_att_control(setpoint, QEstAux);
 			/*
 			if (torqueCount++ >= 10)

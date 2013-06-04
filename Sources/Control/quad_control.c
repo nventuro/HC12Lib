@@ -111,26 +111,29 @@ int int_SumSat3(int a, int b, int c)
 }
 */
 
-#define att_Kp FRAC_1
-#define att_Kd (FRAC_1/2)
+#define att_Kp 400
+#define att_Kd 1000
 
 vec3 adv_att_control(quat setpoint, quat att)
 {
 	static vec3 err_prev = VEC0;
+	//static dvec3 d_err_prev = VEC0;
 	static vec3 int_error = VEC0;
 
 	quat setp_c = qconj(setpoint);
 	vec3 t_error = qmul(setp_c, att).v;
 	vec3 torques;
+	dvec3 d_err;
 	/* ¿tenemos que hacer la derivada saturada?? */
+	//d_err = dvsub(vfmul2(vsub(t_error, err_prev), att_Kd), d_err_prev);
+	d_err = vfmul2(vsub(t_error, err_prev), att_Kd);
 	
-	torques = vec_clip_d(dvsum(	vfmul2(t_error, att_Kp),
-			vfmul2(	vsub(t_error, err_prev),
-				att_Kd
-				)
-			)
-		);
+	
+	torques = vec_clip_d(
+			dvsum(vfmul2(t_error, att_Kp), d_err)
+			);
 	err_prev = t_error;
+	//d_err_prev = d_err;
 	
 	//torques = vec_clip_d(vfmul2(t_error, att_Kp));
 	
@@ -153,8 +156,8 @@ frac h_control(frac setpoint, frac h)
 }
 
 #define mix_thrust_shift 0
-#define	mix_roll_shift 2
-#define mix_pitch_shift 2
+#define	mix_roll_shift 3
+#define mix_pitch_shift 3
 #define mix_yaw_shift 3
 
 frac gammainv(frac T, frac t1, frac t2, frac t3)
@@ -173,9 +176,9 @@ struct motorData control_mixer(frac thrust, vec3 torque)
 {
 	struct motorData output;
 	
-	output.speed[0] = gammainv(thrust, 0, torque.y, -torque.z);
+	output.speed[0] = 0;//gammainv(thrust, 0, torque.y, -torque.z);
 	output.speed[1] = gammainv(thrust, -torque.x, 0, torque.z);
-	output.speed[2] = gammainv(thrust, 0, -torque.y, -torque.z);
+	output.speed[2] = 0;//gammainv(thrust, 0, -torque.y, -torque.z);
 	output.speed[3] = gammainv(thrust, torque.x, 0, torque.z);
 	
 	return output;

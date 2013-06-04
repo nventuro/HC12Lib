@@ -78,7 +78,7 @@ void mot_MasterSrv(void)
 		tim_SetValue(MOTOR_SLAVE1_OC, latchedTime + fmul(motData.speed[1], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
 		tim_SetValue(MOTOR_SLAVE2_OC, latchedTime + fmul(motData.speed[2], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
 		tim_SetValue(MOTOR_SLAVE3_OC, latchedTime + fmul(motData.speed[3], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
-		
+		 
 		mot_Unlink();
 		
 		readyToCalculate = _TRUE;

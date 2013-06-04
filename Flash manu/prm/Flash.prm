@@ -1,4 +1,4 @@
- 	NAMES
+NAMES
     /* CodeWarrior will pass all the needed files to the linker by command line. But here you may add your additional files */
 END
 
@@ -108,5 +108,5 @@ ENTRIES /* keep the following unreferenced variables */
     interrupt_vector_table
 END
 
-STACKSIZE 0x100   /* size of the stack (will be allocated in DEFAULT_RAM) */
+STACKSIZE 0x300   /* size of the stack (will be allocated in DEFAULT_RAM) */
 

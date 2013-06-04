@@ -3,7 +3,7 @@
 RegBase:	equ	$0000	 	
 ;
 		xdef  pll_init
-		include	"CRG.Asm"
+		include	"CRG.Asm"    
 ;
 ;
 ;	CRG Module Register and bit definitions
@@ -67,6 +67,7 @@ COPBYP:	equ	$40
 PLLBYP:	equ	$10
 FCM:	equ	$02
 ;
+		
 
 OscClk:	equ	16000000
 Eclock:	equ	24000000		; final E-clock frequency (PLL)
@@ -74,14 +75,15 @@ RefClock:	equ	8000000
 ;
 REFDVVal:	equ	(OscClk/RefClock)-1	
 SYNRVal:	equ	(Eclock/RefClock)-1
-
-
+mCLKSEL_PLLSEL:     equ    %10000000
+mPLLCTL_PLLON:      equ    %01000000
 
 DEFAULT_ROM  	SECTION   
 
 pll_init 	equ	*
 
-     	
+    bclr CLKSEL,mCLKSEL_PLLSEL ;disengage PLL
+    bset    PLLCTL,mPLLCTL_PLLON   ;turn on PLL 	
  		ldab	#REFDVVal		; set the REFDV register to give us a 1.0 MHz reference.
 		stab	REFDV
 		ldab	#SYNRVal		; set the SYNR register to give us a 24.0 MHz E-clock.
