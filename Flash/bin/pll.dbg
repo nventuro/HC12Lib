@@ -1,0 +1,97 @@
+
+
+RegBase:	equ	$0000	 	
+;
+		xdef  pll_init
+		include	"CRG.Asm"
+;
+;
+;	CRG Module Register and bit definitions
+;
+SYNR:	equ	RegBase+$0034	; synthesizer loop divider register.
+REFDV:	equ	RegBase+$0035	; reference divider register.
+CTFLG:	equ	RegBase+$0036	;
+CRGFLG:	equ	RegBase+$0037	; CRG flag register.
+CRGINT:	equ	RegBase+$0038	; CRG interrupt flag register.
+CLKSEL:	equ	RegBase+$0039	; CRG clock select register.
+PLLCTL:	equ	RegBase+$003a
+RTICTL:	equ	RegBase+$003b	; RTI control register
+COPCTL:	equ	RegBase+$003c	; COP Watchdog control register.
+FORBYP:	equ	RegBase+$003d	; GRC prescaler bypass control register.
+CTCTL:	equ	RegBase+$003e	;
+ARMCOP:	equ	RegBase+$003f	; COP reset register.
+;
+;	Bit definitions for the CRGFLG register
+;
+RTIF:	equ	$80
+PROF:	equ	$40
+LOCKIF:	equ	$10
+LOCK:	equ	$08
+TRACK:	equ	$04
+SCMIF:	equ	$02
+SCM:	equ	$01
+;
+;	Bit definitions for the CRGINT register
+;
+RTIE:	equ	$80
+LOCKIE:	equ	$10
+SCMIE:	equ	$02
+;
+;	Bit definitions for the CLKSEL register
+;
+PLLSEL:	equ	$80	; use PLL for system clocks.
+PSTP:	equ	$40
+SYSWAI:	equ	$20
+ROAWAI:	equ	$10
+PLLWAI:	equ	$08
+CWAI:	equ	$04
+RTIWAI:	equ	$02
+COPWAI:	equ	$01
+;
+;	Bit definitions for the PLLCTL register
+;
+CME:	equ	$80
+PLLON:	equ	$40	; PLL on/off control bit.
+AUTO:	equ	$20	; auto/manual acquisiton mode.
+ACQ:	equ	$10
+SCME:	equ	$01
+;
+;	Bit definitions for the COPCTL register
+;
+WCOP:	equ	$80
+;
+;	Bit definitions for the FORBYP register
+;
+RTIBYP:	equ	$80
+COPBYP:	equ	$40
+PLLBYP:	equ	$10
+FCM:	equ	$02
+;
+
+OscClk:	equ	16000000
+Eclock:	equ	24000000		; final E-clock frequency (PLL)
+RefClock:	equ	8000000
+;
+REFDVVal:	equ	(OscClk/RefClock)-1	
+SYNRVal:	equ	(Eclock/RefClock)-1
+
+
+
+DEFAULT_ROM  	SECTION   
+
+pll_init 	equ	*
+
+     	
+ 		ldab	#REFDVVal		; set the REFDV register to give us a 1.0 MHz reference.
+		stab	REFDV
+		ldab	#SYNRVal		; set the SYNR register to give us a 24.0 MHz E-clock.
+		stab	SYNR
+		nop			; nops required for bug in initial silicon.
+		nop
+		nop
+		nop
+		brclr	CRGFLG,#LOCK,*		; wait here till the PLL is locked.	
+		bset	CLKSEL,#PLLSEL		; switch the bus clock to the PLL.
+
+
+		rts

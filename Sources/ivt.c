@@ -4,6 +4,15 @@
 #include "iic.h"
 #include "timers.h"
 
+
+#include <stdio.h>
+void interrupt catch_all()
+{
+	PORTA_PA5 = 1;
+	PORTA_PA5 = 0;
+}
+
+
 #ifndef NOTUSED
 #define NOTUSED ((const *)0xFFFF)
 #endif
@@ -135,7 +144,7 @@ void (* const interrupt_vector_table[])() ={
     rti_Service,// VECT7	rti
     NOTUSED,	// VECT6	irq
     NOTUSED,	// VECT5	xirq
-    NOTUSED,	// VECT4	swi
+    catch_all,	// VECT4	swi
     NOTUSED,	// VECT3	trap
     NOTUSED,	// VECT2	cop
     NOTUSED,	// VECT1	clkmon

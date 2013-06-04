@@ -20,6 +20,7 @@ extern struct dmu_data_T dmu_data;
 void Init (void);
 void PrintMeas (s32 measurement);
 void GetMeasurementsMask(void *data, rti_time period, rti_id id);
+void rti_MotDelay(void *data, rti_time period, rti_id id);
 void GetSamplesMask(void *data, rti_time period, rti_id id);
 void dataReady_Srv(void);
 void dataReady_Ovf(void);
@@ -41,9 +42,22 @@ extern struct motorData motData;
 
 void sample_ready(void)
 {
-	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING) {
+	static u16 latchedTime;
+	static u32 count = 0;
+	
+	if (tim_GetEdge(DMU_TIMER) == EDGE_RISING) 
+	{
+		if ((count > 0) && TIM_TICKS_TO_US(tim_GetTimeElapsed(overflowCnt, DMU_TIMER, latchedTime)) < 999 )
+		{	
+			printf("interrupt before 1ms; count = %lu", count);
+		}
 		tim_SetFallingEdge(DMU_TIMER);
 		dmu_GetMeasurements(att_process);
+		
+		latchedTime = tim_GetValue(DMU_TIMER);
+		overflowCnt = 0;
+		count++;
+
 	} else {
 		tim_SetRisingEdge(DMU_TIMER);
 	}
@@ -57,19 +71,26 @@ void main (void)
 {
 	u8 userInput;
 	u8 measurementCount = 0;
+	bool motDelayDone = _FALSE;
 
 	u16 torqueCount = 0;
 	quat setpoint = {FRAC_1,0,0,0};
 	Init ();	
 	DDRA_DDRA0 = 1;
 	DDRA_DDRA1 = 1;
+	DDRA_DDRA2 = 1;
+	PORTA_PA2 = 0;
+	DDRA_DDRA3 = 1;
+	PORTA_PA3 = 0;
+	DDRA_DDRA5 = DDR_OUT;
+	PORTA_PA5 = 0;
 	
-	tim_GetTimer(TIM_IC, sample_ready, NULL, DMU_TIMER);
+	tim_GetTimer(TIM_IC, sample_ready, dataReady_Ovf, DMU_TIMER);
 	tim_SetRisingEdge(DMU_TIMER);
 	tim_ClearFlag(DMU_TIMER);
 	tim_EnableInterrupts(DMU_TIMER);
 
-/*
+	/*
 	printf("Press 'm' to calibrate\n");
 
 	while (measurementCount < 2)
@@ -119,30 +140,34 @@ void main (void)
 				printf("Calibrate again\n");
 			}
 
-			att_apply_correction(calibrationOutput);
+			//att_apply_correction(calibrationOutput);
 		}
 	}
+	*/
 
-*/
-//	mot_Init();
+	mot_Init();
+	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(3000));
 
+	while(!motDelayDone)
+		;
+
+	printf("Entering loop");
 
 	while (1) {
 	
-
+		/*
 		if (have_to_output)
 		{
 			printf("%d %d %d %d,", Q_COMPONENTS(QEst));
 			//printf("%d %d %d\n", Bias.x, Bias.y, Bias.z);
 			have_to_output = 0;
 		}
-	
-	/*
-		frac thrust = 0;
-		vec3 torque = {0,0,0};
+		*/
 		
 		if (readyToCalculate){
 			quat QEstAux;
+			frac thrust;
+			vec3 torque;
 			
 			asm sei;
 			readyToCalculate = _FALSE;
@@ -151,18 +176,19 @@ void main (void)
 			
 			thrust = h_control(10000, 0);
 			torque = adv_att_control(setpoint, QEstAux);
-			
+			/*
 			if (torqueCount++ >= 10)
 			{
 				torqueCount = 0;
 				printf(">%d %d %d %d\n", Q_COMPONENTS(QEstAux));
 				printf("%d %d %d\n", torque.x, torque.y, torque.z);
 			}
+			*/
 			
 			motData = control_mixer(thrust, torque);
-		
+			//motData.speed[0] = 10000;
 		}
-	*/
+
 	}
 }
 
@@ -263,10 +289,11 @@ void measure (s32 measurement)
 void Init (void)
 {
 	PLL_SPEED(BUS_CLOCK_MHZ);
+	//PLL_SPEED(24);
 
  	// Modules that don't require interrupts to be enabled
 	tim_Init();
-//	rti_Init();	
+	rti_Init();	
 	qs_init(0, MON12X_BR);
  
  	asm cli;
@@ -276,7 +303,7 @@ void Init (void)
 	dmu_Init();
 //	usonic_Init();
 
-	printf("Init done\n");		
+	printf("Init done Cop = %d\n", COPCTL_CR);
 
 
 	return;
@@ -291,6 +318,12 @@ void GetMeasurementsMask(void *data, rti_time period, rti_id id)
 void GetSamplesMask(void *data, rti_time period, rti_id id)
 {
 	dmu_FifoAverage(NULL);
+	return;
+}
+
+void rti_MotDelay(void *data, rti_time period, rti_id id)
+{
+	*(bool*)data = _TRUE;
 	return;
 }
 

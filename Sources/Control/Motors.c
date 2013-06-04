@@ -4,9 +4,9 @@
 #include "motors.h"
 #include <stdio.h>
 
-#define MOTOR_SLAVE1_OC 4
+#define MOTOR_SLAVE1_OC 6	// mot 4: timer 4
 #define MOTOR_SLAVE2_OC 5
-#define MOTOR_SLAVE3_OC 6
+#define MOTOR_SLAVE3_OC 4
 #define MOTOR_MASTER_OC 7
 
 #define MOT_PERIOD_MS 20
@@ -45,10 +45,10 @@ void mot_Init(void)
 	tim_id timerId[4];
 	tim_Init();
 	
-	timerId[0] = tim_GetTimer(TIM_OC, mot_SlaveErr, NULL, MOTOR_SLAVE1_OC);	
-	timerId[1] = tim_GetTimer(TIM_OC, mot_SlaveErr, NULL, MOTOR_SLAVE2_OC);
-	timerId[2] = tim_GetTimer(TIM_OC, mot_SlaveErr, NULL, MOTOR_SLAVE3_OC);
-	timerId[3] = tim_GetTimer(TIM_OC, mot_MasterSrv, NULL, MOTOR_MASTER_OC);
+	timerId[0] = tim_GetTimer(TIM_OC, mot_MasterSrv, NULL, MOTOR_MASTER_OC);
+	timerId[1] = tim_GetTimer(TIM_OC, mot_SlaveErr, NULL, MOTOR_SLAVE1_OC);	
+	timerId[2] = tim_GetTimer(TIM_OC, mot_SlaveErr, NULL, MOTOR_SLAVE2_OC);
+	timerId[3] = tim_GetTimer(TIM_OC, mot_SlaveErr, NULL, MOTOR_SLAVE3_OC);
 
 	if ((timerId[0] < 0) || (timerId[1] < 0) || (timerId[2] < 0) || (timerId[3] < 0))
 		err_Throw("Timers for motors already in use.");
@@ -97,3 +97,6 @@ void mot_SlaveErr(void)
 	err_Throw("A slave motor has interrupted.");
 	return;
 }
+
+
+

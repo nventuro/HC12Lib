@@ -1,0 +1,112 @@
+ 	NAMES
+    /* CodeWarrior will pass all the needed files to the linker by command line. But here you may add your additional files */
+END
+
+SEGMENTS /* here all RAM/ROM areas of the device are listed. Used in PLACEMENT below. All addresses are 'logical' */
+
+/* non-paged EEPROM */
+      EEPROM        = READ_ONLY   0x0C00 TO   0x0FFB; 
+
+/* RAM */
+      RAM           = READ_WRITE    0x1000 TO   0x3FFF;
+
+/* FLASH */
+      ROM_4000      = READ_ONLY   0x4000 TO   0x7FFF; 
+      ROM_C000      = READ_ONLY   0xC000 TO   0xF70F; 
+      ROMVECTORS    = READ_ONLY   0xF710 TO   0xF7FF;
+      MONITOR_CODE  = READ_ONLY   0xF800 TO   0xFEFF;
+      FLASHREGISTERS = READ_ONLY  0xFF00 TO   0xFF0F;
+      TRUEVECTORS   = READ_ONLY   0xFF10 TO   0xFFFF;
+
+/* paged EEPROM                      0x0800 TO   0x0BFF; addressed through EPAGE */
+      EEPROM_FC     = READ_ONLY    0xFC0800 TO 0xFC0BFF; 
+      EEPROM_FD     = READ_ONLY    0xFD0800 TO 0xFD0BFF; 
+      EEPROM_FE     = READ_ONLY    0xFE0800 TO 0xFE0BFF; 
+/*    EEPROM_FF     = READ_ONLY    0xFF0800 TO 0xFF0BFF; intentionally not defined: equivalent to EEPROM */
+
+/* paged RAM:                        0x1000 TO   0x1FFF; addressed through RPAGE */
+      RAM_F8        = READ_WRITE   0xF81000 TO 0xF81FFF; 
+      RAM_F9        = READ_WRITE   0xF91000 TO 0xF91FFF; 
+      RAM_FA        = READ_WRITE   0xFA1000 TO 0xFA1FFF; 
+      RAM_FB        = READ_WRITE   0xFB1000 TO 0xFB1FFF; 
+      RAM_FC        = READ_WRITE   0xFC1000 TO 0xFC1FFF; 
+      RAM_FD        = READ_WRITE   0xFD1000 TO 0xFD1FFF; 
+/*    RAM_FE        = READ_WRITE   0xFE1000 TO 0xFE1FFF; intentionally not defined: equivalent to RAM: 0x2000..0x2FFF */
+/*    RAM_FF        = READ_WRITE   0xFF1000 TO 0xFF1FFF; intentionally not defined: equivalent to RAM: 0x3000..0x3FFF */
+
+/* paged FLASH:                      0x8000 TO   0xBFFF; addressed through PPAGE */
+      PAGE_E0       = READ_ONLY    0xE08000 TO 0xE0BFFF; 
+      PAGE_E1       = READ_ONLY    0xE18000 TO 0xE1BFFF; 
+      PAGE_E2       = READ_ONLY    0xE28000 TO 0xE2BFFF; 
+      PAGE_E3       = READ_ONLY    0xE38000 TO 0xE3BFFF; 
+      PAGE_E4       = READ_ONLY    0xE48000 TO 0xE4BFFF; 
+      PAGE_E5       = READ_ONLY    0xE58000 TO 0xE5BFFF; 
+      PAGE_E6       = READ_ONLY    0xE68000 TO 0xE6BFFF; 
+      PAGE_E7       = READ_ONLY    0xE78000 TO 0xE7BFFF; 
+
+      PAGE_E8       = READ_ONLY    0xE88000 TO 0xE8BFFF; 
+      PAGE_E9       = READ_ONLY    0xE98000 TO 0xE9BFFF; 
+      PAGE_EA       = READ_ONLY    0xEA8000 TO 0xEABFFF; 
+      PAGE_EB       = READ_ONLY    0xEB8000 TO 0xEBBFFF; 
+      PAGE_EC       = READ_ONLY    0xEC8000 TO 0xECBFFF; 
+      PAGE_ED       = READ_ONLY    0xED8000 TO 0xEDBFFF; 
+      PAGE_EE       = READ_ONLY    0xEE8000 TO 0xEEBFFF; 
+      PAGE_EF       = READ_ONLY    0xEF8000 TO 0xEFBFFF; 
+
+      PAGE_F0       = READ_ONLY    0xF08000 TO 0xF0BFFF; 
+      PAGE_F1       = READ_ONLY    0xF18000 TO 0xF1BFFF; 
+      PAGE_F2       = READ_ONLY    0xF28000 TO 0xF2BFFF; 
+      PAGE_F3       = READ_ONLY    0xF38000 TO 0xF3BFFF; 
+      PAGE_F4       = READ_ONLY    0xF48000 TO 0xF4BFFF; 
+      PAGE_F5       = READ_ONLY    0xF58000 TO 0xF5BFFF; 
+      PAGE_F6       = READ_ONLY    0xF68000 TO 0xF6BFFF; 
+      PAGE_F7       = READ_ONLY    0xF78000 TO 0xF7BFFF; 
+
+      PAGE_F8       = READ_ONLY    0xF88000 TO 0xF8BFFF; 
+      PAGE_F9       = READ_ONLY    0xF98000 TO 0xF9BFFF; 
+      PAGE_FA       = READ_ONLY    0xFA8000 TO 0xFABFFF; 
+      PAGE_FB       = READ_ONLY    0xFB8000 TO 0xFBBFFF; 
+      PAGE_FC       = READ_ONLY    0xFC8000 TO 0xFCBFFF; 
+/*    PAGE_FD       = READ_ONLY    0xFD8000 TO 0xFDBFFF; intentionally not defined: equivalent to ROM_4000 */
+      PAGE_FE       = READ_ONLY    0xFE8000 TO 0xFEBFFF; 
+/*    PAGE_FF       = READ_ONLY    0xFF8000 TO 0xFFBFFF; intentionally not defined: equivalent to ROM_C000 */
+END
+
+PLACEMENT /* here all predefined and user segments are placed into the SEGMENTS defined above. */
+      _PRESTART,              /* Used in HIWARE format: jump to _Startup at the code start */
+      STARTUP,                /* startup data structures */
+      ROM_VAR,                /* constant variables */
+      STRINGS,                /* string literals */
+      VIRTUAL_TABLE_SEGMENT,  /* C++ virtual table segment */
+      DEFAULT_ROM, NON_BANKED,             /* runtime routines which must not be banked */
+      COPY                    /* copy down information: how to initialize variables */
+                              /* in case you want to use ROM_4000 here as well, make sure
+                                 that all files (incl. library files) are compiled with the
+                                 option: -OnB=b */
+                        INTO  ROM_C000;
+                        
+                        
+      VECTORS           INTO  ROMVECTORS;
+
+      OTHER_ROM         INTO           PAGE_FE,          PAGE_FC, PAGE_FB, PAGE_FA, PAGE_F9, PAGE_F8, 
+                              PAGE_F7, PAGE_F6, PAGE_F5, PAGE_F4, PAGE_F3, PAGE_F2, PAGE_F1, PAGE_F0, 
+                              PAGE_EF, PAGE_EE, PAGE_ED, PAGE_EC, PAGE_EB, PAGE_EA, PAGE_E9, PAGE_E8, 
+                              PAGE_E7, PAGE_E6, PAGE_E5, PAGE_E4, PAGE_E3, PAGE_E2, PAGE_E1, PAGE_E0;
+     
+      SSTACK,                 /* allocate stack first to avoid overwriting variables on overflow */
+      DEFAULT_RAM             /* all variables, the default RAM location */
+                        INTO  RAM;
+
+   /*   PAGED_RAM         INTO  // when using banked addressing for variable data, make sure to specify
+                                // the option -D__FAR_DATA on the compiler command line 
+                               RAM_F9, RAM_FA, RAM_FB, RAM_FC, RAM_FD;
+    */
+END
+
+
+ENTRIES /* keep the following unreferenced variables */
+    interrupt_vector_table
+END
+
+STACKSIZE 0x100   /* size of the stack (will be allocated in DEFAULT_RAM) */
+

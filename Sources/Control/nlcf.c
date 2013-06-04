@@ -42,7 +42,7 @@
  *	machine_wmes = wmes / ACC_SCALE
  * wmes va sumado al gyro, por lo tanto:
  * 	v = omega + kp*wmes
- * 	machine_v = machine_omega + machine_wmes/WMES_DIV
+ * 	machine_v = machine_omega + machine_wmes/WMES_DIV 
  * 	machine_v = v / GYRO_SCALE = real_omega / GYRO_SCALE + kp*wmes / GYRO_SCALE
  *  =>
  * 	kp*wmes/GYRO_SCALE = kp*machine_wmes*ACC_SCALE/GYRO_SCALE = machine_wmes/ WMES_DIV
@@ -115,7 +115,8 @@ Estos valores le dan demasiada importancia al acelerometro
 
 #define OPT_INLINE /*nada */
 
-static quat Q_Correction = UNIT_Q;
+//static quat Q_Correction = UNIT_Q;
+static quat Q_Correction = {318, {23544, 22788, 285}};
 
 static OPT_INLINE vec3 z_dir(quat q)
 {
@@ -144,7 +145,9 @@ static OPT_INLINE vec3 verror(vec3 y, vec3 x)
 //vec3 Bias;
 quat att_estim(vec3 gyro, vec3 accel)
 {
-	static dquat q = UNIT_DQ;
+	//static dquat q = UNIT_DQ;
+	static dquat q = {10420224, {771489792, 746717184, 9338880}};
+	
 	static vec3 bias = {0, 0, 0};
 	vec3 z_estim, wmes, d_bias;
 	quat p;
@@ -185,6 +188,7 @@ quat att_estim(vec3 gyro, vec3 accel)
 	//p.v = vsub(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vdiv(wmes, WMES_DIV));
 	
 	p.v = vsum(gyro, vdiv(wmes, WMES_DIV));
+//	p.v = vdiv(wmes, WMES_DIV);
 
 	d_q = qmul2(q_lowres, p, D_Q_SCALE);
 
