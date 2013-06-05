@@ -188,7 +188,7 @@ void main (void)
 			QEstAux = QEst;
 			asm cli;
 			
-			thrust = h_control(2000, 0);
+			thrust = h_control(5000, 0);
 			torque = adv_att_control(setpoint, QEstAux);
 			/*
 			if (torqueCount++ >= 10)
