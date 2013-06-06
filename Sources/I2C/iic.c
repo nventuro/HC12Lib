@@ -72,7 +72,7 @@ void iic_Send (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toSend, u8
 		if (iic_data.stoppingBus)	// If the bus is busy but not because it is being stopped, it's a logical error.
 	    	while (iic_IsBusy()); 						// Wait until bus stop is complete
 	    else
-	    	err_Throw("iic: attempt to receive message (from register) while bus is busy.\n");
+	    	err_Throw("iic: attempt to send message while bus is busy.\n");
 	}
 	
 	iic_data.stoppingBus = _FALSE;     
@@ -102,7 +102,7 @@ void iic_Receive (u8 slvAddress, iic_ptr eotCB, iic_ptr commFailedCB, u8 toRead,
 		if (iic_data.stoppingBus)	// If the bus is busy but not because it is being stopped, it's a logical error.
 	    	while (iic_IsBusy()); 						// Wait until bus stop is complete
 	    else
-	    	err_Throw("iic: attempt to receive message (from register) while bus is busy.\n");
+	    	err_Throw("iic: attempt to receive message while bus is busy.\n");
 	}
 	
 	iic_data.stoppingBus = _FALSE;     

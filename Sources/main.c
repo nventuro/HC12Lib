@@ -12,6 +12,7 @@
 
 #include "quad_control.h"
 #include "nlcf.h"
+#include "arith.h"
 
 #define DMU_TIMER 1
 
@@ -69,6 +70,17 @@ void sample_ready(void)
 
 #define Q_COMPONENTS(q) (q).r, (q).v.x, (q).v.y, (q).v.z
 extern vec3 Bias;
+
+
+
+
+#define OC_PERIOD ((u8)62500)
+#define TIM4_DUTY 14000
+#define TIM5_DUTY 5000
+#define TIM6_DUTY 10000
+#define TIM7_DUTY 9375
+
+
 void main (void)
 {
 	u8 userInput;
@@ -154,7 +166,7 @@ void main (void)
 
 	while(!motDelayDone)
 		;
-	
+	/*
 	motData.speed[0] = 0;//S16_MAX;
 	motData.speed[1] = S16_MAX;
 	motData.speed[2] = 0;//S16_MAX;
@@ -163,7 +175,7 @@ void main (void)
 	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(3000));
 
 	while(!motDelayDone)
-		;
+		;*/
 
 	printf("Entering loop");
 
@@ -188,7 +200,7 @@ void main (void)
 			QEstAux = QEst;
 			asm cli;
 			
-			thrust = h_control(5000, 0);
+			thrust = h_control(4000, 0);
 			torque = adv_att_control(setpoint, QEstAux);
 			/*
 			if (torqueCount++ >= 10)
@@ -207,33 +219,34 @@ void main (void)
 }
 
 
-
-#define OC_PERIOD ((u8)62500)
-#define TIM4_DUTY 14000
-#define TIM5_DUTY 5000
-#define TIM6_DUTY 10000
-#define TIM7_DUTY 9375
-
-
 /*
 int main(void)
 {
 	volatile frac f = FRAC_0_5;
+	u16 i;
+	
 	
 	PLL_SPEED(BUS_CLOCK_MHZ);
 	qs_init(0, MON12X_BR);
  
  	asm cli;
  	
- 	mot_Init();
+	for (i = 0; i < U16_MAX; i++)
+	{
+		f = i;
+		if (dtrunc(fexpand(f)) != f)
+			printf("la concha tuya\n");
+		printf("%d\n", i);
+	}
  	
+ 	printf("todo goood!");
 	
 	
 	while(1);
 
 }
-
 */
+
 void measure (s32 measurement);
 
 /*
@@ -290,6 +303,7 @@ void measure (s32 measurement);
  		
 }
 */
+/*
 void measure (s32 measurement)
 {
 	if (measurement != USONIC_INVALID_MEAS)
@@ -299,7 +313,7 @@ void measure (s32 measurement)
 		
 	 usonic_Measure(measure);
 }
-
+*/
 void Init (void)
 {
 	PLL_SPEED(BUS_CLOCK_MHZ);
@@ -317,7 +331,7 @@ void Init (void)
 	dmu_Init();
 //	usonic_Init();
 
-	printf("Init done Cop = %d\n", COPCTL_CR);
+	printf("Init done");
 
 
 	return;

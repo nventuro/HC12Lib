@@ -6,7 +6,7 @@
 
 
 #define MAX_BURST_READS 252
-#define INITIAL_AVERAGE 120
+#define INITIAL_AVERAGE 0
 
 
 #define PRINT_START 1

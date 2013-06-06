@@ -25,6 +25,9 @@ frac fsqrt(frac b);
 #define DFRAC_almost1 (-(S32_MIN>>1)-1) /* 0.999 */
 #define DFRAC_minus1 (S32_MIN>>1) /* -1 */
 
+#define DFRAC_MAX S32_MAX
+#define DFRAC_MIN S32_MIN
+
 #define FRAC2DBL(n) (((double)(n))/(-(double)FRAC_minus1))
 #define F_TO_FRAC(f) ((frac)(-f*FRAC_minus1))
 
@@ -48,10 +51,13 @@ static frac dtrunc(dfrac x)
 		return (x << 1) >> FRAC_BIT;
 }
 
+
+
 static dfrac fexpand(frac x)
-{ /* 2.30 -> 1.15 */
+{ /* 1.15 -> 2.30 */
 	return ((dfrac)x)<<(FRAC_BIT - 1);
 }
+
 
 /* **** Vectors in R^3 ****/
 
@@ -225,6 +231,60 @@ static dvec3 vfmul2(vec3 a, frac f)
 	
 	return r;
 }
+
+static dvec3 dvec_lShift(dvec3 a, u8 shift)
+{
+	a.x <<= shift;
+	a.y <<= shift;
+	a.z <<= shift;
+
+	return a;
+}
+
+
+static dvec3 dvec_rShift(dvec3 a, u8 shift)
+{
+	a.x >>= shift;
+	a.y >>= shift;
+	a.z >>= shift;
+
+	return a;
+}
+
+
+static dvec3 vexpand(vec3 a)
+{
+	dvec3 r;
+	
+	r.x=fexpand(a.x);
+	r.y=fexpand(a.y);
+	r.z=fexpand(a.z);
+	
+	return r;
+}
+
+
+static dfrac dfrac_SumSat2(dfrac x1, dfrac x2)
+{
+	dfrac result = x1+x2;
+	if (x1 > 0 && x2 > 0)
+		return ((result < x1) ? DFRAC_MAX : result);
+	else if (x1 < 0 && x2 < 0)
+		return ((result > x1) ? DFRAC_MIN : result);
+	else
+		return result;
+}
+
+
+static dvec3 dvsumsat(dvec3 a, dvec3 b)
+{
+	a.x = dfrac_SumSat2(a.x, b.x);
+	a.y = dfrac_SumSat2(a.y, b.y);
+	a.z = dfrac_SumSat2(a.z, b.z);
+
+	return a;
+}
+
 
 static vec3 vec_clip_d(dvec3 a)
 {
