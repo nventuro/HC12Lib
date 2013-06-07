@@ -25,7 +25,7 @@ typedef struct rti_cb {
 
 bool rti_isInit = _FALSE;
 
-rti_cb rti_tbl[RTI_MAX_FCNS];
+struct rti_cb rti_tbl[RTI_MAX_FCNS];
 
 
 void rti_Init()

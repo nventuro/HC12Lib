@@ -1,7 +1,6 @@
 #include "fjoy.h"
 #include "rti.h"
 #include "error.h"
-#include <stdio.h>
 
 #define FJOY_READ_CHANNEL(chann, cb) atd_SetTask(FJOY_ATD_MODULE, chann, FJOY_ATD_OVERSAMPLING, _FALSE, _FALSE, cb)
 
