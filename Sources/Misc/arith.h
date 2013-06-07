@@ -11,6 +11,10 @@ typedef s16 frac;
 /* 2.30 */
 typedef s32 dfrac;
 
+/* 17.15 */
+
+typedef dfrac efrac;
+
 #define FRAC_BIT (16)
 #define DFRAC_BIT (32)
 
@@ -51,13 +55,15 @@ static frac dtrunc(dfrac x)
 		return (x << 1) >> FRAC_BIT;
 }
 
-
-
 static dfrac fexpand(frac x)
 { /* 1.15 -> 2.30 */
 	return ((dfrac)x)<<(FRAC_BIT - 1);
 }
 
+static frac efclip(efrac x)
+{
+	return (x > FRAC_minus1)? ((x < FRAC_1)? x : FRAC_1) : FRAC_minus1;
+}
 
 /* **** Vectors in R^3 ****/
 
@@ -69,6 +75,7 @@ typedef struct {
 	dfrac x,y,z;
 } dvec3;
 
+typedef dvec3 evec3;
 
 #if (FRAC_BIT == 16)
 typedef vec3 s16Vec3;
@@ -251,6 +258,27 @@ static dvec3 dvec_rShift(dvec3 a, u8 shift)
 	return a;
 }
 
+static evec3 vimul2(vec3 v, int a)
+{
+	dvec3 r;
+	
+	r.x = v.x*a;
+	r.y = v.y*a;
+	r.z = v.z*a;
+
+	return r;
+}
+
+static vec3 evclip(evec3 v)
+{
+	vec3 r;
+	
+	r.x = efclip(v.x);
+	r.y = efclip(v.y);
+	r.z = efclip(v.z);
+	
+	return r;
+}
 
 static dvec3 vexpand(vec3 a)
 {

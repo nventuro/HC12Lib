@@ -89,46 +89,50 @@ int int_SumSat3(int a, int b, int c)
 }
 */
 
-#define att_Kp 0
-#define att_Kd 0
-#define att_Ki_shift 7
-#define INT_DIV 8
+//#define att_Kp 1000
+//#define att_Kd 1000
+
+#define c1_gain 1
+#define c2_gain 30
 
 vec3 adv_att_control(quat setpoint, quat att)
 {
 	static vec3 err_prev = VEC0;
-	static dvec3 int_acc = VEC0;
+	static quat att_prev = UNIT_Q;
 
 	quat setp_c = qconj(setpoint);
+	/* Hacia donde me tengo que mover para ir hacia el setpoint*/
 	vec3 error = qmul(setp_c, att).v;
+	/* Hacia donde me tengo que mover para volver a la posición anterior*/
+	vec3 damp = qmul(att_prev, qconj(att)).v;
 	vec3 torques;
-	dvec3 d_out;
-	dvec3 p_out;
-	dvec3 i_out;
-	
-	/* Â¿tenemos que hacer la derivada saturada?? */
-	// El italiano hace la derivada de la salida, no del error entre la salida y el setpoint.
-	// Además, usa PID con integral saturada.
-	// Dice de limitar en banda la derivada, pero para que no se produzcan impulsos (lo cual no es el caso)
-	
-	d_out = vfmul2(vsub(error, err_prev), att_Kd);						// Backward
-	p_out = vfmul2(error, att_Kp);
-//	i_out = vfmul2(vec_clip_d(dvsum(dvsum(int_prev, fexpand(error)),fexpand(err_prev)))), att_Ki);
-	
-	int_acc = dvsumsat(int_acc, dvec_lShift(dvsum(vexpand(err_prev),vexpand(error)), att_Ki_shift) );
-	i_out = dvec_rShift(int_acc, INT_DIV);
-	printf("%d, %d, %d\n",error.x, error.y, error.z);
+	dvec3 ctrl_signal;
+	/*
+	ctrl_signal = dvsum(vimul2(error, c1_gain),
+					dvsum(vimul2(err_prev, c1_gain),
+						dvsum(vimul2(att.v, -c2_gain),
+							vimul2(att_prev, c2_gain)
+				)));
+				*/
+	ctrl_signal = dvsum(
+					dvsum(vimul2(error, c1_gain),
+						  vimul2(err_prev, c1_gain)),
+					vimul2(damp, c2_gain)
+					);
 
-	torques = vec_clip_d(dvsumsat(dvsum(p_out,d_out),i_out));
-			
-	err_prev = error;
+	//printf("%d %d %d - %d %d %d\n", error.x, error.y, error.z, (att.v.x-att_prev.x), (att.v.y-att_prev.y), (att.v.z-att_prev.z));
+	torques = evclip(ctrl_signal);
 	
+	err_prev = error;
+	att_prev = att;
+	
+	// FIXME: esto esta mal, es para poder probar sin que moleste el yaw 
 	torques.z = 0;
 	return torques;
 }
 
 #define h_Kp_mul 1
-#define h_Kd_mul 17
+#define h_Kd_mul 10
 
 frac h_control(frac setpoint, frac h)
 {
@@ -142,8 +146,8 @@ frac h_control(frac setpoint, frac h)
 }
 
 #define mix_thrust_shift 0
-#define	mix_roll_shift 3
-#define mix_pitch_shift 3
+#define	mix_roll_shift_r 3
+#define mix_pitch_shift_r 3
 #define mix_yaw_shift 3
 
 frac gammainv(frac T, frac t1, frac t2, frac t3)
@@ -151,11 +155,12 @@ frac gammainv(frac T, frac t1, frac t2, frac t3)
 	dfrac r = 0;
 	
 	r += (((dfrac)T) << mix_thrust_shift);
-	r += (((dfrac)t1) << mix_roll_shift);
-	r += (((dfrac)t2) << mix_pitch_shift);
+	r += (((dfrac)t1) >> mix_roll_shift_r);
+	r += (((dfrac)t2) >> mix_pitch_shift_r);
 	r += (((dfrac)t3) << mix_yaw_shift);
 	
 	return fsqrt((r > 0)? ((r < FRAC_1)? r : FRAC_1) : 0);
+	//return ((r > 0)? ((r < FRAC_1)? r : FRAC_1) : 0);
 }				
 
 struct motorData control_mixer(frac thrust, vec3 torque)

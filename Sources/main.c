@@ -166,7 +166,7 @@ void main (void)
 
 	while(!motDelayDone)
 		;
-	/*
+	
 	motData.speed[0] = 0;//S16_MAX;
 	motData.speed[1] = S16_MAX;
 	motData.speed[2] = 0;//S16_MAX;
@@ -175,7 +175,7 @@ void main (void)
 	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(3000));
 
 	while(!motDelayDone)
-		;*/
+		;
 
 	printf("Entering loop");
 
@@ -200,7 +200,7 @@ void main (void)
 			QEstAux = QEst;
 			asm cli;
 			
-			thrust = h_control(4000, 0);
+			thrust = h_control(6000, 0);
 			torque = adv_att_control(setpoint, QEstAux);
 			/*
 			if (torqueCount++ >= 10)
