@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-#define RFTX_DATA_TIMER 4 // The timer module used for transmitting data, connected to the transmitter's data pin.
+#define RFTX_DATA_TIMER 0 // The timer module used for transmitting data, connected to the transmitter's data pin.
 // If the timer is changed, rftx.c must be recompiled.
 
 // Timing in us

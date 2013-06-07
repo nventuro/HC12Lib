@@ -9,7 +9,7 @@
 #define BATT_AD_RESOLUTION_MV 5
 #define BATT_MV_TO_LEVEL(mv) (mv/BATT_AD_RESOLUTION_MV)
 
-#define BATT_MAX_BATTS 3
+#define BATT_MAX_BATTS 2
 
 typedef void (*batt_callback) (void);
 
