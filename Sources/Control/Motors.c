@@ -3,6 +3,7 @@
 #include "common.h"
 #include "motors.h"
 #include <stdio.h>
+#include "quad_control.h"
 
 #define MOTOR_SLAVE1_OC 6	// mot 4: timer 4
 #define MOTOR_SLAVE2_OC 5
@@ -30,8 +31,9 @@ void mot_SlaveErr(void);
 void mot_MasterSrv(void);
 
 extern struct motorData control(void);
+extern controlData_T controlData;
 
-struct motorData motData = { {0,0,0,0} };
+struct motorData motData = { MOT_MANUAL, {0,0,0,0} };
 bool readyToCalculate = _FALSE;
 
 
@@ -73,6 +75,11 @@ void mot_MasterSrv(void)
 	if (MOTOR_MASTER_PIN == PIN_HIGH)
 	{  
 		latchedTime = tim_GetValue(MOTOR_MASTER_OC);
+
+		if (motData.mode == MOT_AUTO)
+		{
+			control_mixer(controlData.thrust, controlData.torque, &motData);
+		}
 
 		tim_SetValue(MOTOR_MASTER_OC, latchedTime + fmul(motData.speed[0], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);
 		tim_SetValue(MOTOR_SLAVE1_OC, latchedTime + fmul(motData.speed[1], MOT_SLOPE_TICKS) + MOT_CONSTANT_TERM_TICKS);

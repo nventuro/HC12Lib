@@ -69,12 +69,12 @@ enum {FALLING_EDGE, RISING_EDGE, LOW_LEVEL, HIGH_LEVEL};
 /******************		CTL5	****************/
 
 typedef enum {LEFT=0, RIGHT}justify;
-typedef enum {UNS=0, SIG}sign;
+typedef enum {UNS=0, SIG}ATD_sign;
 
 const struct
 {
 	justify j;
-	sign s;
+	ATD_sign s;
 	
 }atd_defaults = {RIGHT, UNS};
 
@@ -82,7 +82,7 @@ const struct
 #define ATD0_START(a) (ATD0CTL5 = a)
 #define ATD1_START(a) (ATD1CTL5 = a)
 
-void atd_conversionStart(atd_module m, justify j, sign s, bool scan, bool mult, u8 startChannel)
+void atd_conversionStart(atd_module m, justify j, ATD_sign s, bool scan, bool mult, u8 startChannel)
 {
 	u8 config = 0;
 		

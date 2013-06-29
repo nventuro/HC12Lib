@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?codewarrior exportversion="1.0" ideversion="5.5" ?>
+
+<!DOCTYPE EXPORTEDPANEL [
+<!ELEMENT EXPORTEDPANEL (NAME, (SETTINGLIST|VALUE))>
+<!ELEMENT SETTINGLIST (SETTING+)>
+<!ELEMENT SETTING (NAME?, (VALUE|(SETTING+)))>
+<!ELEMENT NAME (#PCDATA)>
+<!ELEMENT VALUE (#PCDATA)>
+]>
+
+<EXPORTEDPANEL>
+    <NAME>Code Formatting</NAME>
+    <SETTINGLIST>
+        <SETTING><NAME>MWAutoCodeFormat_Enabled</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_CCpp_FormatBraces</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_CCpp_OpenBracesOnSeparateLine</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_CCpp_IndentBraces</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_CCpp_ElseOnSameLine</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_CCpp_IndentInBraces</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_CCpp_CloseBracesBracketsParens</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_CCpp_IndentCasesInSwitch</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_Java_FormatBraces</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_Java_OpenBracesOnSeparateLine</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_Java_IndentBraces</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_Java_ElseOnSameLine</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_Java_IndentInBraces</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_Java_CloseBracesBracketsParens</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWAutoCodeFormat_Java_IndentCasesInSwitch</NAME><VALUE>true</VALUE></SETTING>
+    </SETTINGLIST>
+</EXPORTEDPANEL>

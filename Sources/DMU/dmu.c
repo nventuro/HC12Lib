@@ -3,7 +3,7 @@
 #include "quick_serial.h"
 #include "debug.h"
 #include "rti.h"
-
+#include "error.h"
 
 #define MAX_BURST_READS 252
 #define INITIAL_AVERAGE 0
@@ -114,7 +114,7 @@ void dmu_Init()
 	dmu_CleanAccumulator(&dmu_sampleAccumulator);
 	
 	#ifdef DMU_DEBUG_OFFSET
-	printf("ox: %d, oy: %d, oz: %d\n", dmu_gyroOffset.x, dmu_gyroOffset.y, dmu_gyroOffset.z);
+//	printf("ox: %d, oy: %d, oz: %d\n", dmu_gyroOffset.x, dmu_gyroOffset.y, dmu_gyroOffset.z);
 	#endif
 	
 #endif
@@ -246,7 +246,7 @@ void dmu_GetMeasurements(iic_ptr cb)
 void dmu_PrintFormattedMeasurements(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
-	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x, dm->gyro.y, dm->gyro.z);
+//	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x, dm->gyro.y, dm->gyro.z);
 	return;
 }
 
@@ -255,7 +255,7 @@ void dmu_PrintFormattedMeasurements_WO(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
 	struct dmu_gyroOffset_T* gOff = &dmu_gyroOffset;
-	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x - gOff->x, dm->gyro.y - gOff->y, dm->gyro.z - gOff->z);
+//	printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x - gOff->x, dm->gyro.y - gOff->y, dm->gyro.z - gOff->z);
 	return;
 }
 
@@ -263,7 +263,7 @@ void dmu_PrintFormattedMeasurements_WO(void)
 void dmu_PrintRawMeasurements(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
-	printf("%d %d %d %d %d %d, ", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x, dm->gyro.y, dm->gyro.z);
+//	printf("%d %d %d %d %d %d, ", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x, dm->gyro.y, dm->gyro.z);
 	return;
 }
 
@@ -272,7 +272,7 @@ void dmu_PrintRawMeasurements_WO(void)
 {
 	struct dmu_measurements_T* dm = &dmu_measurements;
 	struct dmu_gyroOffset_T* gOff = &dmu_gyroOffset;
-	printf("%d %d %d %d %d %d, ", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x - gOff->x, dm->gyro.y - gOff->y, dm->gyro.z - gOff->z);
+//	printf("%d %d %d %d %d %d, ", dm->accel.x, dm->accel.y, dm->accel.z, dm->gyro.x - gOff->x, dm->gyro.y - gOff->y, dm->gyro.z - gOff->z);
 	return;
 }
 
@@ -307,7 +307,7 @@ void dmu_FifoStageRead(void)
 		dmu_data.fifo.fetchTimes--;
 
 		#ifdef FIFO_DEBUG_COUNT
-		printf("fc: %d, ft: %d, rb: %d\n", dmu_data.fifo.count, dmu_data.fifo.fetchTimes, dmu_data.fifo.remainingBytes);
+//		printf("fc: %d, ft: %d, rb: %d\n", dmu_data.fifo.count, dmu_data.fifo.fetchTimes, dmu_data.fifo.remainingBytes);
 		#endif
 		
 		if ((dmu_data.fifo.fetchTimes < 0) && (dmu_data.fifo.remainingBytes != 0))
@@ -329,7 +329,7 @@ void dmu_printI2CData(void)
 	u16 i;
 	for (i = 0; i < PRINT_LENGTH; i++)
 	{
-		printf("%d %x\n", PRINT_START + i, iic_commData.data[i]);
+//		printf("%d %x\n", PRINT_START + i, iic_commData.data[i]);
 		iic_commData.data[i] = '\0';
 	}
 }
@@ -337,8 +337,12 @@ void dmu_printI2CData(void)
 
 void dmu_CommFailed()
 {
-	printf("comm failed, stage %d\n", dmu_data.stage);
-	dmu_data.stage = 0;
+//	printf("comm failed, stage %d\n", dmu_data.stage);
+	puts("comm failed, stage ");
+	putchar(dmu_data.stage + '0');
+	putchar('\n');
+
+	err_Throw("Dmu comm failure.");
 }
 
 
@@ -350,7 +354,7 @@ void dmu_PrintFifoMem(void)
 	
 	for (i = 0; i < limit; i++) 
 	{
-		printf("%d\t", (*(((u16*)iic_commData.data) + i) ) );
+//		printf("%d\t", (*(((u16*)iic_commData.data) + i) ) );
 	}
 		
 	dmu_ContinueFifoAction();		
@@ -364,7 +368,7 @@ void dmu_PrintFifoMem(void)
 
 void dmu_printFifoCnt(void)
 {
-	printf("fCnt: %d\n", (*(u16*)iic_commData.data));
+//	printf("fCnt: %d\n", (*(u16*)iic_commData.data));
 }
 
 
@@ -389,7 +393,7 @@ void dmu_AverageSamples(void)
 	for (dmuSamples += dmu_data.fifo.avgDiscard; (u8*)dmuSamples < (iic_commData.data + limit); dmuSamples++)
 	{
 		#ifdef FIFO_DEBUG_PRINT_AVG_SAMPLES
-		printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dmuSamples->accel.x, dmuSamples->accel.y, dmuSamples->accel.z, dmuSamples->gyro.x, dmuSamples->gyro.y, dmuSamples->gyro.z);
+//		printf("ax: %d, ay: %d, az: %d\ngx: %d, gy: %d, gz: %d\n", dmuSamples->accel.x, dmuSamples->accel.y, dmuSamples->accel.z, dmuSamples->gyro.x, dmuSamples->gyro.y, dmuSamples->gyro.z);
 		#endif 
 		
 		dmu_AccumulateSamples(acc, dmuSamples);

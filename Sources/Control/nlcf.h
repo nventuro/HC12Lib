@@ -11,7 +11,7 @@
 
 enum CAL_QUALITY {CAL_EXCELLENT, CAL_GOOD, CAL_UGLY, CAL_BAD};
 
-quat att_estim(vec3 gyro, vec3 accel);
+void att_estim(vec3 gyro, vec3 accel, quat *qest_out, vec3 *gyro_out);
 
 struct qpair {
 	quat p0, p1;

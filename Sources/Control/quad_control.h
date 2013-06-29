@@ -4,9 +4,18 @@
 #include "arith.h"
 #include "motors.h"
 
-vec3 adv_att_control(quat setpoint, quat att);
+typedef struct
+{
+	quat QEst;
+	vec3 bff_angle_rate;
+	vec3 torque;
+	frac thrust;
+}controlData_T;
+
+
+vec3 adv_att_control(quat setpoint, quat att, vec3 angle_rate);
 frac h_control(frac setpoint, frac h);
-struct motorData control_mixer(frac thrust, vec3 torque);
+void control_mixer(frac thrust, vec3 torque, struct motorData* output);
 
 
 

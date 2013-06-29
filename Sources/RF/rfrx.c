@@ -6,8 +6,8 @@
 
 #define RFRX_ID_AMOUNT 8
 
-#define RFRX_TIME_SMALL_MARGIN_US 40
-#define RFRX_TIME_LARGE_MARGIN_US 80
+#define RFRX_TIME_SMALL_MARGIN_US (80*2)
+#define RFRX_TIME_LARGE_MARGIN_US (160*2)
 
 #define RFRX_TIME_SMALL_MARGIN_TICKS TIM_US_TO_TICKS(RFRX_TIME_SMALL_MARGIN_US)
 #define RFRX_TIME_LARGE_MARGIN_TICKS TIM_US_TO_TICKS(RFRX_TIME_LARGE_MARGIN_US)
@@ -202,7 +202,7 @@ void rfrx_TimerCallback(void)
 
 void rfrx_CommenceReception (void)
 {	
-	hamm_DecodeWord(&rfrx_data.currComm.currData);
+//	hamm_DecodeWord(&rfrx_data.currComm.currData);
 	
 	rfrx_data.currComm.id = (rfrx_data.currComm.currData & 0x380) >> 7;
 	
@@ -249,7 +249,7 @@ void rfrx_StoreReceivedData(void)
 	
 	if (rfrx_data.currComm.ecc == _TRUE)
 	{
-		hamm_DecodeWord(&rfrx_data.currComm.currData);
+	//	hamm_DecodeWord(&rfrx_data.currComm.currData);
 		rfrx_data.currComm.currData = rfrx_data.currComm.currData & 0x7FF;
 	}
 	

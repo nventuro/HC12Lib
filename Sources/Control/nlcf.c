@@ -17,7 +17,7 @@
 #include "quick_serial.h"
 #endif
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include "nlcf.h"
@@ -116,7 +116,7 @@ Estos valores le dan demasiada importancia al acelerometro
 #define OPT_INLINE /*nada */
 
 //static quat Q_Correction = UNIT_Q;
-static quat Q_Correction = {318, {23544, 22788, 285}};
+static quat Q_Correction = {318, {-23544, -22788, -285}};
 
 static OPT_INLINE vec3 z_dir(quat q)
 {
@@ -131,7 +131,6 @@ static OPT_INLINE vec3 z_dir(quat q)
 	return zd;
 }
 
-
 static OPT_INLINE vec3 verror(vec3 y, vec3 x)
 {
 	vec3 zd;
@@ -143,17 +142,20 @@ static OPT_INLINE vec3 verror(vec3 y, vec3 x)
 	return zd;
 }
 //vec3 Bias;
-quat att_estim(vec3 gyro, vec3 accel)
+void att_estim(vec3 gyro, vec3 accel, quat *qest_out, vec3 *gyro_out)
 {
-	//static dquat q = UNIT_DQ;
-	static dquat q = {10420224, {771489792, 746717184, 9338880}};
-	
+	static dquat q = UNIT_DQ;
 	static vec3 bias = {0, 0, 0};
 	vec3 z_estim, wmes, d_bias;
 	quat p;
 	quat q_lowres = qtrunc(q);
 	dquat d_q, correction;
 	frac err;
+
+	/* convertimos al marco de ref del body */
+	gyro = qrot(Q_Correction, gyro);
+	accel = qrot(Q_Correction, accel);
+	*gyro_out = gyro;
 
 	/* wmes, bias */
 	z_estim = z_dir(q_lowres);
@@ -184,8 +186,8 @@ quat att_estim(vec3 gyro, vec3 accel)
 	/* d_q */
 	p.r = 0;
 	/* la correccion de bias se estaba portando mal */
-	///p.v = vsum(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vmul(wmes, WMES_MUL));
-	//p.v = vsub(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vdiv(wmes, WMES_DIV));
+	// p.v = vsum(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vmul(wmes, WMES_MUL));
+	// p.v = vsub(vsum(gyro, vdiv(bias, BIAS_SCALE2)), vdiv(wmes, WMES_DIV));
 	
 	p.v = vsum(gyro, vdiv(wmes, WMES_DIV));
 //	p.v = vdiv(wmes, WMES_DIV);
@@ -201,8 +203,28 @@ quat att_estim(vec3 gyro, vec3 accel)
 	correction = qscale2(q_lowres, err);
 	q = dqsum(q, correction);
 
-	return qmul(qtrunc(q), Q_Correction);
+	*qest_out = qtrunc(q);
+	//*qest_out = qmul(qtrunc(q), Q_Correction);
 }
+
+/* Calibración:
+	
+	p es la orientación del IMU con respecto al body:
+		X_body = p*X_imu*p'
+	q es la orientación del body con respecto la tierra:
+		X_earth = q*X_body*q'
+		
+	por lo tanto:
+		X_earth = q*p*X_imu*p'*q'
+		q*p = M (salida del estimador) => X_earth = M*X_imu*M'
+	para obtener q:
+		M*p' = q*p*p' = q (porque son cuaterniones unitarios)
+	
+	La otra manera es convertir las mediciones al marco de referencia
+	del vehículo:
+		w_body = p*w_imu*p'
+		
+*/
 
 #define CAL_ITERATIONS 12
 
@@ -254,7 +276,8 @@ struct cal_output att_calibrate(quat mes0, quat mes1)
 	p = _calibrate(mes0, mes1);
 	err = qmul2(p.p0, qconj(p.p1), 1).r;
 	
-	r.correction = qconj(p.p0);
+	//r.correction = qconj(p.p0);
+	r.correction = p.p0;
 	
 	if (err > ERR_1DG)
 		r.quality = CAL_EXCELLENT;
@@ -275,21 +298,5 @@ void att_apply_correction(struct cal_output c)
 
 
 #ifdef __HC12__
-quat QEst;
-bool have_to_output = 0;
 
-void att_process(void)
-{
-	static int ccount = 0;
-
-	PORTA_PA0 = 1;
-	{
-		QEst = att_estim(dmu_measurements.gyro, dmu_measurements.accel);
-		if (++ccount == 20) {
-			ccount = 0;
-			have_to_output = 1;
-		}
-	}
-	PORTA_PA0 = 0;
-}
 #endif

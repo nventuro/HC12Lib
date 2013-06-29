@@ -8,129 +8,122 @@
 #include "quad_control.h"
 #include <stdio.h>
 
-/*
-#define att_pre_err_div 1
-#define att_Kp_div 1
-#define att_Kd_div 25
-*/
-/*
-typedef struct { int min, med, max;} triplet;
 
-triplet int_Order3(int a, int b, int c)
+controlData_T controlData = {{0,0,0,0}, {0, 0, 0}, {0,0,0}, 0};
+
+
+#define ATT_DECIMATION_SIZE 4
+#define ATT_D_FILTER_SIZE 8
+
+#define prop_gain_frac 6500
+//#define prop_gain_int
+//#define prop_gain_divide 8000
+
+#define int_gain_divide 8000
+
+#define der_gain_int (1)
+//#define der_gain_frac 2000
+//#define der_gain_divide
+
+#define integral_error_limit 300
+
+vec3 adv_att_control(quat setpoint, quat att, vec3 angle_rate)
 {
-    triplet retVal;
-    if (a < b)
-    {
-        if (a < c)
-        {
-            if(b < c)
-            {
-                retVal.min = a;
-                retVal.med = b;
-                retVal.max = c;
-            }
-            else
-            {
-                retVal.min = a;
-                retVal.med = c;
-                retVal.max = b;
-            }
-        }
-        else
-        {
-            retVal.min = c;
-            retVal.med = a;
-            retVal.max = b;
-        }
-    }
-    else
-    {
-        if (b < c)
-        {
-            if (a < c)
-            {
-                retVal.min = b;
-                retVal.med = a;
-                retVal.max = c;
-            }
-            else
-            {
-                retVal.min = b;
-                retVal.med = c;
-                retVal.max = a;
-            }
-        }
-        else
-        {
-            retVal.min = c;
-            retVal.med = b;
-            retVal.max = a;
-        }
-    }
-
-    return retVal;
-}
-
-int min3(int a, int b, int c)
-{
-	int min_ab = (a < b)? a: b;
-	return (min_ab < c)? min_ab : c;
-}
-
-
-int int_SumSat3(int a, int b, int c)
-{
-    triplet ordVec = int_Order3(a,b,c);
-
-    if ((ordVec.max = int_SumSat2(ordVec.min, ordVec.max)) == INT_MAX)
-        return INT_MAX;
-    else
-        return int_SumSat2(ordVec.max, ordVec.med);
-}
-*/
-
-//#define att_Kp 1000
-//#define att_Kd 1000
-
-#define c1_gain 1
-#define c2_gain 30
-
-vec3 adv_att_control(quat setpoint, quat att)
-{
-	static vec3 err_prev = VEC0;
 	static quat att_prev = UNIT_Q;
-
-	quat setp_c = qconj(setpoint);
+	static vec3 d_prev[ATT_D_FILTER_SIZE] = {VEC0};
+	static int d_prev_i = 0;
+	static vec3 error_sat_prev = VEC0;
+	static evec3 integral_out_prev = VEC0;
+		
+	int i;
+	
+	//quat setp_c = qconj(setpoint);
 	/* Hacia donde me tengo que mover para ir hacia el setpoint*/
-	vec3 error = qmul(setp_c, att).v;
+	//vec3 error = qmul(setp_c, att).v;
+	vec3 error = qerror2(setpoint, att);	
 	/* Hacia donde me tengo que mover para volver a la posición anterior*/
-	vec3 damp = qmul(att_prev, qconj(att)).v;
-	vec3 torques;
-	dvec3 ctrl_signal;
-	/*
-	ctrl_signal = dvsum(vimul2(error, c1_gain),
-					dvsum(vimul2(err_prev, c1_gain),
-						dvsum(vimul2(att.v, -c2_gain),
-							vimul2(att_prev, c2_gain)
-				)));
-				*/
+	//vec3 damp = qmul(att_prev, qconj(att)).v;
+/*	vec3 damp = qerror2(att_prev, att);
+	evec3 damp_lp = VEC0;
+*/
+	vec3 torques = VEC0;
+	evec3 ctrl_signal;
+	
+	vec3 error_sat = vsat(error, integral_error_limit);
+	evec3 integral_out;
+/*	
+	d_prev[d_prev_i] = damp;
+	d_prev_i++;
+	if (d_prev_i >= ATT_D_FILTER_SIZE)
+		d_prev_i = 0;
+	
+	for (i = 0; i < ATT_D_FILTER_SIZE; i++)
+		damp_lp = dvsum(damp_lp, v_to_extended(d_prev[i]));
+*/
+	
+	integral_out = dvsum(dvsum(v_to_extended(error_sat_prev), v_to_extended(error_sat)), integral_out_prev);
+	
+	integral_out_prev = integral_out;
+	error_sat_prev = error_sat;
+/*	
+	ctrl_signal = dvsum(dvsum(
+					v_to_extended(vdiv(error, c1_gain_divide)),
+					dvdiv(evimul(damp_lp, c2_gain), ATT_D_FILTER_SIZE)),//vimul2(damp, c2_gain)
+					dvdiv(integral_out, c1_int_gain_divide)
+					);
+*/
 	ctrl_signal = dvsum(
-					dvsum(vimul2(error, c1_gain),
-						  vimul2(err_prev, c1_gain)),
-					vimul2(damp, c2_gain)
+						dvsub(
+						#ifdef prop_gain_frac
+							v_to_extended(vfmul(error, prop_gain_frac)),
+						#elif (defined prop_gain_int) 
+							vimul2(error, prop_gain_int),
+						#elif (defined prop_gain_divide)
+							v_to_extended(vdiv(error, prop_gain_divide)),
+						#else 
+							#error "Define gain for proportional control."
+						
+						#endif
+							
+						#ifdef der_gain_frac
+						 	v_to_extended(vfmul(angle_rate, der_gain_frac))),
+						#elif (defined der_gain_int)
+						 	vimul2(angle_rate, der_gain_int)),
+						#elif (defined der_gain_divide)
+							v_to_extended(vdiv(angle_rate, der_gain_divide))),
+						#else
+							#error "Define gain for derivative control."
+						#endif
+					
+					dvdiv(integral_out, int_gain_divide)
 					);
 
-	//printf("%d %d %d - %d %d %d\n", error.x, error.y, error.z, (att.v.x-att_prev.x), (att.v.y-att_prev.y), (att.v.z-att_prev.z));
-	torques = evclip(ctrl_signal);
-	
-	err_prev = error;
 	att_prev = att;
+	
+	torques = evclip(ctrl_signal);
 	
 	// FIXME: esto esta mal, es para poder probar sin que moleste el yaw 
 	torques.z = 0;
 	return torques;
 }
-
+/*
+vec3 att_control_decimate(dvec3 torque_in)
+{
+	static dquat d_prev[ATT_DECIMATION_SIZE] = {VEC0};
+	static d_prev_i = 0;
+	
+	int i;
+	evec3 torques = VEC0;
+	
+	d_prev[d_prev_i] = torque_in;
+	d_prev_i++;
+	if (d_prev_i >= ATT_D_FILTER_SIZE)
+		d_prev_i = 0;
+	for (i = 0; i < ATT_DECIMATION_SIZE; i++)
+		torques = dvsum(torques, d_prev[i]);
+		
+}
+*/
 #define h_Kp_mul 1
 #define h_Kd_mul 10
 
@@ -146,8 +139,8 @@ frac h_control(frac setpoint, frac h)
 }
 
 #define mix_thrust_shift 0
-#define	mix_roll_shift_r 3
-#define mix_pitch_shift_r 3
+#define	mix_roll_shift_r 0
+#define mix_pitch_shift_r 0
 #define mix_yaw_shift 3
 
 frac gammainv(frac T, frac t1, frac t2, frac t3)
@@ -163,14 +156,14 @@ frac gammainv(frac T, frac t1, frac t2, frac t3)
 	//return ((r > 0)? ((r < FRAC_1)? r : FRAC_1) : 0);
 }				
 
-struct motorData control_mixer(frac thrust, vec3 torque)
+void control_mixer(frac thrust, vec3 torque, struct motorData* output)
 {
-	struct motorData output;
-	//VER SIGNO; justo el 0 y el 2 deberían estar al revés con los torques en y.
-	output.speed[0] = 0;//gammainv(thrust, 0, torque.y, -torque.z);
-	output.speed[1] = gammainv(thrust, -torque.x, 0, torque.z);
-	output.speed[2] = 0;//gammainv(thrust, 0, -torque.y, -torque.z);
-	output.speed[3] = gammainv(thrust, torque.x, 0, torque.z);
+	// 0 y 2: brazo rojo.
 	
-	return output;
+	output->speed[0] = gammainv(thrust, 0, torque.y, -torque.z);
+	output->speed[1] = 0;//gammainv(thrust, -torque.x, 0, torque.z);
+	output->speed[2] = gammainv(thrust, 0, -torque.y, -torque.z);
+	output->speed[3] = 0;//gammainv(thrust, torque.x, 0, torque.z);
+	
+	return;
 }

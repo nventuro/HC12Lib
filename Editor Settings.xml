@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?codewarrior exportversion="1.0" ideversion="5.5" ?>
+
+<!DOCTYPE EXPORTEDPANEL [
+<!ELEMENT EXPORTEDPANEL (NAME, (SETTINGLIST|VALUE))>
+<!ELEMENT SETTINGLIST (SETTING+)>
+<!ELEMENT SETTING (NAME?, (VALUE|(SETTING+)))>
+<!ELEMENT NAME (#PCDATA)>
+<!ELEMENT VALUE (#PCDATA)>
+]>
+
+<EXPORTEDPANEL>
+    <NAME>Editor</NAME>
+    <SETTINGLIST>
+        <SETTING><NAME>MWApplication_FlashingDelay</NAME><VALUE>30</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_DefaultTextFormat</NAME><VALUE>1</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_Flashing</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_UseDragAndDropEditing</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_SortFunctionPopup</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_UseMultiUndo</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_UseFontAndSize</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_UseSelectionAndPosition</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_UseDimensionAndPosition</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_RelaxedCParse</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_LeftColumnSelection</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_ContextMenuEditCmds</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_ContextMenuBrowserCmds</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_ContextMenuProjectCmds</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_ContextMenuTemplateCmds</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_ContextMenuVCSCmds</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_ContextMenuDebuggerCmds</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_UseVirtualSpace</NAME><VALUE>false</VALUE></SETTING>
+        <SETTING><NAME>MWApplication_UseFindNotFoundDialog</NAME><VALUE>true</VALUE></SETTING>
+    </SETTINGLIST>
+</EXPORTEDPANEL>

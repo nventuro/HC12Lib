@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?codewarrior exportversion="1.0" ideversion="5.5" ?>
+
+<!DOCTYPE EXPORTEDPANEL [
+<!ELEMENT EXPORTEDPANEL (NAME, (SETTINGLIST|VALUE))>
+<!ELEMENT SETTINGLIST (SETTING+)>
+<!ELEMENT SETTING (NAME?, (VALUE|(SETTING+)))>
+<!ELEMENT NAME (#PCDATA)>
+<!ELEMENT VALUE (#PCDATA)>
+]>
+
+<EXPORTEDPANEL>
+    <NAME>Syntax Coloring</NAME>
+    <SETTINGLIST>
+        <SETTING><NAME>MWSyntaxHilite_ColorEdit</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWSyntaxHilite_BrowserColor</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWSyntaxHilite_MainColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>56283</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>56283</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>56283</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWSyntaxHilite_BackgroundColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>9252</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>9252</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>9252</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWSyntaxHilite_CommentColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>28270</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>28270</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>28270</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWSyntaxHilite_KeyColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>1285</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>57568</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>19789</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWSyntaxHilite_StringColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>59624</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>47031</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>9252</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWSyntaxHilite_CustomColor1</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>32767</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>0</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>32767</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWSyntaxHilite_CustomColor2</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>32767</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>0</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>32767</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWSyntaxHilite_CustomColor3</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>32767</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>0</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>32767</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWSyntaxHilite_CustomColor4</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>32767</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>0</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>32767</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_ClassesColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>19660</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>29490</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>42597</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_ConstantsColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>19660</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>29490</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>42597</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_EnumsColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>47288</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>31868</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>13621</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_FunctionsColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>20560</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>41891</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>41120</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_GlobalsColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>38550</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>32125</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>54741</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_MacrosColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>20560</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>41891</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>41120</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_TemplatesColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>19660</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>29490</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>42597</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_TypedefsColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>48573</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>31868</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>13621</VALUE></SETTING>
+        </SETTING>
+        <SETTING><NAME>MWBrowserKeywords_OtherColor</NAME>
+            <SETTING><NAME>Red</NAME><VALUE>19660</VALUE></SETTING>
+            <SETTING><NAME>Green</NAME><VALUE>29490</VALUE></SETTING>
+            <SETTING><NAME>Blue</NAME><VALUE>42597</VALUE></SETTING>
+        </SETTING>
+    </SETTINGLIST>
+</EXPORTEDPANEL>

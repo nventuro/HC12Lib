@@ -6,13 +6,15 @@
 
 #include "common.h"
 
-/* 1.15 */
+#define SIGN(a) (((a) >= 0)? 1 : -1)
+
+/* Formato  Q1.15 */
 typedef s16 frac;
-/* 2.30 */
+
+/* Formato Q2.30 */
 typedef s32 dfrac;
 
-/* 17.15 */
-
+/* Formato Q17.15 */
 typedef dfrac efrac;
 
 #define FRAC_BIT (16)
@@ -64,6 +66,14 @@ static frac efclip(efrac x)
 {
 	return (x > FRAC_minus1)? ((x < FRAC_1)? x : FRAC_1) : FRAC_minus1;
 }
+
+
+static frac frac_sat (frac x, frac sat)
+{
+	
+	return  (x > -sat)? ((x < sat)? x : sat) : -sat;
+}
+
 
 /* **** Vectors in R^3 ****/
 
@@ -192,6 +202,15 @@ static dvec3 dvec_Sub(dvec3 a, dvec3 b)
 	return c;
 }
 
+static dvec3 dvec_Div(dvec3 a, s16 b)
+{
+	dvec3 c = a;
+
+	dVec_DivInPlace(&c, b);
+	
+	return c;
+}
+
 static vec3 vec_Add(vec3 a, vec3 b)
 {
 	vec3 c = a;
@@ -228,6 +247,17 @@ static vec3 vec_Mul(vec3 a, int f)
 	return c;
 }
 
+static vec3 vfmul(vec3 a, frac f)
+{
+	vec3 r;
+	
+	r.x = fmul(a.x, f);
+	r.y = fmul(a.y, f);
+	r.z = fmul(a.z, f);
+	
+	return r;
+}
+
 static dvec3 vfmul2(vec3 a, frac f)
 {
 	dvec3 r;
@@ -260,7 +290,18 @@ static dvec3 dvec_rShift(dvec3 a, u8 shift)
 
 static evec3 vimul2(vec3 v, int a)
 {
-	dvec3 r;
+	evec3 r;
+	
+	r.x = v.x*a;
+	r.y = v.y*a;
+	r.z = v.z*a;
+
+	return r;
+}
+
+static evec3 evimul(evec3 v, int a)
+{
+	evec3 r;
 	
 	r.x = v.x*a;
 	r.y = v.y*a;
@@ -276,6 +317,17 @@ static vec3 evclip(evec3 v)
 	r.x = efclip(v.x);
 	r.y = efclip(v.y);
 	r.z = efclip(v.z);
+	
+	return r;
+}
+
+static evec3 v_to_extended(vec3 v)
+{
+	evec3 r;
+	
+	r.x = v.x;
+	r.y = v.y;
+	r.z = v.z;
 	
 	return r;
 }
@@ -314,6 +366,16 @@ static dvec3 dvsumsat(dvec3 a, dvec3 b)
 }
 
 
+
+static vec3 vsat (vec3 a, frac sat)
+{
+	a.x = frac_sat (a.x, sat);
+	a.y = frac_sat (a.y, sat);
+	a.z = frac_sat (a.z, sat);
+	
+	return a;	
+}
+
 static vec3 vec_clip_d(dvec3 a)
 {
 	vec3 r;
@@ -331,6 +393,7 @@ static vec3 vec_clip_d(dvec3 a)
 #define vmul vec_Mul
 #define dvsum dvec_Add
 #define dvsub dvec_Sub
+#define dvdiv dvec_Div
 
 /* **** Quaternions ****/
 
@@ -454,6 +517,16 @@ static  quat qsum(quat q, quat p)
 	return s;
 }
 
+static vec3 qrot(quat q, vec3 v)
+{
+	quat _v;
+
+	_v.r = 0;
+	_v.v = v;
+	
+	return qmul(q, qmul(_v, qconj(q))).v;
+}
+
 static quat qrenorm(quat q)
 {
 	frac err;
@@ -511,6 +584,24 @@ static quat qdecompose(quat q, u8 axis)
 	}
 
 	return ret;
+}
+
+/* Estas funciones dan el giro que hay que realizar para ir de
+ * 'pos' hacia 'setp', en el marco de referencia de 'pos'
+ */
+
+static vec3 qerror(quat setp, quat pos)
+{
+	quat c = qmul(qconj(pos), setp);
+	
+	return vfmul(c.v, c.r);
+}
+
+static vec3 qerror2(quat setp, quat pos)
+{
+	quat c = qmul(qconj(pos), setp);
+	
+	return vmul(c.v, SIGN(c.r));
 }
 
 #endif /* _ARITH_H_ */

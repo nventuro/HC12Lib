@@ -1,6 +1,6 @@
 #include "hamming1511.h"
 
-u8 hamm_lookupTable[1024];
+u8 hamm_lookupTable[1];
 
 void hamm_GetParityBits(u16 *data)
 {

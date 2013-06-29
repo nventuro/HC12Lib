@@ -34,11 +34,8 @@ void PrintAxisMeasurements (s8 meas, u8 row, bool isSigned);
 void PrintBars (void);
 void PrintBar (s8 meas, u8 row, bool isSigned, u8 bits);
 
-void u8ToChar (u8 x, char *c);
-void s8ToChar (s8 x, char *c);
 void u8ToBar (u8 x, char *c, u8 bits);
 void s8ToBar (s8 x, char *c, u8 bits);
-u8 StrLen (char *c);
 
 char *axesNames[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
 char auxStr[VALUE_LEN]; // Used for converting numbers to strings

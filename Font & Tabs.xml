@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?codewarrior exportversion="1.0" ideversion="5.5" ?>
+
+<!DOCTYPE EXPORTEDPANEL [
+<!ELEMENT EXPORTEDPANEL (NAME, (SETTINGLIST|VALUE))>
+<!ELEMENT SETTINGLIST (SETTING+)>
+<!ELEMENT SETTING (NAME?, (VALUE|(SETTING+)))>
+<!ELEMENT NAME (#PCDATA)>
+<!ELEMENT VALUE (#PCDATA)>
+]>
+
+<EXPORTEDPANEL>
+    <NAME>Font</NAME>
+    <SETTINGLIST>
+        <SETTING><NAME>MWFontSize</NAME><VALUE>11</VALUE></SETTING>
+        <SETTING><NAME>MWFontName</NAME><VALUE>Lucida Console00</VALUE></SETTING>
+        <SETTING><NAME>MWTabCount</NAME><VALUE>4</VALUE></SETTING>
+        <SETTING><NAME>MWAutoIndent</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWIndentSelection</NAME><VALUE>true</VALUE></SETTING>
+        <SETTING><NAME>MWTabInsertsSpaces</NAME><VALUE>false</VALUE></SETTING>
+    </SETTINGLIST>
+</EXPORTEDPANEL>
