@@ -19,7 +19,6 @@
 #include "lcd.h"
 #include "rfrx.h"
 #define DMU_TIMER 1
-
 #define C1_ID 0
 #define C2_ID 1
 #define SHIFT_ID 2
@@ -68,10 +67,10 @@ void att_process(void)
 
 		// El control se corre sólo después de inicializar los motores, para que el control integral
 		// no empiece acumulando error.
-		if (motData.mode = MOT_AUTO)
+		if (motData.mode == MOT_AUTO)
 		{
 			controlData.torque = adv_att_control(setpoint, controlData.QEst, controlData.bff_angle_rate);
-			controlData.thrust = 10500;
+			controlData.thrust = 11500;
 		}
 		
 		if (++ccount == 20) {
@@ -178,6 +177,8 @@ void batt_rx(u8 length)
 	putchar('e');
 	start = _TRUE;
 }
+
+
 
 void main (void)
 {
@@ -317,7 +318,7 @@ void main (void)
 	//		//printf("%d %d %d\n", Bias.x, Bias.y, Bias.z);
 	//		have_to_output = 0;
 	//	}
-		
+/*		
 		if (input == 'a')
 		{
 			//quat aux = {32488, 3024, -3024, 0};
@@ -348,7 +349,7 @@ void main (void)
 			while (1)
 				;
 		}
-		
+*/		
 	
 		/*
 		
