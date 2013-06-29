@@ -35,43 +35,18 @@ vec3 adv_att_control(quat setpoint, quat att, vec3 angle_rate)
 	static vec3 error_sat_prev = VEC0;
 	static evec3 integral_out_prev = VEC0;
 		
-	int i;
-	
-	//quat setp_c = qconj(setpoint);
-	/* Hacia donde me tengo que mover para ir hacia el setpoint*/
-	//vec3 error = qmul(setp_c, att).v;
 	vec3 error = qerror2(setpoint, att);	
-	/* Hacia donde me tengo que mover para volver a la posición anterior*/
-	//vec3 damp = qmul(att_prev, qconj(att)).v;
-/*	vec3 damp = qerror2(att_prev, att);
-	evec3 damp_lp = VEC0;
-*/
 	vec3 torques = VEC0;
 	evec3 ctrl_signal;
 	
 	vec3 error_sat = vsat(error, integral_error_limit);
 	evec3 integral_out;
-/*	
-	d_prev[d_prev_i] = damp;
-	d_prev_i++;
-	if (d_prev_i >= ATT_D_FILTER_SIZE)
-		d_prev_i = 0;
-	
-	for (i = 0; i < ATT_D_FILTER_SIZE; i++)
-		damp_lp = dvsum(damp_lp, v_to_extended(d_prev[i]));
-*/
 	
 	integral_out = dvsum(dvsum(v_to_extended(error_sat_prev), v_to_extended(error_sat)), integral_out_prev);
 	
 	integral_out_prev = integral_out;
 	error_sat_prev = error_sat;
-/*	
-	ctrl_signal = dvsum(dvsum(
-					v_to_extended(vdiv(error, c1_gain_divide)),
-					dvdiv(evimul(damp_lp, c2_gain), ATT_D_FILTER_SIZE)),//vimul2(damp, c2_gain)
-					dvdiv(integral_out, c1_int_gain_divide)
-					);
-*/
+
 	ctrl_signal = dvsum(
 						dvsub(
 						#ifdef prop_gain_frac
@@ -106,24 +81,8 @@ vec3 adv_att_control(quat setpoint, quat att, vec3 angle_rate)
 	torques.z = 0;
 	return torques;
 }
-/*
-vec3 att_control_decimate(dvec3 torque_in)
-{
-	static dquat d_prev[ATT_DECIMATION_SIZE] = {VEC0};
-	static d_prev_i = 0;
-	
-	int i;
-	evec3 torques = VEC0;
-	
-	d_prev[d_prev_i] = torque_in;
-	d_prev_i++;
-	if (d_prev_i >= ATT_D_FILTER_SIZE)
-		d_prev_i = 0;
-	for (i = 0; i < ATT_DECIMATION_SIZE; i++)
-		torques = dvsum(torques, d_prev[i]);
-		
-}
-*/
+
+
 #define h_Kp_mul 1
 #define h_Kd_mul 10
 
