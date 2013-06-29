@@ -65,8 +65,14 @@ void att_process(void)
 	{
 		att_estim(dmu_measurements.gyro, dmu_measurements.accel, 
 							&controlData.QEst, &controlData.bff_angle_rate);
-		controlData.torque = adv_att_control(setpoint, controlData.QEst, controlData.bff_angle_rate);
-		controlData.thrust = 6000;
+
+		// El control se corre sólo después de inicializar los motores, para que el control integral
+		// no empiece acumulando error.
+		if (motData.mode = MOT_AUTO)
+		{
+			controlData.torque = adv_att_control(setpoint, controlData.QEst, controlData.bff_angle_rate);
+			controlData.thrust = 10500;
+		}
 		
 		if (++ccount == 20) {
 			ccount = 0;
@@ -273,11 +279,11 @@ void main (void)
 		;
 	
 	motData.speed[0] = S16_MAX;
-	motData.speed[1] = 0;//S16_MAX;
+	motData.speed[1] = S16_MAX;
 	motData.speed[2] = S16_MAX;
-	motData.speed[3] = 0;//S16_MAX;
+	motData.speed[3] = S16_MAX;
 	motDelayDone = _FALSE;
-	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(3000));
+	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(2000));
 
 	while(!motDelayDone)
 		;
@@ -287,7 +293,7 @@ void main (void)
 	motData.speed[2] = 0;
 	motData.speed[3] = 0;
 
-/*
+
 	motDelayDone = _FALSE;
 	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(3000));
 
@@ -295,8 +301,8 @@ void main (void)
 		;
 
 	
-	while (start == _FALSE)
-		;*/
+//	while (start == _FALSE)
+//		;
 
 	
 	motData.mode = MOT_AUTO;
