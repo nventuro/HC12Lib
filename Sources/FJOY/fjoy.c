@@ -33,6 +33,15 @@
 #define ELEV_MAX 883
 
 
+struct 
+{
+	bool button[FJOY_BUTTONS];
+	s8 yaw;
+	s8 pitch;
+	s8 roll;
+	u8 elev;
+} fjoy_status;
+
 struct {
 	fjoy_callback callback[FJOY_MAX_CALLBACKS];
 	s32 yawAvg;
@@ -41,6 +50,8 @@ struct {
 	s32 elevAvg;
 	bool axesRead;
 } fjoy_data;
+
+
 
 bool fjoy_isInit = _FALSE;
 
