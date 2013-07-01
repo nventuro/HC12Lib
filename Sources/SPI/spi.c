@@ -28,7 +28,7 @@ bool spi_isInit = _FALSE;
 void spi_sendNewData (void);
 void spi_storeReceived (void);
 
-void spi_Init (void)
+void spi_Init (bool CPOL, bool CPHA)
 {
 	if (spi_isInit == _TRUE)
 		return;
@@ -47,8 +47,8 @@ void spi_Init (void)
 	SPI0CR1_MSTR = 1; // Master
 	SPI0CR2_SPC0 = 0; // Unidirectional
 	
-	SPI0CR1_CPOL = 0; // Active high
-	SPI0CR1_CPHA = 0; // Trigger on falling edge
+	SPI0CR1_CPOL = CPOL; // Active high
+	SPI0CR1_CPHA = CPHA; // Trigger on falling edge
 	SPI0CR1_LSBFE = 0; // Most significant bit first
 	
 	SPI0CR1_SSOE = 1; // Automatic slave select
@@ -65,7 +65,7 @@ void spi_Init (void)
 
 void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
 {
-//	bool intsEnabled = SafeSei();
+	bool intsEnabled = SafeSei();
 	
 	if (spi_data.busy == _TRUE)
 		err_Throw("spi: attempt to initiate a transfer while another is in progress.\n");
@@ -87,7 +87,7 @@ void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
 	spi_data.index = 0;
 	
 	spi_sendNewData();
-//	SafeCli(intsEnabled);
+	SafeCli(intsEnabled);
 }
 
 void interrupt spi0_srv (void)
@@ -107,9 +107,9 @@ void interrupt spi0_srv (void)
 
 void spi_sendNewData (void)
 {
-	while (SPI0SR_SPTEF != SPI_SPTEF_READY) // Shouldn't be too long?
+	while (SPI0SR_SPTEF != SPI_SPTEF_READY) // Just in case, shouldn't be too long
 		;
-			
+	
 	SPI_WRITE(spi_data.currTransfer.input[spi_data.index]);
 }
 
@@ -117,9 +117,9 @@ void spi_storeReceived (void)
 {
 	u8 temp;
 	
-	while (SPI0SR_SPIF != SPI_SPIF_READY) // Shouldn't be too long?
+	while (SPI0SR_SPIF != SPI_SPIF_READY) // Just in case, shouldn't be too long
 		;
-		
+	
 	if (spi_data.currTransfer.output != NULL)
 		spi_data.currTransfer.output[spi_data.index] = SPI_READ();
 	else 
