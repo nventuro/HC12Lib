@@ -221,7 +221,7 @@ atd_taskId atd_SetTask(atd_module module, u8 channel, u8 length, bool mult, bool
 	atd_data *moduleData;
 	bool interruptsEnabled = SafeSei();
 	moduleData = getModuleData(module);
-	
+
 	if (cb == NULL)
 		err_Throw("atd: null callback received.\n");
 	

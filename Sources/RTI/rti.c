@@ -50,6 +50,7 @@ void rti_Init()
 rti_id rti_Register (rti_ptr callback, void *data, rti_time period, rti_time delay)
 {
 	rti_id i;
+	
 	for (i = 0; i < RTI_MAX_FCNS; i++) 
 	{
 		if (rti_tbl[i].callback == NULL) 
