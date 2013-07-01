@@ -1,4 +1,6 @@
 #include "nRF24L01+.h"
+#include "error.h"
+#include "rti.h"
 
 // SPI COMMANDS
 #define R_REGISTER(x) (x)
@@ -52,17 +54,17 @@
 #define RF_DR_2MBPS  ((0 << 5) | (1 << 3)) 
 #define RF_DR_250KBPS  ((1 << 5) | (0 << 3)) 
 #define PLL_LOCK BIT(4)
-#define RF_PWR_-18DBM ((0x00) << 1)
-#define RF_PWR_-12DBM ((0x01) << 1)
-#define RF_PWR_-6DBM ((0x10) << 1)
+#define RF_PWR_m18DBM ((0x00) << 1)
+#define RF_PWR_m12DBM ((0x01) << 1)
+#define RF_PWR_m6DBM ((0x10) << 1)
 #define RF_PWR_0DBM ((0x11) << 1)
 
 #define STATUS 0x07
-#define RX_DR BIT(6)
-#define TX_DS BIT(5)
-#define MAX_RT BIT(4)
+#define RX_DR BIT(6) // Data Ready RX FIFO interrupt
+#define TX_DS BIT(5) // Data Sent TX FIFO interrupt
+#define MAX_RT BIT(4) // Maximum number of retransmits reached interrupt
 #define RX_P_NO(x) (x << 1) // Data pipe number for the payload available for reading in the RX FIFO
-#define TX_FULL BIT(0)
+#define ST_TX_FULL BIT(0) // TX FIFO full
 
 #define OBSERVE_TX 0x08
 #define PLOS_CNT 0xF0 // Lost packets
@@ -95,7 +97,32 @@
 #define EN_ACK_PAY BIT(1) // Enable Payload with ACK
 #define EN_DYN_ACK BIT(0) // Enable the W_TX_PAYLOAD_NO_ACK command
 
+typedef struct 
+{
+	u8 dummy;
+} nrf_transferData;
+
+
+struct {
+	nrf_Type type;
+} nrf_data;
+
+bool nrf_isInit = _FALSE;
+
 void nrf_Init (nrf_Type type)
 {
+	if (nrf_isInit == _TRUE)
+		return;
+	
+	nrf_isInit = _TRUE;
+	
+	nrf_data.type = type;
+	
+	
+	return;
+}
 
+void interrupt nrf_irq_Service (void)
+{
+	
 }

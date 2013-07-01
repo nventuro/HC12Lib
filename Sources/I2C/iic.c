@@ -176,7 +176,7 @@ void iic_FullStagesReceive (void)
 }
 
 
-void interrupt iic0_srv (void)
+void interrupt iic0_Service (void)
 {
     IIC_FLG_CLEAR();
   

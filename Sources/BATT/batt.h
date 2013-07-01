@@ -14,7 +14,8 @@
 typedef void (*batt_callback) (void);
 
 // Initializes the battery level-checking module. This samples the registered batteries' voltages every BATT_SAMPLE_PERIOD_MS
-// and calls any registered callback when that occurs. Batteries are registed by calling AddBatt.
+// and calls any registered callback when that occurs. Batteries are registed by calling AddBatt. This requires the RTI module
+// to work.
 void batt_Init (void);
 
 // Registers a battery for level-checking. The battery must be connected to the corresponding atd module and channel.

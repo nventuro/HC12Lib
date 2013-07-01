@@ -56,7 +56,7 @@ void batt_AddBatt (atd_module module, atd_channel channel, batt_callback cb, u8 
 		err_Throw("batt: minLevel must be lower than maxLevel.\n");
 	
 	for (i = 0; i < BATT_MAX_BATTS; i++)
-		if (batteries[i].cb != NULL)
+		if (batteries[i].cb == NULL)
 			break;
 	
 	if (i == BATT_MAX_BATTS)
@@ -98,7 +98,7 @@ void batt_SampleBatteries (void *data, rti_time period, rti_id id)
 		measuring = _FALSE;
 }
 
-
+#include <stdio.h>
 
 void batt_SampleCallback (s16* mem, const atd_task* taskData)
 {
@@ -114,9 +114,9 @@ void batt_SampleCallback (s16* mem, const atd_task* taskData)
 	
 	if (batteries[measIndex].currLevel != NULL)
 		(*batteries[measIndex].currLevel) = level;
-	
-	if (level < batteries[measIndex].lowBattLevel)
-		batteries[measIndex].cb();	
+	printf("%d\n",avgMeas);
+//	if (level < batteries[measIndex].lowBattLevel)
+//		batteries[measIndex].cb();	
 	
 	measIndex ++;
 	if ((measIndex < BATT_MAX_BATTS) && (batteries[measIndex].cb != NULL))

@@ -18,6 +18,6 @@ void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot);
 // memory in both input and output.
 // If spi_Transfer is called while there's already another transfer in progress, an error is thrown.
 
-void interrupt spi0_srv (void);
+void interrupt spi0_Service (void);
 
 #endif

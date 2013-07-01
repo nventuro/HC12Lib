@@ -317,7 +317,7 @@ atd_data* getModuleData(atd_module module)
 }
 
 
-void interrupt atd0_srv(void)
+void interrupt atd0_Service(void)
 {
 	atd_srv(ATD0);
 	ATD0_FLAG_CLR();
@@ -325,7 +325,7 @@ void interrupt atd0_srv(void)
 }
 
 
-void interrupt atd1_srv(void)
+void interrupt atd1_Service(void)
 {
 	atd_srv(ATD1);
 	ATD1_FLAG_CLR();

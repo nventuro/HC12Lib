@@ -90,7 +90,7 @@ void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
 	SafeCli(intsEnabled);
 }
 
-void interrupt spi0_srv (void)
+void interrupt spi0_Service (void)
 {
 	spi_storeReceived();
 	

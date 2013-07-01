@@ -75,7 +75,7 @@ void atd_FreeTask(atd_module module, atd_taskId id);
 //void atd_multiFreeChannel(u8 module, u8 firstChannel, u8 lastChannel);
 
 
-extern void interrupt atd0_srv(void);
-extern void interrupt atd1_srv(void);
+extern void interrupt atd0_Service(void);
+extern void interrupt atd1_Service(void);
 
 #endif // _AD_H

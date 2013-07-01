@@ -72,6 +72,6 @@ void iic_ReceiveFromRegister (u8 regAddress, u8 slaveAddress, iic_ptr eotCB, iic
 void iic_FlushBuffer(void);
 
 
-void interrupt iic0_srv (void);
+void interrupt iic0_Service (void);
 
 #endif
