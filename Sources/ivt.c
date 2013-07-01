@@ -2,6 +2,7 @@
 
 #include "rti.h"
 #include "iic.h"
+#include "spi.h"
 #include "timers.h"
 #include "atd.h"
 
@@ -121,7 +122,7 @@ void (* const interrupt_vector_table[])() ={
     atd0_srv,	// VECT22	atd0
     NOTUSED,	// VECT21	sci1
     NOTUSED,	// VECT20	sci0
-    NOTUSED,	// VECT19	spi0
+    spi0_srv,	// VECT19	spi0
     NOTUSED,	// VECT18	timpaie
     NOTUSED,	// VECT17	timpaaovf
     timOvf_Service,	// VECT16	timovf
