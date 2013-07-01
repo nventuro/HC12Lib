@@ -1,6 +1,14 @@
 #ifndef _DEBUG_H_INCLUDED_
 #define _DEBUG_H_INCLUDED_
 
+// Main program
+
+//#define MAIN_CALIBRATE
+#define MAIN_CONTROL
+#define MAIN_SETPOINT
+//#define MAIN_OUTPUT
+
+
 
 // General keys
 

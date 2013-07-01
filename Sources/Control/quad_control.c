@@ -19,13 +19,13 @@ controlData_T controlData = {{0,0,0,0}, {0, 0, 0}, {0,0,0}, 0};
 //#define prop_gain_int
 //#define prop_gain_divide 8000
 
-#define int_gain_divide 250
+#define int_gain_divide 8000
 
 #define der_gain_int (1)
 //#define der_gain_frac 2000
 //#define der_gain_divide
 
-#define integral_error_limit 100
+#define integral_error_limit 300
 
 vec3 adv_att_control(quat setpoint, quat att, vec3 angle_rate)
 {
@@ -80,7 +80,7 @@ vec3 adv_att_control(quat setpoint, quat att, vec3 angle_rate)
 	torques = evclip(ctrl_signal);
 	
 	// FIXME: esto esta mal, es para poder probar sin que moleste el yaw 
-//	torques.z = 0;
+	torques.z = 0;
 	return torques;
 }
 
@@ -121,9 +121,9 @@ void control_mixer(frac thrust, vec3 torque, struct motorData* output)
 {
 	// 0 y 2: brazo rojo.
 	
-	output->speed[0] = gammainv(thrust, 0, torque.y, -torque.z);
+	output->speed[0] = 0;//gammainv(thrust, 0, torque.y, -torque.z);
 	output->speed[1] = gammainv(thrust, -torque.x, 0, torque.z);
-	output->speed[2] = gammainv(thrust, 0, -torque.y, -torque.z);
+	output->speed[2] = 0;//gammainv(thrust, 0, -torque.y, -torque.z);
 	output->speed[3] = gammainv(thrust, torque.x, 0, torque.z);
 	
 	return;

@@ -14,6 +14,7 @@
 #include "arith.h"
 #include "atd.h"
 #include "motors.h"
+#include "debug.h"
 
 //#include "batt.h"
 #include "lcd.h"
@@ -70,7 +71,7 @@ void att_process(void)
 		if (motData.mode == MOT_AUTO)
 		{
 			controlData.torque = adv_att_control(setpoint, controlData.QEst, controlData.bff_angle_rate);
-			controlData.thrust = 11500;
+			controlData.thrust = 6000;
 		}
 		
 		if (++ccount == 20) {
@@ -217,7 +218,8 @@ void main (void)
 	rfrx_Register(BATT_ID, batt_rx, &rx_data);
 */
 
-	/*
+#ifdef MAIN_CALIBRATE
+
 	printf("Press 'm' to calibrate\n");
 
 	while (measurementCount < 2)
@@ -231,7 +233,7 @@ void main (void)
 		{
 			quat aux;
 			asm sei;
-			aux = QEst;
+			aux = controlData.QEst;
 			asm cli;
 			printf("Current quaternion: %d %d %d %d\n", Q_COMPONENTS(aux));
 			continue;		
@@ -242,14 +244,14 @@ void main (void)
 		
 		if (measurementCount == 0)
 		{	asm sei;
-			calibration.p0 = QEst;
+			calibration.p0 = controlData.QEst;
 			asm cli;
 			printf("First measurement done\n");
 		}
 		else if (measurementCount == 1)
 		{
 			asm sei;
-			calibration.p1 = QEst;
+			calibration.p1 = controlData.QEst;
 			asm cli;
 			printf("Second measurement done\n");
 		}
@@ -265,16 +267,18 @@ void main (void)
 			{
 				measurementCount = 1;	// Stay looping second measurement.
 				printf("Calibrate again\n");
-			}
-
+			}j
+		
+			measurementCount = 1;
 			//att_apply_correction(calibrationOutput);
 		}
 	}
-	*/
+
+#elif (defined MAIN_CONTROL)
 
 	mot_Init();
 			
-	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(3000));
+	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(10000));
 
 	while(!motDelayDone)
 		;
@@ -283,8 +287,9 @@ void main (void)
 	motData.speed[1] = S16_MAX;
 	motData.speed[2] = S16_MAX;
 	motData.speed[3] = S16_MAX;
+	
 	motDelayDone = _FALSE;
-	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(2000));
+	rti_Register (rti_MotDelay, &motDelayDone, RTI_ONCE, RTI_MS_TO_TICKS(10000));
 
 	while(!motDelayDone)
 		;
@@ -308,17 +313,14 @@ void main (void)
 	
 	motData.mode = MOT_AUTO;
 
+#endif 
+
+#ifdef MAIN_SETPOINT
+
 	while (1) {
 		char input;
 		input = qs_getchar(0);
-		
-	//	if (have_to_output)
-	//	{
-	//		printf("%d %d %d %d,", Q_COMPONENTS(QEst));
-	//		//printf("%d %d %d\n", Bias.x, Bias.y, Bias.z);
-	//		have_to_output = 0;
-	//	}
-/*		
+			
 		if (input == 'a')
 		{
 			//quat aux = {32488, 3024, -3024, 0};
@@ -349,41 +351,10 @@ void main (void)
 			while (1)
 				;
 		}
-*/		
-	
-		/*
-		
-		if (readyToCalculate){
-			quat QEstAux;
-			vec3 torque_copy;
-			
-	//		asm sei;
-	//		readyToCalculate = _FALSE;
-	//		QEstAux = controlData.QEst;
-	//		torque_copy = controlData.torque;
-	//		asm cli;
-			
-			//controlData.thrust = h_control(6000, 0);
-			//torque = adv_att_control(setpoint, QEstAux);
-			
-			
-			if (torqueCount++ >= 20)
-			{
-				controlData_T *p = &controlData;
-				torqueCount = 0;
-				printf(">%d %d %d %d\n", Q_COMPONENTS(QEstAux));
-				printf("%d %d %d\n", p->torque.x, p->torque.y, p->torque.z);
-				printf("%d %d %d %d\n", motData.speed[0], motData.speed[1], motData.speed[2], motData.speed[3]);
-		
-			}
-			
-
-			//motData.speed[0] = 10000;
-		}
-		*/
 	}
-	
-	/*
+
+#elif (defined MAIN_OUTPUT)
+
 	while(1) {
 		if (have_to_output) {
 			quat QEstAux;
@@ -396,9 +367,9 @@ void main (void)
 			printf("%d %d %d %d,", Q_COMPONENTS(QEstAux));
 		}
 	}
-	*/
-}
 
+#endif
+}
 
 void measure (s32 measurement);
 
