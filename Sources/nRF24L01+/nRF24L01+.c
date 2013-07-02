@@ -5,7 +5,7 @@
 
 // SPI COMMANDS
 #define R_REGISTER(x) (x)
-#define W_REGISTER(x) (BIT(5) & x)
+#define W_REGISTER(x) (BIT(5) | x)
 
 #define R_RX_PAYLOAD 0x61
 #define W_TX_PAYLOAD 0xA0
@@ -14,7 +14,7 @@
 
 #define REUSE_TX_PL 0xE3
 #define R_RX_PL_WID 0x60
-#define W_ACK_PAYLOAD(x) (0xA8 & x)
+#define W_ACK_PAYLOAD(x) (0xA8 | x)
 #define W_TX_PAYLOAD_NO_ACK 0xB0
 
 #define NOP 0xFF
@@ -104,26 +104,32 @@
 #define NRF_SPI_DATA_SIZE 40
 
 #define NRF_STARTUP_TIME_MS 150
+#define NRF_CE_PULSE_DURATION_MS 2 // In reality, it is about 10us, but this is only done once so no harm done
 
 #define NRF_ADDRESS 0xE7
 
 
 typedef struct 
 {
-	u8 dummy;
+	u8 *payloadData;
+	nrf_ptr eot;
 } nrf_transferData;
 
 
 struct {
 	nrf_Type type;
 	u8 spiData[NRF_SPI_DATA_SIZE];
+	bool transmitting;
+	nrf_transferData currTransmission;
 } nrf_data;
 
 bool nrf_isInit = _FALSE;
 u8 nrf_initStep;
 
-void nrf_rtiCallback (void *data, rti_time period, rti_id id);
+void nrf_rtiInitCallback (void *data, rti_time period, rti_id id);
 void nrf_InitSequence (void);
+void nrf_CommenceTransmission (u8 *data, u8 length);
+void nrf_spiCallback (void);
 
 void nrf_Init (nrf_Type type)
 {
@@ -133,12 +139,14 @@ void nrf_Init (nrf_Type type)
 	nrf_isInit = _TRUE;
 	
 	nrf_data.type = type;
+	nrf_data.transmitting = _FALSE;
 	
 	NRF_CE_DDR = DDR_OUT;
 	NRF_CE = 0;
 	
 	rti_Init();
-	rti_Register(nrf_rtiCallback, NULL, RTI_ONCE, RTI_MS_TO_TICKS(NRF_STARTUP_TIME_MS));
+	nrf_initStep = 0;
+	rti_Register(nrf_rtiInitCallback, NULL, RTI_ONCE, RTI_MS_TO_TICKS(NRF_STARTUP_TIME_MS));
 
 	while (nrf_isInit != _TRUE)
 		;
@@ -146,23 +154,13 @@ void nrf_Init (nrf_Type type)
 	return;
 }
 
-void nrf_rtiCallback (void *data, rti_time period, rti_id id)
+void nrf_rtiInitCallback (void *data, rti_time period, rti_id id)
 {
-	nrf_initStep = 0;
 	nrf_InitSequence();
 }
 
 void nrf_InitSequence (void)
-{
-	// init sequence - wait times, configure ALL registers, depending on wether TX or RX
-	
-	// RX: callback para un UNICO pipe. me da un chorizo de memoria, y cuando lo llamo ahí está lo que mandaron
-	// , y le digo el largo. Funcion para guardar el ack payload.	
-	
-	// TX: funcion para mandar. Chequeo de no llenar la FIFO (solo esta todo bien si la fifo no está llena). Me pasas
-	// chorizo de memoria y largo, yo mando eso. te llamo cuando termino y recibi un ack, o cuando hubo un error. Si
-	// llego un ack, te paso el payload, si hay.
-	
+{	
 	switch (nrf_initStep)
 	{
 		// Device is in the Power Down state if there was a power cycle, or in some other state if the uC was reset.
@@ -216,7 +214,7 @@ void nrf_InitSequence (void)
 			nrf_initStep ++;
 						
 			nrf_data.spiData[0] = W_REGISTER(SETUP_RETR);
-			// Set ARD to (1+1) * 250us = 500us, and ARC to 10 retransmits.
+			// Set ARD to (1+1) * 500us = 250us, and ARC to 10 retransmits.
 			nrf_data.spiData[1] = ARD(1) | ARC(10);
 			
 			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
@@ -310,14 +308,91 @@ void nrf_InitSequence (void)
 			break;
 		
 		case 12:
+			nrf_initStep ++;
+			NRF_CE = 1; 
+			// Wait until the nRF goes into Standby-I (or II) mode
+			rti_Register(nrf_rtiInitCallback, NULL, RTI_ONCE, RTI_MS_TO_TICKS(NRF_CE_PULSE_DURATION_MS));
+						
+			break;
+			
+		case 13:
+			// The nRF is now configured and properly initialized
 			nrf_isInit = _TRUE;
-			NRF_CE = 1; // HAVE TO WAIT FOR 10 US TO ENSURE DEVICE IS IN STANDBY I MODE
 						
 			break;
 	}
 }
 
+bool nrf_IsBusy(void)
+{
+	if (nrf_data.type != PTX)
+		err_Throw("nrf: IsBusy is only available in PTX mode.\n");
+
+	return nrf_data.transmitting;
+}
+
+void nrf_Transmit (u8 *data, u8 length, nrf_ptr eot, u8 *payloadData)
+{
+	if (nrf_data.type != PTX)
+		err_Throw("nrf: Transmit can only be called in PTX mode.\n");
+
+	if (nrf_data.transmitting == _TRUE)
+		err_Throw("nrf: attempted to initiate a transmission while another one is taking place.\n");
+	
+	if (data == NULL)
+		err_Throw("nrf: recevied NULL data pointer.\n");
+	
+	if ((length == 0) || (length > 32))
+		err_Throw("nrf: length must be between 1 and 32.\n");
+	
+	nrf_data.transmitting = _TRUE;
+	nrf_data.currTransmission.eot = eot;
+	nrf_data.currTransmission.payloadData = payloadData;
+	
+	nrf_CommenceTransmission (data, length);	
+}
+
+void nrf_CommenceTransmission (u8 *data, u8 length)
+{
+	u8 index;
+	nrf_data.spiData[0] = W_TX_PAYLOAD;
+	for (index = 0; index < length; index ++)
+		nrf_data.spiData[index + 1] = data[index];
+		
+	spi_Transfer(nrf_data.spiData, NULL, length + 1, NULL);
+}
+
+
 void interrupt nrf_irq_Service (void)
 {
-	
+	// By writing a NOP, the nRF's status register is read, and it is stored in nrf_data.spiData[0]
+	nrf_data.spiData[0] = NOP;
+	spi_Transfer(nrf_data.spiData, nrf_data.spiData, 1, nrf_spiCallback);
+}
+
+void nrf_spiCallback (void)
+{
+	if (nrf_data.type == PTX)
+	{
+		if ((nrf_data.spiData[0] & MAX_RT) != 0) // MAX_RT interrupt
+		{
+			nrf_data.transmitting = _FALSE;
+			nrf_data.currTransmission.eot (_FALSE, NULL, 0);
+		}
+		else // TX_DS interrupt, an RX_DR might have also ocurred if there was payload
+		{
+			if ((nrf_data.spiData[0] & RX_DR) != 0) // TX_DS + RX_DR interrupts
+			{
+				//read payload, store it, call eot
+			}
+			else // TX_DS interrupt
+			{
+				nrf_data.transmitting = _FALSE;
+				nrf_data.currTransmission.eot (_FALSE, NULL, 0);
+			}
+		}
+	}
+	else // nrf_data.type == PRX
+	{
+	}
 }

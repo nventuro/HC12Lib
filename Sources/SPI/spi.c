@@ -1,5 +1,4 @@
 #include "spi.h"
-#include "mc9s12xdp512.h"
 #include "error.h"
 
 #define SPI_SPTEF_READY 1
@@ -8,8 +7,8 @@
 #define SPI_READ() SPI0DR
 #define SPI_WRITE(x) (SPI0DR = x)
 
-#define SPI_SS_START() (PTM_PTM3 = 0)
-#define SPI_SS_STOP() (PTM_PTM3 = 1)
+#define SPI_SS_START() (SPI_LONG_SS = 0)
+#define SPI_SS_STOP() (SPI_LONG_SS = 1)
 
 typedef struct 
 {
@@ -54,10 +53,10 @@ void spi_Init (bool CPOL, bool CPHA)
 	SPI0CR1_CPHA = CPHA; // Trigger on falling edge
 	SPI0CR1_LSBFE = 0; // Most significant bit first
 	
-	SPI0CR1_SSOE = 0; // Disable Slave Select
-	SPI0CR2_MODFEN = 0; // Disable MODF error.
+	SPI0CR1_SSOE = 1; // Enable automaic slave select.
+	SPI0CR2_MODFEN = 1; // Enable MODF error (required for SSOE = 1).
 
-	DDRM_DDRM3 = DDR_OUT; // PTM3 is the slave select pin: it will be manually toggled.
+	SPI_LONG_SS_DDR = DDR_OUT; // PTS3 is the slave select pin: it will be manually toggled.
 	SPI_SS_STOP();		
 	
 	// Baudate = 50 MHz / ((0+1)*2^(7+1)) = 195 kHz

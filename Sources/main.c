@@ -2,6 +2,7 @@
 #include "common.h"
 #include "pll.h"
 #include "quick_serial.h"
+#include "nRF24L01+.h"
 
 void Init (void);
 
@@ -23,6 +24,7 @@ void Init (void)
 	asm cli;
 
 	// Modules that do require interrupts to be enabled
+	nrf_Init(PTX);
 
 	return;
 }

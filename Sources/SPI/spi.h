@@ -2,6 +2,13 @@
 #define _SPI_H
 
 #include "common.h"
+#include "mc9s12xdp512.h"
+
+// Pin SS0 goes down at the beginning of every 8 bit SPI transfer, and up when it ends.
+// Pin SPI_LONG_SS goes down at the same time as SS0, but only goes up when spi_Transfer ends. 
+// Depending on the device, connect the SS (CSN) line to either SS0 or SPI_LONG_SS
+#define SPI_LONG_SS PTS_PTS3 
+#define SPI_LONG_SS_DDR DDRS_DDRS3 // The DDR register for SPI_LONG_SS
 
 typedef void (*spi_ptr)(void);
 
