@@ -118,6 +118,15 @@ void nrf_Init (nrf_Type type)
 	
 	nrf_data.type = type;
 	
+	rti_Init();
+	// init sequence - wait times, configure ALL registers, depending on wether TX or RX
+	
+	// RX: callback para un UNICO pipe. me da un chorizo de memoria, y cuando lo llamo ahí está lo que mandaron
+	// , y le digo el largo. Funcion para guardar el ack payload.	
+	
+	// TX: funcion para mandar. Chequeo de no llenar la FIFO (solo esta todo bien si la fifo no está llena). Me pasas
+	// chorizo de memoria y largo, yo mando eso. te llamo cuando termino y recibi un ack, o cuando hubo un error. Si
+	// llego un ack, te paso el payload, si hay.
 	
 	return;
 }
