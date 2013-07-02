@@ -8,6 +8,9 @@
 #define SPI_READ() SPI0DR
 #define SPI_WRITE(x) (SPI0DR = x)
 
+#define SPI_SS_START() (PTM_PTM3 = 0)
+#define SPI_SS_STOP() (PTM_PTM3 = 1)
+
 typedef struct 
 {
 	u8 *input;
@@ -51,9 +54,12 @@ void spi_Init (bool CPOL, bool CPHA)
 	SPI0CR1_CPHA = CPHA; // Trigger on falling edge
 	SPI0CR1_LSBFE = 0; // Most significant bit first
 	
-	SPI0CR1_SSOE = 1; // Automatic slave select
-	SPI0CR2_MODFEN = 1; // MODF error enabled (required for SSOE = 1)
-		
+	SPI0CR1_SSOE = 0; // Disable Slave Select
+	SPI0CR2_MODFEN = 0; // Disable MODF error.
+
+	DDRM_DDRM3 = DDR_OUT; // PTM3 is the slave select pin: it will be manually toggled.
+	SPI_SS_STOP();		
+	
 	// Baudate = 50 MHz / ((0+1)*2^(7+1)) = 195 kHz
 	SPI0BR_SPR = 7;
 	SPI0BR_SPPR = 0;
@@ -61,6 +67,11 @@ void spi_Init (bool CPOL, bool CPHA)
 	SPI0CR1_SPE = 1; // Enable
 	
 	return;
+}
+
+bool spi_IsBusy (void)
+{
+	return spi_data.busy;
 }
 
 void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
@@ -76,9 +87,6 @@ void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
 	if (length == 0)
 		err_Throw("spi: length must be non-zero.\n");
 	
-	if (eot == NULL)
-		err_Throw("spi: received NULL end of transmission callback.\n");
-	
 	spi_data.busy = _TRUE;
 	spi_data.currTransfer.input = input;
 	spi_data.currTransfer.output = output;
@@ -86,6 +94,7 @@ void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
 	spi_data.currTransfer.eot = eot;
 	spi_data.index = 0;
 	
+	SPI_SS_START();
 	spi_sendNewData();
 	SafeCli(intsEnabled);
 }
@@ -99,8 +108,10 @@ void interrupt spi0_Service (void)
 		spi_sendNewData();
 	else
 	{
+		SPI_SS_STOP();
 		spi_data.busy = _FALSE;
-		spi_data.currTransfer.eot();	
+		if (spi_data.currTransfer.eot != NULL)
+			spi_data.currTransfer.eot();	
 	}
 }
 

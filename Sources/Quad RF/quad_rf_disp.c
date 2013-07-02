@@ -1,4 +1,4 @@
-#include "fjoy_disp.h"
+#include "quad_rf_disp.h"
 #include "fjoy.h"
 #include "lcd.h"
 #include "rti.h"
@@ -44,22 +44,22 @@ char *axesNames[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
 char auxStr[VALUE_LEN]; // Used for converting numbers to strings
 
 
-void fjoy_PrintAxes (void)
+void qrf_disp_PrintAxes (void)
 {
 	PrintAxesNames();
 	PrintAxesMeasurements();
 	PrintBars();
 }
 
-void fjoy_PrintAxesPeriodically (void)
+void qrf_disp_PrintAxesPeriodically (void)
 {	
 	rti_Init();
-	rti_Register(PeriodicPrint, NULL, RTI_MS_TO_TICKS(FJOY_REFRESH_PERIOD_MS), RTI_NOW);
+	rti_Register(PeriodicPrint, NULL, RTI_MS_TO_TICKS(QUAD_RF_DISP_REFRESH_PERIOD_MS), RTI_NOW);
 }
 
 void PeriodicPrint (void *data, rti_time period, rti_id id)
 {
-	fjoy_PrintAxes();
+	qrf_disp_PrintAxes();
 }
 
 void PrintAxesNames (void)
