@@ -6,17 +6,14 @@
 #include <stdio.h>
 
 void Init (void);
-void nrf_Callback (bool success, u8 *ackPayload, u8 length);
-
-u8 data[10];
+void nrf_Callback (u8 *data, u8 length);
 
 void main (void)
 {
-	u8 i;
-	Init ();	
-	for (i = 0; i < 10; i++)
-		data[i] = 0xAA;
-	nrf_Transmit(data, 10, nrf_Callback);
+	Init ();
+		
+	nrf_Receive(nrf_Callback);
+	
 	while (1)
 		;	
 }
@@ -31,18 +28,16 @@ void Init (void)
 	asm cli;
 
 	// Modules that do require interrupts to be enabled
-	nrf_Init(PTX);
+	nrf_Init(PRX);
 
 	return;
 }
 
-void nrf_Callback (bool success, u8 *ackPayload, u8 length)
+void nrf_Callback (u8 *data, u8 length)
 {
-	if (success == _TRUE)
-		printf("Salio todo bien.\n");
-	else
-		printf("Nadie tiro un ACK.\n");
-	
-	nrf_Transmit(data, 10, nrf_Callback);
+	u8 index;
+	for (index = 0; index < length; index++)
+		printf("%d\t",((s16)(data[index])));
+	putchar('\n');
 }
 	

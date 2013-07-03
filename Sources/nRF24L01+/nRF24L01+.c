@@ -356,6 +356,26 @@ void nrf_InitSequence (void)
 		case 13:
 			nrf_initStep ++;
 						
+			nrf_data.spiInputData[0] = FLUSH_TX;
+			// Flush the TX FIFO, if there was something stored (because the nRF wasn't reset)
+			
+			spi_Transfer(nrf_data.spiInputData, NULL, 1, nrf_InitSequence);
+		
+			break;
+			
+		case 14:
+			nrf_initStep ++;
+						
+			nrf_data.spiInputData[0] = FLUSH_RX;
+			// Flush the RX FIFO, if there was something stored (because the nRF wasn't reset)
+			
+			spi_Transfer(nrf_data.spiInputData, NULL, 1, nrf_InitSequence);
+		
+			break;
+			
+		case 15:
+			nrf_initStep ++;
+						
 			nrf_data.spiInputData[0] = W_REGISTER(CONFIG);
 			// Register configuration is done, power on device.
 			nrf_data.spiInputData[1] = EN_CRC | CRC_2_BYTE | PWR_UP | ((nrf_data.type == PRX) ? PRIM_RX : PRIM_TX);
@@ -364,7 +384,7 @@ void nrf_InitSequence (void)
 			
 			break;
 		
-		case 14:
+		case 16:
 			nrf_initStep ++;
 			NRF_CE = 1; 
 			// Wait until the nRF goes into Standby-I (or II) mode
@@ -372,7 +392,7 @@ void nrf_InitSequence (void)
 						
 			break;
 			
-		case 15:
+		case 17:
 			// The nRF is now configured and properly initialized
 			nrf_isInit = _TRUE;
 			ENABLE_IRQ();
@@ -431,7 +451,8 @@ void nrf_Receive (nrf_PRXptr eot)
 	if (nrf_data.prxData.eot != NULL)
 		err_Throw("nrf: attempted to register a second end of transmission callback.\n");
 	
-	nrf_data.prxData.eot = eot;	}
+	nrf_data.prxData.eot = eot;	
+}
 
 void nrf_StoreAckPayload (u8 *data, u8 length)
 {	
