@@ -122,12 +122,12 @@ typedef struct
 	
 	// Used when reading the payload in an ACK
 	u8 readLen[2];
-	u8 payloadStorage[NRF_SPI_DATA_SIZE];
 } nrf_PTXData;
 
 struct {
 	nrf_Type type;
-	u8 spiData[NRF_SPI_DATA_SIZE];
+	u8 spiInputData[NRF_SPI_DATA_SIZE];
+	u8 spiOutputData[NRF_SPI_DATA_SIZE];
 	nrf_PTXData ptxData;
 } nrf_data;
 
@@ -179,163 +179,163 @@ void nrf_InitSequence (void)
 			
 			spi_Init(NRF_SPI_CPOL, NRF_SPI_CPHA);
 			
-			nrf_data.spiData[0] = W_REGISTER(CONFIG);
+			nrf_data.spiInputData[0] = W_REGISTER(CONFIG);
 			// Enable all interrupts (all masks are set to 0), enable 2 byte CRC, power down device (PWR_UP = 0), and set as PTX/PRX.
-			nrf_data.spiData[1] = EN_CRC | CRC_2_BYTE | ((nrf_data.type == PRX) ? PRIM_RX : PRIM_TX);
+			nrf_data.spiInputData[1] = EN_CRC | CRC_2_BYTE | ((nrf_data.type == PRX) ? PRIM_RX : PRIM_TX);
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 			
 			break;
 			
 		case 1:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(EN_AA);
+			nrf_data.spiInputData[0] = W_REGISTER(EN_AA);
 			// Enable Auto Acknowledgement for Pipe 0 (and disable for all other pipes).
-			nrf_data.spiData[1] = ENAA_P(0);
+			nrf_data.spiInputData[1] = ENAA_P(0);
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 			
 			break;
 			
 		case 2:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(EN_RXADDR);
+			nrf_data.spiInputData[0] = W_REGISTER(EN_RXADDR);
 			// Enable RX Pipe 0 (and disable for all other pipes).
-			nrf_data.spiData[1] = ERX_P(0);
+			nrf_data.spiInputData[1] = ERX_P(0);
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 				
 		case 3:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(SETUP_AW);
+			nrf_data.spiInputData[0] = W_REGISTER(SETUP_AW);
 			// Set Address Width to 5 bytes
-			nrf_data.spiData[1] = AW_5_BYTES;
+			nrf_data.spiInputData[1] = AW_5_BYTES;
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 			
 		case 4:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(SETUP_RETR);
+			nrf_data.spiInputData[0] = W_REGISTER(SETUP_RETR);
 			// Set ARD to (1+1) * 500us = 250us, and ARC to 10 retransmits.
-			nrf_data.spiData[1] = ARD(1) | ARC(10);
+			nrf_data.spiInputData[1] = ARD(1) | ARC(10);
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 			
 		case 5:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(RF_CH);
+			nrf_data.spiInputData[0] = W_REGISTER(RF_CH);
 			// Set RF Channel to 24050 MHz
-			nrf_data.spiData[1] = SET_CH(50);
+			nrf_data.spiInputData[1] = SET_CH(50);
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 			
 		case 6:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(RF_SETUP);
+			nrf_data.spiInputData[0] = W_REGISTER(RF_SETUP);
 			// Set Data Rate to 2Mbps and output power to 0dBm.
-			nrf_data.spiData[1] = RF_DR_2MBPS | RF_PWR_0DBM;
+			nrf_data.spiInputData[1] = RF_DR_2MBPS | RF_PWR_0DBM;
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 			
 		case 7:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(RX_ADDR_P(0));
+			nrf_data.spiInputData[0] = W_REGISTER(RX_ADDR_P(0));
 			// Set RX Address
-			nrf_data.spiData[1] = NRF_ADDRESS;
-			nrf_data.spiData[2] = NRF_ADDRESS;
-			nrf_data.spiData[3] = NRF_ADDRESS;
-			nrf_data.spiData[4] = NRF_ADDRESS;
-			nrf_data.spiData[5] = NRF_ADDRESS;
+			nrf_data.spiInputData[1] = NRF_ADDRESS;
+			nrf_data.spiInputData[2] = NRF_ADDRESS;
+			nrf_data.spiInputData[3] = NRF_ADDRESS;
+			nrf_data.spiInputData[4] = NRF_ADDRESS;
+			nrf_data.spiInputData[5] = NRF_ADDRESS;
 			
-			spi_Transfer(nrf_data.spiData, NULL, 6, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 6, nrf_InitSequence);
 		
 			break;
 			
 		case 8:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(TX_ADDR);
+			nrf_data.spiInputData[0] = W_REGISTER(TX_ADDR);
 			// Set TX Address
-			nrf_data.spiData[1] = RF_DR_2MBPS | RF_PWR_0DBM;
-			nrf_data.spiData[1] = NRF_ADDRESS;
-			nrf_data.spiData[2] = NRF_ADDRESS;
-			nrf_data.spiData[3] = NRF_ADDRESS;
-			nrf_data.spiData[4] = NRF_ADDRESS;
-			nrf_data.spiData[5] = NRF_ADDRESS;
+			nrf_data.spiInputData[1] = RF_DR_2MBPS | RF_PWR_0DBM;
+			nrf_data.spiInputData[1] = NRF_ADDRESS;
+			nrf_data.spiInputData[2] = NRF_ADDRESS;
+			nrf_data.spiInputData[3] = NRF_ADDRESS;
+			nrf_data.spiInputData[4] = NRF_ADDRESS;
+			nrf_data.spiInputData[5] = NRF_ADDRESS;
 			
-			spi_Transfer(nrf_data.spiData, NULL, 6, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 6, nrf_InitSequence);
 		
 			break;
 			
 		case 9:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(DYNPD);
+			nrf_data.spiInputData[0] = W_REGISTER(DYNPD);
 			// Enable dynamic payload length for Pipe 0.
-			nrf_data.spiData[1] = DPL_P(0);
+			nrf_data.spiInputData[1] = DPL_P(0);
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 		
 		case 10:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = ACTIVATE;
+			nrf_data.spiInputData[0] = ACTIVATE;
 			// Enable the R_RX_PL_WID, W_ACK_PAYLOAD and W_TX_PAYLOAD_NOACK commands
-			nrf_data.spiData[1] = ACTIVATE_DATA;
+			nrf_data.spiInputData[1] = ACTIVATE_DATA;
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 			
 		case 11:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(FEATURE);
+			nrf_data.spiInputData[0] = W_REGISTER(FEATURE);
 			// Enable dynamic payload length, enable payload with ACK, disable transmissions with no ACK.
-			nrf_data.spiData[1] = EN_DPL | EN_ACK_PAY;
+			nrf_data.spiInputData[1] = EN_DPL | EN_ACK_PAY;
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 		
 		case 12:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(STATUS);
+			nrf_data.spiInputData[0] = W_REGISTER(STATUS);
 			// Turn off all interrupts, if they were on (because the nRF wasn't reset)
-			nrf_data.spiData[1] = MAX_RT | TX_DS | RX_DR;
+			nrf_data.spiInputData[1] = MAX_RT | TX_DS | RX_DR;
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
 			
 		case 13:
 			nrf_initStep ++;
 						
-			nrf_data.spiData[0] = W_REGISTER(CONFIG);
+			nrf_data.spiInputData[0] = W_REGISTER(CONFIG);
 			// Register configuration is done, power on device.
-			nrf_data.spiData[1] = EN_CRC | CRC_2_BYTE | PWR_UP | ((nrf_data.type == PRX) ? PRIM_RX : PRIM_TX);
+			nrf_data.spiInputData[1] = EN_CRC | CRC_2_BYTE | PWR_UP | ((nrf_data.type == PRX) ? PRIM_RX : PRIM_TX);
 			
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 			
 			break;
 		
@@ -387,11 +387,11 @@ void nrf_Transmit (u8 *data, u8 length, nrf_PTXptr eot)
 void nrf_CommenceTransmission (u8 *data, u8 length)
 {
 	u8 index;
-	nrf_data.spiData[0] = W_TX_PAYLOAD;
+	nrf_data.spiInputData[0] = W_TX_PAYLOAD;
 	for (index = 0; index < length; index ++)
-		nrf_data.spiData[index + 1] = data[index];
+		nrf_data.spiInputData[index + 1] = data[index];
 		
-	spi_Transfer(nrf_data.spiData, NULL, length + 1, NULL);
+	spi_Transfer(nrf_data.spiInputData, NULL, length + 1, NULL);
 }
 
 
@@ -419,9 +419,9 @@ void interrupt nrf_irq_Service (void)
 	// Since the IRQ won't be serviced until a few SPI transmissions take place, it must be inhibited until then.
 	DISABLE_IRQ(); 
 	
-	// By writing a NOP, the nRF's status register is read, and it is stored in nrf_data.spiData[0]
-	nrf_data.spiData[0] = NOP;
-	spi_Transfer(nrf_data.spiData, nrf_data.spiData, 1, nrf_spiReadStatusCallback);
+	// By writing a NOP, the nRF's status register is read, and it is stored in nrf_data.spiInputData[0]
+	nrf_data.spiInputData[0] = NOP;
+	spi_Transfer(nrf_data.spiInputData, nrf_data.spiInputData, 1, nrf_spiReadStatusCallback);
 }
 
 void nrf_spiReadStatusCallback (void)
@@ -431,25 +431,25 @@ void nrf_spiReadStatusCallback (void)
 	{
 		nrf_data.ptxData.callbackStage = 0;
 		
-		if ((nrf_data.spiData[0] & MAX_RT) != 0) // MAX_RT interrupt
+		if ((nrf_data.spiInputData[0] & MAX_RT) != 0) // MAX_RT interrupt
 		{
-			nrf_data.spiData[0] = W_REGISTER(STATUS);
-			nrf_data.spiData[1] = MAX_RT;
-			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_spiHandleMAXRTCallback);
+			nrf_data.spiInputData[0] = W_REGISTER(STATUS);
+			nrf_data.spiInputData[1] = MAX_RT;
+			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_spiHandleMAXRTCallback);
 		}
 		else // TX_DS interrupt, an RX_DR might have also ocurred if there was payload
 		{
-			if ((nrf_data.spiData[0] & RX_DR) != 0) // TX_DS + RX_DR interrupts
+			if ((nrf_data.spiInputData[0] & RX_DR) != 0) // TX_DS + RX_DR interrupts
 			{
-				nrf_data.spiData[0] = W_REGISTER(STATUS);
-				nrf_data.spiData[1] = TX_DS | RX_DR;
-				spi_Transfer(nrf_data.spiData, NULL, 2, nrf_spiHandleTXACKCallback);
+				nrf_data.spiInputData[0] = W_REGISTER(STATUS);
+				nrf_data.spiInputData[1] = TX_DS | RX_DR;
+				spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_spiHandleTXACKCallback);
 			}
 			else // TX_DS interrupt
 			{
-				nrf_data.spiData[0] = W_REGISTER(STATUS);
-				nrf_data.spiData[1] = TX_DS;
-				spi_Transfer(nrf_data.spiData, NULL, 2, nrf_spiHandleTXCallback);
+				nrf_data.spiInputData[0] = W_REGISTER(STATUS);
+				nrf_data.spiInputData[1] = TX_DS;
+				spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_spiHandleTXCallback);
 			}
 		}
 	}
@@ -477,8 +477,8 @@ void nrf_spiHandleTXACKCallback (void)
 			nrf_data.ptxData.callbackStage++;
 			
 			// There's data in the RX FIFO: first, it's width must be read.
-			nrf_data.spiData[0] = R_RX_PL_WID;
-			spi_Transfer(nrf_data.spiData, nrf_data.ptxData.readLen, 2, nrf_spiHandleTXACKCallback);
+			nrf_data.spiInputData[0] = R_RX_PL_WID;
+			spi_Transfer(nrf_data.spiInputData, nrf_data.ptxData.readLen, 2, nrf_spiHandleTXACKCallback);
 			
 			break;
 			
@@ -486,8 +486,8 @@ void nrf_spiHandleTXACKCallback (void)
 			nrf_data.ptxData.callbackStage++;
 			
 			// nrf_data.ptxData.readLen[1] contains the amount of bytes in the RX FIFO
-			nrf_data.spiData[0] = R_RX_PAYLOAD;
-			spi_Transfer(nrf_data.spiData, nrf_data.ptxData.payloadStorage, nrf_data.ptxData.readLen[1] + 1, nrf_spiHandleTXACKCallback);
+			nrf_data.spiInputData[0] = R_RX_PAYLOAD;
+			spi_Transfer(nrf_data.spiInputData, nrf_data.spiOutputData, nrf_data.ptxData.readLen[1] + 1, nrf_spiHandleTXACKCallback);
 			
 			break;
 			
@@ -496,7 +496,7 @@ void nrf_spiHandleTXACKCallback (void)
 			
 			// The data has been read
 			nrf_data.ptxData.transmitting = _FALSE;
-			nrf_data.ptxData.eot (_TRUE, nrf_data.ptxData.payloadStorage, nrf_data.ptxData.readLen[1]);
+			nrf_data.ptxData.eot (_TRUE, nrf_data.spiOutputData, nrf_data.ptxData.readLen[1]);
 			
 			break;
 	}
@@ -513,8 +513,8 @@ void nrf_spiHandleMAXRTCallback (void)
 			nrf_data.ptxData.callbackStage++;
 			
 			// The payload is still in the TX FIFO: it must be flushed out.
-			nrf_data.spiData[0] = FLUSH_TX;
-			spi_Transfer(nrf_data.spiData, NULL, 1, nrf_spiHandleMAXRTCallback);
+			nrf_data.spiInputData[0] = FLUSH_TX;
+			spi_Transfer(nrf_data.spiInputData, NULL, 1, nrf_spiHandleMAXRTCallback);
 			
 			break;
 			
