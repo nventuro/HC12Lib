@@ -17,6 +17,9 @@
 #define W_ACK_PAYLOAD(x) (0xA8 | x)
 #define W_TX_PAYLOAD_NO_ACK 0xB0
 
+#define ACTIVATE 0x50
+#define ACTIVATE_DATA 0x73
+
 #define NOP 0xFF
 
 // REGISTER ADDRESSES & BITS
@@ -108,38 +111,46 @@
 
 #define NRF_ADDRESS 0xE7
 
+#define ENABLE_IRQ() (IRQCR_IRQEN = 1)
+#define DISABLE_IRQ() (IRQCR_IRQEN = 0)
 
-typedef struct 
+typedef struct
 {
-	u8 *payloadData;
-	nrf_ptr eot;
-} nrf_transferData;
-
+	bool transmitting;
+	u8 callbackStage;
+	nrf_PTXptr eot;
+	
+	// Used when reading the payload in an ACK
+	u8 readLen[2];
+	u8 payloadStorage[NRF_SPI_DATA_SIZE];
+} nrf_PTXData;
 
 struct {
 	nrf_Type type;
 	u8 spiData[NRF_SPI_DATA_SIZE];
-	bool transmitting;
-	nrf_transferData currTransmission;
+	nrf_PTXData ptxData;
 } nrf_data;
 
 bool nrf_isInit = _FALSE;
 u8 nrf_initStep;
+#include <stdio.h>
 
 void nrf_rtiInitCallback (void *data, rti_time period, rti_id id);
 void nrf_InitSequence (void);
 void nrf_CommenceTransmission (u8 *data, u8 length);
-void nrf_spiCallback (void);
+void nrf_spiReadStatusCallback (void);
+void nrf_spiHandleTXCallback (void);
+void nrf_spiHandleTXACKCallback (void);
+void nrf_spiHandleMAXRTCallback (void);
 
 void nrf_Init (nrf_Type type)
 {
 	if (nrf_isInit == _TRUE)
 		return;
-	
-	nrf_isInit = _TRUE;
-	
+		
 	nrf_data.type = type;
-	nrf_data.transmitting = _FALSE;
+	if (nrf_data.type == PTX)
+		nrf_data.ptxData.transmitting = _FALSE;
 	
 	NRF_CE_DDR = DDR_OUT;
 	NRF_CE = 0;
@@ -150,7 +161,7 @@ void nrf_Init (nrf_Type type)
 
 	while (nrf_isInit != _TRUE)
 		;
-	
+			
 	return;
 }
 
@@ -288,6 +299,17 @@ void nrf_InitSequence (void)
 		case 10:
 			nrf_initStep ++;
 						
+			nrf_data.spiData[0] = ACTIVATE;
+			// Enable the R_RX_PL_WID, W_ACK_PAYLOAD and W_TX_PAYLOAD_NOACK commands
+			nrf_data.spiData[1] = ACTIVATE_DATA;
+			
+			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+		
+			break;
+			
+		case 11:
+			nrf_initStep ++;
+						
 			nrf_data.spiData[0] = W_REGISTER(FEATURE);
 			// Enable dynamic payload length, enable payload with ACK, disable transmissions with no ACK.
 			nrf_data.spiData[1] = EN_DPL | EN_ACK_PAY;
@@ -295,8 +317,19 @@ void nrf_InitSequence (void)
 			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
 		
 			break;
+		
+		case 12:
+			nrf_initStep ++;
+						
+			nrf_data.spiData[0] = W_REGISTER(STATUS);
+			// Turn off all interrupts, if they were on (because the nRF wasn't reset)
+			nrf_data.spiData[1] = MAX_RT | TX_DS | RX_DR;
 			
-		case 11:
+			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_InitSequence);
+		
+			break;
+			
+		case 13:
 			nrf_initStep ++;
 						
 			nrf_data.spiData[0] = W_REGISTER(CONFIG);
@@ -307,7 +340,7 @@ void nrf_InitSequence (void)
 			
 			break;
 		
-		case 12:
+		case 14:
 			nrf_initStep ++;
 			NRF_CE = 1; 
 			// Wait until the nRF goes into Standby-I (or II) mode
@@ -315,9 +348,10 @@ void nrf_InitSequence (void)
 						
 			break;
 			
-		case 13:
+		case 15:
 			// The nRF is now configured and properly initialized
 			nrf_isInit = _TRUE;
+			ENABLE_IRQ();
 						
 			break;
 	}
@@ -328,15 +362,15 @@ bool nrf_IsBusy(void)
 	if (nrf_data.type != PTX)
 		err_Throw("nrf: IsBusy is only available in PTX mode.\n");
 
-	return nrf_data.transmitting;
+	return nrf_data.ptxData.transmitting;
 }
 
-void nrf_Transmit (u8 *data, u8 length, nrf_ptr eot, u8 *payloadData)
+void nrf_Transmit (u8 *data, u8 length, nrf_PTXptr eot)
 {
 	if (nrf_data.type != PTX)
 		err_Throw("nrf: Transmit can only be called in PTX mode.\n");
 
-	if (nrf_data.transmitting == _TRUE)
+	if (nrf_data.ptxData.transmitting == _TRUE)
 		err_Throw("nrf: attempted to initiate a transmission while another one is taking place.\n");
 	
 	if (data == NULL)
@@ -345,9 +379,8 @@ void nrf_Transmit (u8 *data, u8 length, nrf_ptr eot, u8 *payloadData)
 	if ((length == 0) || (length > 32))
 		err_Throw("nrf: length must be between 1 and 32.\n");
 	
-	nrf_data.transmitting = _TRUE;
-	nrf_data.currTransmission.eot = eot;
-	nrf_data.currTransmission.payloadData = payloadData;
+	nrf_data.ptxData.transmitting = _TRUE;
+	nrf_data.ptxData.eot = eot;
 	
 	nrf_CommenceTransmission (data, length);	
 }
@@ -363,36 +396,134 @@ void nrf_CommenceTransmission (u8 *data, u8 length)
 }
 
 
-void interrupt nrf_irq_Service (void)
+void nrf_Receive (u8 *data, nrf_PRXptr eot)
 {
-	// By writing a NOP, the nRF's status register is read, and it is stored in nrf_data.spiData[0]
-	nrf_data.spiData[0] = NOP;
-	spi_Transfer(nrf_data.spiData, nrf_data.spiData, 1, nrf_spiCallback);
+	if (nrf_data.type != PRX)
+		err_Throw("nrf: Receive can only be called in PRX mode.\n");
 }
 
-void nrf_spiCallback (void)
+void nrf_StoreAckPayload (u8 *data, u8 length)
+{	
+	if (nrf_data.type != PRX)
+		err_Throw("nrf: StoreAckPayload can only be called in PRX mode.\n");
+}
+
+void interrupt nrf_irq_Service (void)
 {
+	// The nRF might be issuing an IRQ if it wasn't reset
+	if (nrf_isInit != _TRUE)
+	{
+		DISABLE_IRQ();
+		return;
+	}
+	
+	// Since the IRQ won't be serviced until a few SPI transmissions take place, it must be inhibited until then.
+	DISABLE_IRQ(); 
+	
+	// By writing a NOP, the nRF's status register is read, and it is stored in nrf_data.spiData[0]
+	nrf_data.spiData[0] = NOP;
+	spi_Transfer(nrf_data.spiData, nrf_data.spiData, 1, nrf_spiReadStatusCallback);
+}
+
+void nrf_spiReadStatusCallback (void)
+{
+	// Read the status byte, and turn off the corresponding interrupt bits
 	if (nrf_data.type == PTX)
 	{
+		nrf_data.ptxData.callbackStage = 0;
+		
 		if ((nrf_data.spiData[0] & MAX_RT) != 0) // MAX_RT interrupt
 		{
-			nrf_data.transmitting = _FALSE;
-			nrf_data.currTransmission.eot (_FALSE, NULL, 0);
+			nrf_data.spiData[0] = W_REGISTER(STATUS);
+			nrf_data.spiData[1] = MAX_RT;
+			spi_Transfer(nrf_data.spiData, NULL, 2, nrf_spiHandleMAXRTCallback);
 		}
 		else // TX_DS interrupt, an RX_DR might have also ocurred if there was payload
 		{
 			if ((nrf_data.spiData[0] & RX_DR) != 0) // TX_DS + RX_DR interrupts
 			{
-				//read payload, store it, call eot
+				nrf_data.spiData[0] = W_REGISTER(STATUS);
+				nrf_data.spiData[1] = TX_DS | RX_DR;
+				spi_Transfer(nrf_data.spiData, NULL, 2, nrf_spiHandleTXACKCallback);
 			}
 			else // TX_DS interrupt
 			{
-				nrf_data.transmitting = _FALSE;
-				nrf_data.currTransmission.eot (_FALSE, NULL, 0);
+				nrf_data.spiData[0] = W_REGISTER(STATUS);
+				nrf_data.spiData[1] = TX_DS;
+				spi_Transfer(nrf_data.spiData, NULL, 2, nrf_spiHandleTXCallback);
 			}
 		}
 	}
 	else // nrf_data.type == PRX
 	{
+	}
+}
+
+void nrf_spiHandleTXCallback (void)
+{
+	// TX_DS interrupt - the IRQ has been serviced
+	ENABLE_IRQ();
+	nrf_data.ptxData.transmitting = _FALSE;
+	nrf_data.ptxData.eot (_TRUE, NULL, 0);
+}
+
+void nrf_spiHandleTXACKCallback (void)
+{
+	switch (nrf_data.ptxData.callbackStage)
+	{
+		case 0:
+			// TX_DS + RX_DR interrupts - the IRQ has been serviced
+			ENABLE_IRQ();
+			
+			nrf_data.ptxData.callbackStage++;
+			
+			// There's data in the RX FIFO: first, it's width must be read.
+			nrf_data.spiData[0] = R_RX_PL_WID;
+			spi_Transfer(nrf_data.spiData, nrf_data.ptxData.readLen, 2, nrf_spiHandleTXACKCallback);
+			
+			break;
+			
+		case 1:
+			nrf_data.ptxData.callbackStage++;
+			
+			// nrf_data.ptxData.readLen[1] contains the amount of bytes in the RX FIFO
+			nrf_data.spiData[0] = R_RX_PAYLOAD;
+			spi_Transfer(nrf_data.spiData, nrf_data.ptxData.payloadStorage, nrf_data.ptxData.readLen[1] + 1, nrf_spiHandleTXACKCallback);
+			
+			break;
+			
+		case 2:
+			nrf_data.ptxData.callbackStage++;
+			
+			// The data has been read
+			nrf_data.ptxData.transmitting = _FALSE;
+			nrf_data.ptxData.eot (_TRUE, nrf_data.ptxData.payloadStorage, nrf_data.ptxData.readLen[1]);
+			
+			break;
+	}
+}
+
+void nrf_spiHandleMAXRTCallback (void)
+{
+	switch (nrf_data.ptxData.callbackStage)
+	{
+		case 0:
+			// MAX_RT interrupt - the IRQ has been serviced
+			ENABLE_IRQ();
+			
+			nrf_data.ptxData.callbackStage++;
+			
+			// The payload is still in the TX FIFO: it must be flushed out.
+			nrf_data.spiData[0] = FLUSH_TX;
+			spi_Transfer(nrf_data.spiData, NULL, 1, nrf_spiHandleMAXRTCallback);
+			
+			break;
+			
+		case 1:
+		 	// The IRQ has been serviced, and the TX FIFO flushed.
+			nrf_data.ptxData.transmitting = _FALSE;
+			nrf_data.ptxData.eot (_FALSE, NULL, 0);
+			
+			break;
 	}
 }
