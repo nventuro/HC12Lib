@@ -133,7 +133,6 @@ struct {
 
 bool nrf_isInit = _FALSE;
 u8 nrf_initStep;
-#include <stdio.h>
 
 void nrf_rtiInitCallback (void *data, rti_time period, rti_id id);
 void nrf_InitSequence (void);

@@ -18,7 +18,6 @@ typedef struct
 	spi_ptr eot;
 } spi_transferData;
 
-
 struct {
 	bool busy;
 	spi_transferData currTransfer;
@@ -92,7 +91,7 @@ void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
 	spi_data.currTransfer.length = length;
 	spi_data.currTransfer.eot = eot;
 	spi_data.index = 0;
-	
+
 	SPI_SS_START();
 	spi_sendNewData();
 	SafeCli(intsEnabled);
@@ -101,7 +100,7 @@ void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
 void interrupt spi0_Service (void)
 {
 	spi_storeReceived();
-	
+
 	spi_data.index++;
 	if (spi_data.index != spi_data.currTransfer.length)			
 		spi_sendNewData();
@@ -119,7 +118,7 @@ void spi_sendNewData (void)
 {
 	while (SPI0SR_SPTEF != SPI_SPTEF_READY) // Just in case, shouldn't be too long
 		;
-	
+
 	SPI_WRITE(spi_data.currTransfer.input[spi_data.index]);
 }
 

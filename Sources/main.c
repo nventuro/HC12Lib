@@ -3,13 +3,20 @@
 #include "pll.h"
 #include "quick_serial.h"
 #include "nRF24L01+.h"
+#include <stdio.h>
 
 void Init (void);
+void nrf_Callback (bool success, u8 *ackPayload, u8 length);
+
+u8 data[10];
 
 void main (void)
 {
+	u8 i;
 	Init ();	
-	
+	for (i = 0; i < 10; i++)
+		data[i] = 0xAA;
+	nrf_Transmit(data, 10, nrf_Callback);
 	while (1)
 		;	
 }
@@ -28,3 +35,14 @@ void Init (void)
 
 	return;
 }
+
+void nrf_Callback (bool success, u8 *ackPayload, u8 length)
+{
+	if (success == _TRUE)
+		printf("Salio todo bien.\n");
+	else
+		printf("Nadie tiro un ACK.\n");
+	
+	nrf_Transmit(data, 10, nrf_Callback);
+}
+	
