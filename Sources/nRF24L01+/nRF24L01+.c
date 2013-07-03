@@ -124,11 +124,27 @@ typedef struct
 	u8 readLen[2];
 } nrf_PTXData;
 
+typedef struct
+{
+	u8 callbackStage;
+	nrf_PRXptr eot;
+	bool receiveRequest;
+	bool sendRequest;
+	
+	// Used for temporary payload storage
+	u8 *data;
+	u8 length;
+	
+	// Used when reading the payload
+	u8 readLen[2];
+} nrf_PRXData;
+
 struct {
 	nrf_Type type;
 	u8 spiInputData[NRF_SPI_DATA_SIZE];
 	u8 spiOutputData[NRF_SPI_DATA_SIZE];
 	nrf_PTXData ptxData;
+	nrf_PRXData prxData;
 } nrf_data;
 
 bool nrf_isInit = _FALSE;
@@ -141,6 +157,8 @@ void nrf_spiReadStatusCallback (void);
 void nrf_spiHandleTXCallback (void);
 void nrf_spiHandleTXACKCallback (void);
 void nrf_spiHandleMAXRTCallback (void);
+void nrf_spiHandleRXCallback (void);
+void nrf_StoreAckDone (void);
 
 void nrf_Init (nrf_Type type)
 {
@@ -148,8 +166,15 @@ void nrf_Init (nrf_Type type)
 		return;
 		
 	nrf_data.type = type;
+	
 	if (nrf_data.type == PTX)
 		nrf_data.ptxData.transmitting = _FALSE;
+	else // if PRX
+	{
+		nrf_data.prxData.eot = NULL;
+		nrf_data.prxData.receiveRequest = _FALSE;
+		nrf_data.prxData.sendRequest = _FALSE;
+	}
 	
 	NRF_CE_DDR = DDR_OUT;
 	NRF_CE = 0;
@@ -316,7 +341,7 @@ void nrf_InitSequence (void)
 			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
 		
 			break;
-		
+			
 		case 12:
 			nrf_initStep ++;
 						
@@ -395,16 +420,54 @@ void nrf_CommenceTransmission (u8 *data, u8 length)
 }
 
 
-void nrf_Receive (u8 *data, nrf_PRXptr eot)
+void nrf_Receive (nrf_PRXptr eot)
 {
 	if (nrf_data.type != PRX)
 		err_Throw("nrf: Receive can only be called in PRX mode.\n");
-}
+	
+	if (eot == NULL)
+		err_Throw("nrf: received a null end of transmission callback.\n");
+	
+	if (nrf_data.prxData.eot != NULL)
+		err_Throw("nrf: attempted to register a second end of transmission callback.\n");
+	
+	nrf_data.prxData.eot = eot;	}
 
 void nrf_StoreAckPayload (u8 *data, u8 length)
 {	
+	u8 index;
+	bool intStatus = SafeSei();
+	
 	if (nrf_data.type != PRX)
 		err_Throw("nrf: StoreAckPayload can only be called in PRX mode.\n");
+	
+	nrf_data.prxData.sendRequest = _TRUE;
+		
+	if (nrf_data.prxData.receiveRequest == _TRUE)
+	{
+		nrf_data.prxData.data = data;
+		nrf_data.prxData.length = length;
+	}
+	else
+	{
+		nrf_data.spiInputData[0] = W_ACK_PAYLOAD(0);
+		for (index = 0; index < length; index++)
+			nrf_data.spiInputData[index + 1] = data[index];	
+			
+		spi_Transfer(nrf_data.spiInputData, NULL, length + 1, nrf_StoreAckDone);
+	}
+	
+	SafeCli(intStatus);
+}
+
+void nrf_StoreAckDone (void)
+{
+	nrf_data.prxData.sendRequest = _FALSE;
+	if (nrf_data.prxData.receiveRequest == _TRUE)
+	{
+		nrf_data.spiInputData[0] = NOP;
+		spi_Transfer(nrf_data.spiInputData, nrf_data.spiInputData, 1, nrf_spiReadStatusCallback);
+	}
 }
 
 void interrupt nrf_irq_Service (void)
@@ -418,6 +481,15 @@ void interrupt nrf_irq_Service (void)
 	
 	// Since the IRQ won't be serviced until a few SPI transmissions take place, it must be inhibited until then.
 	DISABLE_IRQ(); 
+	
+	// If the PRX is currently uploading an ACK payload, it cannot service the IRQ immediately.
+	if (nrf_data.type == PRX)
+	{
+		nrf_data.prxData.receiveRequest = _TRUE;
+		
+		if (nrf_data.prxData.sendRequest == _TRUE)			
+			return;
+	}
 	
 	// By writing a NOP, the nRF's status register is read, and it is stored in nrf_data.spiInputData[0]
 	nrf_data.spiInputData[0] = NOP;
@@ -455,6 +527,12 @@ void nrf_spiReadStatusCallback (void)
 	}
 	else // nrf_data.type == PRX
 	{
+		nrf_data.prxData.callbackStage = 0;
+		
+		// Either a RX_DR or both RX_DR + TX_DS interrupts have occured - clear both flags just in case
+		nrf_data.spiInputData[0] = W_REGISTER(STATUS);
+		nrf_data.spiInputData[1] = TX_DS | RX_DR;
+		spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_spiHandleRXCallback);
 	}
 }
 
@@ -463,7 +541,8 @@ void nrf_spiHandleTXCallback (void)
 	// TX_DS interrupt - the IRQ has been serviced
 	ENABLE_IRQ();
 	nrf_data.ptxData.transmitting = _FALSE;
-	nrf_data.ptxData.eot (_TRUE, NULL, 0);
+	if (nrf_data.ptxData.eot != NULL)
+		nrf_data.ptxData.eot (_TRUE, NULL, 0);
 }
 
 void nrf_spiHandleTXACKCallback (void)
@@ -491,12 +570,12 @@ void nrf_spiHandleTXACKCallback (void)
 			
 			break;
 			
-		case 2:
-			nrf_data.ptxData.callbackStage++;
-			
+		case 2:			
 			// The data has been read
 			nrf_data.ptxData.transmitting = _FALSE;
-			nrf_data.ptxData.eot (_TRUE, nrf_data.spiOutputData, nrf_data.ptxData.readLen[1]);
+			if (nrf_data.ptxData.eot != NULL)
+				// The first byte on spiOutputData contains the nRF's status register
+				nrf_data.ptxData.eot (_TRUE, nrf_data.spiOutputData + 1, nrf_data.ptxData.readLen[1]);
 			
 			break;
 	}
@@ -521,7 +600,47 @@ void nrf_spiHandleMAXRTCallback (void)
 		case 1:
 		 	// The IRQ has been serviced, and the TX FIFO flushed.
 			nrf_data.ptxData.transmitting = _FALSE;
-			nrf_data.ptxData.eot (_FALSE, NULL, 0);
+			if (nrf_data.ptxData.eot != NULL)
+				nrf_data.ptxData.eot (_FALSE, NULL, 0);
+			
+			break;
+	}
+}
+
+void nrf_spiHandleRXCallback (void)
+{
+	switch (nrf_data.prxData.callbackStage)
+	{
+		case 0:
+			// Either RX_DR or TX_DS + RX_DR interrupts - the IRQ has been serviced
+			ENABLE_IRQ();
+			
+			nrf_data.prxData.callbackStage++;
+			
+			// There's data in the RX FIFO: first, it's width must be read.
+			nrf_data.spiInputData[0] = R_RX_PL_WID;
+			spi_Transfer(nrf_data.spiInputData, nrf_data.prxData.readLen, 2, nrf_spiHandleRXCallback);
+			
+			break;
+			
+		case 1:
+			nrf_data.prxData.callbackStage++;
+			
+			// nrf_data.prxData.readLen[1] contains the amount of bytes in the RX FIFO
+			nrf_data.spiInputData[0] = R_RX_PAYLOAD;
+			spi_Transfer(nrf_data.spiInputData, nrf_data.spiOutputData, nrf_data.prxData.readLen[1] + 1, nrf_spiHandleRXCallback);
+			
+			break;
+			
+		case 2:			
+			// The data has been read
+		
+			// The first byte on spiOutputData contains the nRF's status register
+			nrf_data.prxData.eot (nrf_data.spiOutputData + 1, nrf_data.prxData.readLen[1]);
+			
+			nrf_data.prxData.receiveRequest = _FALSE;
+			if (nrf_data.prxData.sendRequest == _TRUE)
+				nrf_StoreAckPayload (nrf_data.prxData.data, nrf_data.prxData.length);
 			
 			break;
 	}

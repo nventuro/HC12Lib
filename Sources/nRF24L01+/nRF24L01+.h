@@ -48,7 +48,7 @@ void nrf_Receive (nrf_PRXptr eot);
 // nrf_Receive can only be called in PRX mode.
 
 void nrf_StoreAckPayload (u8 *data, u8 length);
-// uploads to the device the payload that will be sent with the next ACK, stored in data, of length bytes.
+// Uploads to the device the payload that will be sent with the next ACK, stored in data, of length bytes.
 
 void interrupt nrf_irq_Service (void);
 
