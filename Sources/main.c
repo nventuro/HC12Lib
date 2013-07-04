@@ -11,7 +11,7 @@ void main (void)
 	Init ();
 		
 	qrf_SendJoyMeasurements();
-	qrf_PrintJoyMeasurements();
+	qrf_PrintCommInfo();
 	
 	while (1)
 		;	

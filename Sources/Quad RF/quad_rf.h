@@ -1,6 +1,8 @@
 #ifndef _QUAD_RF_H
 #define _QUAD_RF_H
 
+#define QUAD_RF_DISP_REFRESH_PERIOD_MS 250
+
 #include "common.h"
 
 extern u16 packetLossCount;
@@ -9,6 +11,7 @@ extern u16 packetLossCount;
 void qrf_Init(void);
 
 void qrf_SendJoyMeasurements(void);
-void qrf_PrintJoyMeasurements(void);
+
+void qrf_PrintCommInfo(void);
 
 #endif

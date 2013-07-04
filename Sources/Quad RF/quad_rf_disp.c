@@ -2,7 +2,6 @@
 #include "nRF24L01+.h"
 #include "fjoy.h"
 #include "lcd.h"
-#include "rti.h"
 
 // Format is:
 // Ax:  val [---|---]
@@ -27,8 +26,6 @@
 #define ROLL_ROW 2
 #define ELEV_ROW 3
 
-void PeriodicPrint (void *data, rti_time period, rti_id id);
-
 void PrintAxesNames (void);
 void PrintAxesMeasurements (void);
 void PrintAxisMeasurements (s8 meas, u8 row, bool isSigned);
@@ -42,6 +39,7 @@ void s8ToBar (s8 x, char *c, u8 bits);
 u8 StrLen (char *c);
 
 char *axesNames[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
+char *battString = "Battery ";
 char auxStr[VALUE_LEN]; // Used for converting numbers to strings
 
 void qrf_disp_PrintAxes (void)
@@ -49,17 +47,6 @@ void qrf_disp_PrintAxes (void)
 	PrintAxesNames();
 	PrintAxesMeasurements();
 	PrintBars();
-}
-
-void qrf_disp_PrintAxesPeriodically (void)
-{	
-	rti_Init();
-	rti_Register(PeriodicPrint, NULL, RTI_MS_TO_TICKS(QUAD_RF_DISP_REFRESH_PERIOD_MS), RTI_NOW);
-}
-
-void PeriodicPrint (void *data, rti_time period, rti_id id)
-{
-	qrf_disp_PrintAxes();
 }
 
 void PrintAxesNames (void)
@@ -123,6 +110,16 @@ void PrintBar (s8 meas, u8 row, bool isSigned, u8 bits)
 	else
 		u8ToBar((u8)meas,lcd_memory + row*DISPLAY_COLS + BAR_START_POS, bits);	
 }
+
+/*void qrf_disp_PrintCommAndBatt (u16 lostPacketsCount, u8 battALevel, u8 battBLevel)
+{	
+	u8 i, j;
+	for (i = 0; i < DISPLAY_ROWS; i++)
+	{
+		if ((i == 0) || (i == 1))
+			
+	}
+}*/
 
 void u8ToChar (u8 x, char *c)
 {
