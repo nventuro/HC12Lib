@@ -11,6 +11,7 @@
 #define BATT_MV_TO_LEVEL(mv) ((s16)(((s32)mv * BATT_AD_LEVELS) / BATT_AD_FULL_SCALE))
 
 #define BATT_MAX_BATTS 3
+#define BATT_MAX_CALLBACKS 2
 
 typedef void (*batt_callback) (void);
 
@@ -20,13 +21,17 @@ typedef void (*batt_callback) (void);
 void batt_Init (void);
 
 // Registers a battery for level-checking. The battery must be connected to the corresponding atd module and channel.
-// Every time the battery is sampled, cb is called (if it is not NULL). The battery's % level is 
-// calculated using minLevel and maxLevel, the correspoding atd values for the maximum and minimum battery voltages 
+// The battery's % level is calculated using minLevel and maxLevel, the correspoding atd values for the maximum and minimum battery voltages 
 // (BATT_MV_TO_LEVEL converts milivolts to this).
-// Whenever the battery is sampled, it's % level is stored in currLevel. currLevel may be unused (by making it NULL).
+// Whenever the battery is sampled, it's % level is stored in currLevel.
+// If the battery's level reaches 0%, cb is called.
+// cb or currLevel may be ununsed (by making them NULL), but at least one of them must be non-NULL.
 // If no more batteries can be registered, an error is thrown.
 // When AddBatt returns, the battery has already been measured, and it's value stored in currLevel (if it isn't NULL).
 // AddBatt requires interrupts to be enabled.
 void batt_AddBatt (atd_module module, atd_channel channel, batt_callback cb, s16 minLevel, s16 maxLevel, u8 *currLevel);
+
+// Every time the battery is sampled, cb is called (if it is not NULL).
+void batt_CallOnSample (batt_callback cb);
 
 #endif
