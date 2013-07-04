@@ -5,8 +5,6 @@
 #include "fjoy.h"
 #include "rti.h"
 
-#define QRF_INVALID_BATT_LEVEL 127
-
 void qrf_fjoyUpdateCallback (void);
 void qrf_nrfCallback (bool success, u8 *payloadData, u8 length);
 void PeriodicPrint (void *data, rti_time period, rti_id id);
@@ -21,10 +19,11 @@ struct
 {
 	QRF_SCREEN currScreen;
 	u8 fjoyNRFData[4];
-	u16 lostPacketsCount;
-	u8 battALevel;
-	u8 battBLevel;
 } qrf_data;
+
+u16 lostPacketsCount;
+u8 battALevel;
+u8 battBLevel;
 
 void qrf_Init (void)
 {
@@ -33,9 +32,9 @@ void qrf_Init (void)
 	fjoy_Init();
 	
 	qrf_data.currScreen = AXIS;
-	qrf_data.lostPacketsCount = 0;
-	qrf_data.battALevel = QRF_INVALID_BATT_LEVEL;
-	qrf_data.battBLevel = QRF_INVALID_BATT_LEVEL;
+	lostPacketsCount = 0;
+	battALevel = QRF_INVALID_BATT_LEVEL;
+	battBLevel = QRF_INVALID_BATT_LEVEL;
 }
 
 void qrf_PrintCommInfo(void)
@@ -51,10 +50,10 @@ void qrf_SendJoyMeasurements(void)
 
 void qrf_fjoyUpdateCallback (void)
 {
-	qrf_data.fjoyNRFData[0] = fjoy_status.yaw;
-	qrf_data.fjoyNRFData[1] = fjoy_status.pitch;
-	qrf_data.fjoyNRFData[2] = fjoy_status.roll;
-	qrf_data.fjoyNRFData[3] = fjoy_status.elev;
+	qrf_data.fjoyNRFData[0] = fjoy_status.yaw * POW_2(8 - FJOY_YAW_BITS);
+	qrf_data.fjoyNRFData[1] = fjoy_status.pitch * POW_2(8 - FJOY_PITCH_BITS);
+	qrf_data.fjoyNRFData[2] = fjoy_status.roll * POW_2(8 - FJOY_ROLL_BITS);
+	qrf_data.fjoyNRFData[3] = fjoy_status.elev * POW_2(8 - FJOY_ELEV_BITS);
 	
 	nrf_Transmit(qrf_data.fjoyNRFData, 4, qrf_nrfCallback);
 }
@@ -77,11 +76,11 @@ void PeriodicPrint (void *data, rti_time period, rti_id id)
 void qrf_nrfCallback (bool success, u8 *payloadData, u8 length)
 {
 	if (success != _TRUE)
-		qrf_data.lostPacketsCount++;
+		lostPacketsCount++;
 			
 	if (payloadData != NULL)
 	{
-		qrf_data.battALevel = payloadData[0];
-		qrf_data.battBLevel = payloadData[1];
+		battALevel = payloadData[0];
+		battBLevel = payloadData[1];
 	}
 }

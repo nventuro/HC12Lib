@@ -99,7 +99,7 @@ void batt_CallOnSample (batt_callback cb)
 		err_Throw("batt: NULL cb received.\n");
 	
 	for (index = 0; index < BATT_MAX_CALLBACKS; index++)
-		if (sampleCallback[index] != NULL)
+		if (sampleCallback[index] == NULL)
 			break;
 		
 	if (index == BATT_MAX_CALLBACKS)
