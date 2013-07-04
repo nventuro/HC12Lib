@@ -657,7 +657,8 @@ void nrf_spiHandleRXCallback (void)
 			// The data has been read
 		
 			// The first byte on spiOutputData contains the nRF's status register
-			nrf_data.prxData.eot (nrf_data.spiOutputData + 1, nrf_data.prxData.readLen[1]);
+			if (nrf_data.prxData.eot != NULL)
+				nrf_data.prxData.eot (nrf_data.spiOutputData + 1, nrf_data.prxData.readLen[1]);
 			
 			nrf_data.prxData.receiveRequest = _FALSE;
 			if (nrf_data.prxData.sendRequest == _TRUE)

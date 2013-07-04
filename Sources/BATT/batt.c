@@ -48,9 +48,6 @@ void batt_Init (void)
 void batt_AddBatt (atd_module module, atd_channel channel, batt_callback cb, s16 minLevel, s16 maxLevel, u8 *currLevel)
 {
 	u8 i;
-
-	if (cb == NULL)
-		err_Throw("batt: attempted to register a NULL callback.\n");
 	
 	if (minLevel >= maxLevel)
 		err_Throw("batt: minLevel must be lower than maxLevel.\n");
@@ -84,7 +81,6 @@ void batt_AddBatt (atd_module module, atd_channel channel, batt_callback cb, s16
 	return;
 }
 
-
 void batt_SampleBatteries (void *data, rti_time period, rti_id id)
 {
 	measIndex = 0;
@@ -95,8 +91,6 @@ void batt_SampleBatteries (void *data, rti_time period, rti_id id)
 	else
 		measuring = _FALSE;
 }
-
-
 
 void batt_SampleCallback (s16* mem, const atd_task* taskData)
 {
@@ -114,7 +108,7 @@ void batt_SampleCallback (s16* mem, const atd_task* taskData)
 	if (batteries[measIndex].currLevel != NULL)
 		(*batteries[measIndex].currLevel) = level;
 	
-	if (level == 0)
+	if (batteries[measIndex].cb != NULL)
 		batteries[measIndex].cb();	
 	
 	measIndex ++;

@@ -4,7 +4,8 @@
 
 void err_Throw(char* errMsg)
 {
-	printf("%s\n", errMsg);
+	puts(errMsg);
+	
 	asm sei;
 	
 	while (1)

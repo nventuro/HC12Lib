@@ -35,7 +35,7 @@ void nrf_Transmit (u8 *data, u8 length, nrf_PTXptr eot);
 // When eot is called, a new transmission can be initiated.
 
 bool nrf_IsBusy(void);
-// Informs wheter the module is busy. nrf_Transmit can only be called if IsBusy is false. After eot is called in
+// Informs wheter the module is busy. nrf_.Transmit can only be called if IsBusy is false. After eot is called in
 // nrf_Transmit, IsBusy will be false.
 // IsBusy can only be called on PTX mode.
 

@@ -2,17 +2,16 @@
 #include "common.h"
 #include "pll.h"
 #include "quick_serial.h"
-#include "nRF24L01+.h"
-#include <stdio.h>
+#include "quad_rf.h"
 
 void Init (void);
-void nrf_Callback (u8 *data, u8 length);
 
 void main (void)
 {
 	Init ();
 		
-	nrf_Receive(nrf_Callback);
+	qrf_SendJoyMeasurements();
+	qrf_PrintJoyMeasurements();
 	
 	while (1)
 		;	
@@ -28,16 +27,7 @@ void Init (void)
 	asm cli;
 
 	// Modules that do require interrupts to be enabled
-	nrf_Init(PRX);
+	qrf_Init();
 
 	return;
 }
-
-void nrf_Callback (u8 *data, u8 length)
-{
-	u8 index;
-	for (index = 0; index < length; index++)
-		printf("%d\t",((s16)(data[index])));
-	putchar('\n');
-}
-	

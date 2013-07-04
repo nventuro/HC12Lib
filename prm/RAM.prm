@@ -8,8 +8,8 @@ SEGMENTS /* here all RAM/ROM areas of the device are listed. Used in PLACEMENT b
       EEPROM        = READ_ONLY   0x0C00 TO   0x0FFB; 
 
 /* RAM */
-      RAM_RO        = READ_ONLY    0x1000 TO   0x2FFF; 
-      RAM_RW        = READ_WRITE   0x3000 TO   0x3EFF;
+      RAM_RO        = READ_ONLY    0x1000 TO   0x3800; 
+      RAM_RW        = READ_WRITE   0x3801 TO   0x3EFF;
       MONITOR_DATA  = READ_ONLY    0x3F00 TO   0x3F0F;
       RAMVECTORS    = READ_ONLY    0x3F10 TO   0x3FFF;      
 

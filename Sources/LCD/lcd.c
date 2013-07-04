@@ -283,7 +283,7 @@ void lcd_InitCallback (void)
 			
 		case 7:
 			LCD_RS = LCD_RS_INSTR;
-			LCD_DATA = (LCD_DISP_CTL | LCD_DISP_ON | LCD_CURSOR_ON | LCD_BLINK_ON);
+			LCD_DATA = (LCD_DISP_CTL | LCD_DISP_ON | LCD_CURSOR_OFF | LCD_BLINK_OFF);
 			LCD_ENABLE_STROBE();
 			
 			lcd_data.initStage = 8;

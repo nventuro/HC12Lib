@@ -1,4 +1,5 @@
 #include "quad_rf_disp.h"
+#include "nRF24L01+.h"
 #include "fjoy.h"
 #include "lcd.h"
 #include "rti.h"
@@ -42,7 +43,6 @@ u8 StrLen (char *c);
 
 char *axesNames[] = {"Yaw:", "Pitch:", "Roll:", "Elev:"};
 char auxStr[VALUE_LEN]; // Used for converting numbers to strings
-
 
 void qrf_disp_PrintAxes (void)
 {
