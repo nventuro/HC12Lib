@@ -9,7 +9,7 @@
 #define LINEAR_SCALE_U(x,min,max) (((x-min)*(POW_2(ATD_CONV_BITS)-1))/(max-min))
 #define LINEAR_SCALE_S(x,min,max,repos) ((x > repos) ? LINEAR_SCALE_S_UPP(x,repos,max) : LINEAR_SCALE_S_LOW(x,repos,min))
 #define LINEAR_SCALE_S_UPP(x,repos,max) (((x-repos)*(POW_2(ATD_CONV_BITS-1)-1))/(max-repos))
-#define LINEAR_SCALE_S_LOW(x,repos,min) (((x-repos)*(-(POW_2(ATD_CONV_BITS))))/(min-repos))
+#define LINEAR_SCALE_S_LOW(x,repos,min) (((x-repos)*(-(POW_2(ATD_CONV_BITS-1))))/(min-repos))
 
 #define SATURATE_U(x,bits) ((x > (POW_2(bits)-1)) ? (POW_2(bits)-1) : ((x < 0) ? 0 : x))
 #define SATURATE_S(x,bits) ((x > (POW_2(bits-1)-1)) ? (POW_2(bits-1)-1) : ((x < (-(POW_2(bits-1)))) ? (-(POW_2(bits-1))) : x))
@@ -21,7 +21,7 @@
 #define YAW_MAX 981
 #define YAW_REST 940
 
-#define PITCH_MIN 194
+#define PITCH_MIN 190
 #define PITCH_MAX 881
 #define PITCH_REST 500
 
@@ -49,12 +49,14 @@ struct {
 	s32 rollAvg;
 	s32 elevAvg;
 	bool axesRead;
+	bool buttonsRead;
+	u8 buttonStep;
+	u8 buttonCount[FJOY_BUTTONS];
 } fjoy_data;
-
-
 
 bool fjoy_isInit = _FALSE;
 
+void fjoy_SampleButtons (void *data, rti_time period, rti_id id);
 void fjoy_UpdateStatus (void *data, rti_time period, rti_id id);
 void fjoy_ATDCallback (s16* mem, const struct atd_task* taskData);
 
@@ -69,14 +71,21 @@ void fjoy_Init(void)
 	for (i = 0; i < FJOY_MAX_CALLBACKS; i++)
 		fjoy_data.callback[i] = NULL;
 
+
+	FJOY_B6_DDR = 0;
+	FJOY_B7_DDR = 0;
+
+	fjoy_data.axesRead = _FALSE;
+	//fjoy_data.buttonsRead = _FALSE;
+	//fjoy_data.buttonStep = 0;
+	
 	rti_Init();	
-	//rti_Register(fjoy_UpdateStatus, NULL, RTI_MS_TO_TICKS(FJOY_SAMPLE_PERIOD_MS), RTI_NOW); BUTTON SMAPLING FUNCT
+	//rti_Register(fjoy_SampleButtons, NULL, RTI_MS_TO_TICKS(FJOY_BUTTON_SAMPLE_PERIOD_MS), RTI_NOW); 
 	
 	atd_Init(FJOY_ATD_MODULE);
-	fjoy_data.axesRead = _FALSE;
 	FJOY_READ_CHANNEL(FJOY_ATD_FIRST_CHANN, fjoy_ATDCallback);
 
-	while (fjoy_data.axesRead == _FALSE) // && !buttons_read
+	while (fjoy_data.axesRead == _FALSE)// || (fjoy_data.buttonsRead == _FALSE))
 		;
 	
 	rti_Register(fjoy_UpdateStatus, NULL, RTI_MS_TO_TICKS(FJOY_SAMPLE_PERIOD_MS), RTI_NOW);
@@ -125,7 +134,7 @@ void fjoy_ATDCallback (s16* mem, const atd_task* taskData)
 			for (i = 0; i < FJOY_ATD_OVERSAMPLING; i++)
 				fjoy_data.pitchAvg += mem[i];
 			fjoy_data.pitchAvg /= FJOY_ATD_OVERSAMPLING;
-			
+
 			FJOY_READ_CHANNEL(FJOY_ROLL_CHANN, fjoy_ATDCallback);
 			
 			break;
@@ -154,6 +163,21 @@ void fjoy_ATDCallback (s16* mem, const atd_task* taskData)
 	}
 }
 
+void fjoy_SampleButtons (void *data, rti_time period, rti_id id)
+{
+	u8 i;
+
+	if (fjoy_data.buttonsRead == _TRUE)
+		return;
+	
+	fjoy_data.buttonCount[FJOY_B6] += FJOY_B6_PIN;
+	fjoy_data.buttonCount[FJOY_B7] += FJOY_B7_PIN;
+	
+	fjoy_data.buttonStep++;
+	if (fjoy_data.buttonStep == FJOY_BUTTON_OVERSAMPLING)
+		fjoy_data.buttonsRead = _TRUE;
+}
+
 void fjoy_UpdateStatus (void *data, rti_time period, rti_id id)
 {
 	u8 i;
@@ -161,7 +185,18 @@ void fjoy_UpdateStatus (void *data, rti_time period, rti_id id)
 	if (fjoy_data.axesRead == _FALSE)
 		err_Throw("fjoy: axes sampling frequency is too low.\n");
 	
-	// do stuff (average samples of buttons and analog inputs, scale inputs)
+/*	if (fjoy_data.buttonsRead == _FALSE)
+		err_Throw("fjoy: button sampling frequency is too low.\n");
+	
+	for (i = 0; i < FJOY_BUTTONS; i++)
+	{
+		if (fjoy_data.buttonCount[i] > (FJOY_BUTTON_OVERSAMPLING/2))
+			fjoy_status.button[i] = _TRUE;
+		else
+			fjoy_status.button[i] = _FALSE;
+		
+		fjoy_data.buttonCount[i] = 0;
+	}*/
 	
 	// Scaling
 	fjoy_data.yawAvg = LINEAR_SCALE_S(fjoy_data.yawAvg, YAW_MIN, YAW_MAX, YAW_REST);
@@ -187,6 +222,9 @@ void fjoy_UpdateStatus (void *data, rti_time period, rti_id id)
 			(*fjoy_data.callback[i]) ();
 		
 	fjoy_data.axesRead = _FALSE;
+//	fjoy_data.buttonsRead = _FALSE;
+//	fjoy_data.buttonStep = 0;
+		
 	FJOY_READ_CHANNEL(FJOY_ATD_FIRST_CHANN, fjoy_ATDCallback);
 	
 	return;

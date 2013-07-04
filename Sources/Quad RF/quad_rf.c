@@ -54,7 +54,7 @@ void qrf_fjoyUpdateCallback (void)
 	qrf_data.fjoyNRFData[1] = fjoy_status.pitch * POW_2(8 - FJOY_PITCH_BITS);
 	qrf_data.fjoyNRFData[2] = fjoy_status.roll * POW_2(8 - FJOY_ROLL_BITS);
 	qrf_data.fjoyNRFData[3] = fjoy_status.elev * POW_2(8 - FJOY_ELEV_BITS);
-	
+
 	nrf_Transmit(qrf_data.fjoyNRFData, 4, qrf_nrfCallback);
 }
 
