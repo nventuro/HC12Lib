@@ -249,7 +249,7 @@ void nrf_InitSequence (void)
 			nrf_initStep ++;
 						
 			nrf_data.spiInputData[0] = W_REGISTER(SETUP_RETR);
-			// Set ARD to (1+1) * 500us = 250us, and ARC to 10 retransmits.
+			// Set ARD to (1+1) * 250us = 500us, and ARC to 10 retransmits.
 			nrf_data.spiInputData[1] = ARD(1) | ARC(10);
 			
 			spi_Transfer(nrf_data.spiInputData, NULL, 2, nrf_InitSequence);
@@ -411,6 +411,8 @@ bool nrf_IsBusy(void)
 
 void nrf_Transmit (u8 *data, u8 length, nrf_PTXptr eot)
 {
+	bool intsEnabled = SafeSei();
+	
 	if (nrf_data.type != PTX)
 		err_Throw("nrf: Transmit can only be called in PTX mode.\n");
 
@@ -425,6 +427,8 @@ void nrf_Transmit (u8 *data, u8 length, nrf_PTXptr eot)
 	
 	nrf_data.ptxData.transmitting = _TRUE;
 	nrf_data.ptxData.eot = eot;
+	
+	SafeCli(intsEnabled);
 	
 	nrf_CommenceTransmission (data, length);	
 }

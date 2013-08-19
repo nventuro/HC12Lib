@@ -92,9 +92,10 @@ void spi_Transfer (u8 *input, u8 *output, u8 length, spi_ptr eot)
 	spi_data.currTransfer.eot = eot;
 	spi_data.index = 0;
 
+	SafeCli(intsEnabled);
+
 	SPI_SS_START();
 	spi_sendNewData();
-	SafeCli(intsEnabled);
 }
 
 void interrupt spi0_Service (void)
